@@ -725,7 +725,7 @@ export default function NostrWidget({
       )}
 
       {/* Messages Feed */}
-      <div>
+      {/* <div>
         <h5 className="font-medium mb-2">Recent Notes</h5>
         <div className="max-h-64 overflow-y-auto space-y-2">
           {messages.length === 0 ? (
@@ -772,10 +772,10 @@ export default function NostrWidget({
             ))
           )}
         </div>
-      </div>
+      </div>*/}
 
       {/* Zap Modal */}
-      {showZapModal && zapTarget && (
+      {/* {showZapModal && zapTarget && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-96 max-w-full mx-4">
             <h3 className="text-lg font-semibold mb-4">Send Zap</h3>
@@ -839,10 +839,10 @@ export default function NostrWidget({
             </div>
           </div>
         </div>
-      )}
+      )}*/}
 
       {/* Profile Modal */}
-      {showProfileModal && profile && (
+      {/* {showProfileModal && profile && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-96 max-w-full mx-4">
             <h3 className="text-lg font-semibold mb-4">Profile</h3>
@@ -881,7 +881,7 @@ export default function NostrWidget({
             </div>
           </div>
         </div>
-      )}
+      )}*/}
     </div>
   );
 }

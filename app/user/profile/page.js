@@ -2,6 +2,7 @@
 
 import { useNostrAuth } from "../../context/NostrAuthContext";
 import { formatPubkey } from "../../lib/nostrClient";
+import Link from "next/link";
 
 export default function ProfileClient() {
   const { user, error, isLoading, updateProfile, refreshProfile } =
