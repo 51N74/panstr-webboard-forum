@@ -14,41 +14,8 @@ import {
   testRelay,
 } from "./lib/nostrClient";
 
-// Official Room Configuration - CRITICAL: Client-side filtering logic
-const OFFICIAL_ROOMS = [
-  {
-    tag: "#BluePlanet",
-    name: "Blue Planet",
-    description: "การท่องเที่ยว",
-    icon: "🌍",
-    color: "blue",
-    gradient: "from-blue-500 to-cyan-600",
-  },
-  {
-    tag: "#KlaoKrua",
-    name: "Klao Krua",
-    description: "อาหาร, ทำอาหาร",
-    icon: "🍳",
-    color: "orange",
-    gradient: "from-orange-500 to-red-600",
-  },
-  {
-    tag: "#SinThorn",
-    name: "Sin Thorn",
-    description: "การเงิน, หุ้น",
-    icon: "💰",
-    color: "green",
-    gradient: "from-green-500 to-emerald-600",
-  },
-  {
-    tag: "#Mbk",
-    name: "MBK",
-    description: "เทคโนโลยี, มือถือ",
-    icon: "📱",
-    color: "purple",
-    gradient: "from-purple-500 to-pink-600",
-  },
-];
+// Official Room Configuration - moved to Header component
+import Header, { OFFICIAL_ROOMS } from "./components/Header";
 
 export default function Page() {
   const [posts, setPosts] = useState([]);
@@ -156,114 +123,6 @@ export default function Page() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <div className="flex items-center">
-              <Link href="/" className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">P</span>
-                </div>
-                <span className="text-xl font-bold text-gray-900">Panstr</span>
-              </Link>
-            </div>
-
-            {/* Search Bar */}
-            <div className="flex-1 max-w-md mx-8">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="ค้นหาในห้องที่เลือก..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-                <svg
-                  className="absolute left-3 top-2.5 w-5 h-5 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-              </div>
-            </div>
-
-            {/* User Profile */}
-            <div className="flex items-center space-x-4">
-              <button className="p-2 text-gray-500 hover:text-gray-700">
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                  />
-                </svg>
-              </button>
-              <button className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100">
-                <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                  <svg
-                    className="w-5 h-5 text-gray-600"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-                <span className="text-sm font-medium text-gray-700">
-                  เข้าสู่ระบบ
-                </span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Official Rooms Navigation */}
-      <nav className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-8">
-            {OFFICIAL_ROOMS.map((room) => (
-              <button
-                key={room.tag}
-                onClick={() => setActiveRoom(room)}
-                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                  activeRoom.tag === room.tag
-                    ? `border-blue-500 text-blue-600`
-                    : `border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300`
-                }`}
-              >
-                <div className="flex items-center space-x-2">
-                  <span className="text-lg">{room.icon}</span>
-                  <div>
-                    <div className="font-semibold">{room.name}</div>
-                    <div className="text-xs text-gray-500">
-                      {room.description}
-                    </div>
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-      </nav>
-
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
