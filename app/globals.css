@@ -2,36 +2,192 @@
 @tailwind components;
 @tailwind utilities;
 
-/* :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+/* Modern, clean design system for Panstr */
+
+@layer base {
+    html {
+        font-family:
+            "Inter",
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            "Roboto",
+            "Oxygen",
+            "Ubuntu",
+            "Cantarell",
+            "Fira Sans",
+            "Droid Sans",
+            "Helvetica Neue",
+            sans-serif;
+    }
+
+    body {
+        @apply bg-gray-50 text-gray-900 antialiased;
+    }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
-}
+@layer components {
+    /* Nostr-specific component styles */
+    .npub-badge {
+        @apply font-mono text-xs bg-gray-100 px-2 py-1 rounded;
+    }
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+    .nip05-verified {
+        @apply bg-green-100 text-green-800 px-2 py-0.5 rounded-full text-xs font-medium flex items-center space-x-1;
+    }
+
+    .room-badge {
+        @apply px-3 py-1 rounded-full text-xs font-medium;
+    }
+
+    .room-badge-blue {
+        @apply bg-blue-100 text-blue-800;
+    }
+
+    .room-badge-orange {
+        @apply bg-orange-100 text-orange-800;
+    }
+
+    .room-badge-green {
+        @apply bg-green-100 text-green-800;
+    }
+
+    .room-badge-purple {
+        @apply bg-purple-100 text-purple-800;
+    }
+
+    .zap-button {
+        @apply flex items-center space-x-1 text-gray-500 hover:text-green-600 transition-colors font-medium;
+    }
+
+    .comment-button {
+        @apply flex items-center space-x-1 text-gray-500 hover:text-blue-600 transition-colors;
+    }
+
+    .like-button {
+        @apply flex items-center space-x-1 text-gray-500 hover:text-red-600 transition-colors;
+    }
+
+    .post-card {
+        @apply bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow;
+    }
+
+    .thread-container {
+        @apply max-w-4xl mx-auto;
+    }
+
+    .main-post {
+        @apply bg-white rounded-lg shadow-sm border border-gray-200 mb-6;
+    }
+
+    .comment-thread {
+        @apply divide-y divide-gray-200;
+    }
+
+    .verified-user {
+        @apply bg-green-50 border-l-4 border-green-500;
+    }
+
+    .unverified-user {
+        @apply bg-gray-50;
+    }
 }
 
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-} */
+    /* Custom gradients for rooms */
+    .gradient-blue-planet {
+        @apply bg-gradient-to-r from-blue-500 to-cyan-600;
+    }
 
-.notLogin{
-  display:none
+    .gradient-klao-krua {
+        @apply bg-gradient-to-r from-orange-500 to-red-600;
+    }
+
+    .gradient-sin-thorn {
+        @apply bg-gradient-to-r from-green-500 to-emerald-600;
+    }
+
+    .gradient-mbk {
+        @apply bg-gradient-to-r from-purple-500 to-pink-600;
+    }
+
+    /* Animation utilities */
+    .animate-pulse-slow {
+        animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    /* Focus states */
+    .focus-ring {
+        @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+    }
+
+    /* Text truncation */
+    .truncate-2 {
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+
+    .truncate-3 {
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+    }
+}
+
+/* Remove any existing conflicting styles */
+.notLogin {
+    display: none;
+}
+
+/* Prose styles for post content */
+.prose {
+    @apply text-gray-700 leading-relaxed;
+}
+
+.prose h1 {
+    @apply text-2xl font-bold mb-4 text-gray-900;
+}
+
+.prose h2 {
+    @apply text-xl font-semibold mb-3 text-gray-900;
+}
+
+.prose h3 {
+    @apply text-lg font-medium mb-2 text-gray-900;
+}
+
+.prose p {
+    @apply mb-4;
+}
+
+.prose strong {
+    @apply font-semibold text-gray-900;
+}
+
+.prose em {
+    @apply italic;
+}
+
+.prose ul,
+.prose ol {
+    @apply ml-6 mb-4;
+}
+
+.prose li {
+    @apply mb-1;
+}
+
+.prose code {
+    @apply bg-gray-100 px-1 py-0.5 rounded text-sm font-mono text-gray-800;
+}
+
+.prose pre {
+    @apply bg-gray-100 p-4 rounded-lg overflow-x-auto mb-4;
+}
+
+.prose blockquote {
+    @apply border-l-4 border-gray-300 pl-4 italic text-gray-600 mb-4;
 }
