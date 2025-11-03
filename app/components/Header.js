@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useNostrAuth } from "../context/NostrAuthContext";
 import NostrLoginModal from "./NostrLoginModal";
@@ -55,6 +55,8 @@ export default function Header({
 } = {}) {
   const { user, isLoading, error, logout } = useNostrAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
   // Header is fully controlled for activeRoom; keep relayCount internal
   const [relayCount, setRelayCount] = useState(0);
@@ -68,6 +70,18 @@ export default function Header({
   useEffect(() => {
     // initial check on mount
     checkRelays();
+  }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsProfileDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const checkRelays = async () => {
@@ -212,7 +226,7 @@ export default function Header({
                 </>
               ) : (
                 <div className="flex-none gap-2">
-                  <div className="form-control">
+                  {/* <div className="form-control">
                     <button
                       onClick={() =>
                         setShowCreatePost && setShowCreatePost(true)
@@ -221,38 +235,36 @@ export default function Header({
                     >
                       Create Post
                     </button>
-                  </div>
+                  </div>*/}
 
-                  <div className="dropdown dropdown-end">
-                    <div
-                      tabIndex={0}
-                      role="button"
-                      className="btn btn-ghost btn-circle avatar"
+                  <div className="relative" ref={dropdownRef}>
+                    <button
+                      onClick={() =>
+                        setIsProfileDropdownOpen(!isProfileDropdownOpen)
+                      }
+                      className="relative flex items-center justify-center w-10 h-10 rounded-full overflow-hidden hover:ring-2 hover:ring-blue-500 hover:ring-offset-2 transition-all"
                     >
-                      <div className="w-10 rounded-full">
-                        <img
-                          src={user.picture}
-                          alt={user.display_name || user.name}
-                          onError={(e) => {
-                            e.target.src = `https://robohash.org/${user.pubkey}.png`;
-                          }}
-                        />
-                      </div>
-                    </div>
-                    <ul
-                      tabIndex={0}
-                      className="mt-3 z-[1] p-2 shadow menu menu-sm dropdown-content bg-base-100 rounded-box w-52"
-                    >
-                      <li>
-                        <div className="p-2 border-b">
-                          <div className="font-semibold">
+                      <img
+                        src={user.picture}
+                        alt={user.display_name || user.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.src = `https://robohash.org/${user.pubkey}.png`;
+                        }}
+                      />
+                    </button>
+
+                    {isProfileDropdownOpen && (
+                      <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                        <div className="px-4 py-3 border-b border-gray-100">
+                          <p className="text-sm font-medium text-gray-900">
                             {user.display_name || user.name}
-                          </div>
-                          <div className="text-xs text-gray-500">
+                          </p>
+                          <p className="text-xs text-gray-500">
                             {formatPubkey(user.pubkey, "short")}
-                          </div>
+                          </p>
                           {user.nip05 && (
-                            <div className="text-xs text-green-600 flex items-center">
+                            <p className="text-xs text-green-600 flex items-center mt-1">
                               <svg
                                 className="w-3 h-3 mr-1"
                                 fill="currentColor"
@@ -265,15 +277,17 @@ export default function Header({
                                 />
                               </svg>
                               {user.nip05}
-                            </div>
+                            </p>
                           )}
                         </div>
-                      </li>
-                      <li>
-                        <Link href="/user/profile">
-                          <div className="flex items-center">
+
+                        <Link
+                          href="/user/profile"
+                          onClick={() => setIsProfileDropdownOpen(false)}
+                        >
+                          <div className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
                             <svg
-                              className="w-4 h-4 mr-2"
+                              className="w-4 h-4 mr-3"
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
@@ -288,12 +302,14 @@ export default function Header({
                             Profile
                           </div>
                         </Link>
-                      </li>
-                      <li>
-                        <Link href="/user/settings">
-                          <div className="flex items-center">
+
+                        <Link
+                          href="/user/settings"
+                          onClick={() => setIsProfileDropdownOpen(false)}
+                        >
+                          <div className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
                             <svg
-                              className="w-4 h-4 mr-2"
+                              className="w-4 h-4 mr-3"
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
@@ -314,32 +330,33 @@ export default function Header({
                             Settings
                           </div>
                         </Link>
-                      </li>
-                      <div className="divider my-1"></div>
-                      <li>
+
+                        <div className="border-t border-gray-100 my-1"></div>
+
                         <button
-                          onClick={logout}
-                          className="text-red-600 hover:bg-red-50"
+                          onClick={() => {
+                            logout();
+                            setIsProfileDropdownOpen(false);
+                          }}
+                          className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 cursor-pointer"
                         >
-                          <div className="flex items-center">
-                            <svg
-                              className="w-4 h-4 mr-2"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                              />
-                            </svg>
-                            Logout
-                          </div>
+                          <svg
+                            className="w-4 h-4 mr-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                            />
+                          </svg>
+                          Logout
                         </button>
-                      </li>
-                    </ul>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
