@@ -1,29 +1,29 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { UserProvider } from "@auth0/nextjs-auth0/client";
 import Link from "next/link";
 import Footer from "./components/Footer.js";
 import Header from "./components/Header.js";
+import { NostrAuthProvider } from "./context/NostrAuthContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "Panstr",
-  description: "Web Blog on Nostr",
+  title: "Panstr - Decentralized Nostr Forum",
+  description: "A fully decentralized forum platform built with Nostr protocol",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html data-theme="nord" lang="en">
-      <UserProvider>
-        <body className={inter.className}>
-          <div className="">
+      <body className={inter.className}>
+        <NostrAuthProvider>
+          <div className="min-h-screen bg-gray-50">
             <Header />
-              {children}
+            <main className="flex-1">{children}</main>
             <Footer />
           </div>
-        </body>
-      </UserProvider>
+        </NostrAuthProvider>
+      </body>
     </html>
   );
 }
