@@ -16,7 +16,7 @@ import { formatPubkey, getAllRelays, testRelay } from "../lib/nostrClient";
 export const OFFICIAL_ROOMS = [
   {
     tag: "#BluePlanet",
-    name: "Blue Planet",
+    name: "Travel Diaries - เที่ยวไทย",
     description: "การท่องเที่ยว",
     icon: "🌍",
     color: "blue",
@@ -24,7 +24,7 @@ export const OFFICIAL_ROOMS = [
   },
   {
     tag: "#KlaoKrua",
-    name: "Klao Krua",
+    name: "Foodie Thailand - ครัว",
     description: "อาหาร, ทำอาหาร",
     icon: "🍳",
     color: "orange",
@@ -32,7 +32,7 @@ export const OFFICIAL_ROOMS = [
   },
   {
     tag: "#SinThorn",
-    name: "Sin Thorn",
+    name: "Crypto Corner - การเงิน",
     description: "การเงิน, หุ้น",
     icon: "💰",
     color: "green",
@@ -40,7 +40,7 @@ export const OFFICIAL_ROOMS = [
   },
   {
     tag: "#Mbk",
-    name: "MBK",
+    name: "Tech Hub Thailand - MBK",
     description: "เทคโนโลยี, มือถือ",
     icon: "📱",
     color: "purple",

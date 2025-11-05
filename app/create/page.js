@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { OFFICIAL_ROOMS } from "../data/mockPosts";
+import { OFFICIAL_ROOMS } from "../components/Header";
 
 export default function CreatePost() {
   const router = useRouter();
