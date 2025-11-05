@@ -179,6 +179,16 @@ export default function Page() {
   const [activeRoom, setActiveRoom] = useState(OFFICIAL_ROOMS[0]); // Default to first room
   const [relayCount, setRelayCount] = useState(0);
   const [showCreatePost, setShowCreatePost] = useState(false);
+  // Form state for creating a new thread (isolated to creation logic)
+  const [createTitle, setCreateTitle] = useState("");
+  const [createContent, setCreateContent] = useState("");
+  const [creating, setCreating] = useState(false);
+  // Modal & Toast state for modal-based post creation and success notification
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [toast, setToast] = useState({ visible: false, message: "" });
+
+  // Get current authenticated user for author information (display name / username)
+  const { user } = useNostrAuth();
 
   // Load posts for active room on mount and room change
   useEffect(() => {
@@ -305,14 +315,17 @@ export default function Page() {
                   </div>
                 </div>
                 <button
-                  onClick={() => setShowCreatePost(true)}
+                  onClick={() => setIsModalOpen(true)}
                   className="bg-white text-gray-900 px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors flex items-center space-x-2"
+                  aria-haspopup="dialog"
+                  aria-expanded={isModalOpen}
                 >
                   <svg
                     className="w-5 h-5"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
+                    aria-hidden="true"
                   >
                     <path
                       strokeLinecap="round"
@@ -323,6 +336,399 @@ export default function Page() {
                   </svg>
                   <span>สร้างกระทู้</span>
                 </button>
+
+                {isModalOpen && (
+                  <div
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="create-thread-title"
+                    className="fixed inset-0 z-50 flex items-center justify-center px-4 sm:px-6"
+                  >
+                    {/* Overlay */}
+                    <div
+                      className="fixed inset-0 bg-black/40 transition-opacity"
+                      onClick={() => setIsModalOpen(false)}
+                      aria-hidden="true"
+                    />
+                    {/* Modal panel */}
+                    <div className="relative max-w-3xl w-full bg-white rounded-2xl shadow-xl ring-1 ring-black/5 overflow-hidden">
+                      <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                        <div>
+                          <h2
+                            id="create-thread-title"
+                            className="text-lg font-semibold text-gray-900"
+                          >
+                            สร้างกระทู้ใหม่
+                          </h2>
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            สร้างกระทู้ยาวพร้อมหัวข้อ ภาพ และวิดีโอ
+                          </p>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => {
+                              setIsModalOpen(false);
+                            }}
+                            aria-label="Close create thread"
+                            className="rounded-full p-2 hover:bg-gray-100 transition"
+                          >
+                            <svg
+                              className="w-5 h-5 text-gray-600"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                              aria-hidden="true"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          setCreating(true);
+
+                          try {
+                            // Determine room tag (default to general if not available)
+                            const roomTag = activeRoom?.tag || "#general";
+                            const tagName = roomTag.startsWith("#")
+                              ? roomTag.slice(1)
+                              : roomTag;
+
+                            // Build author display name prioritizing display_name -> name -> truncated pubkey
+                            const authorName =
+                              user?.display_name ||
+                              user?.name ||
+                              (user?.pubkey
+                                ? `${formatPubkey(user.pubkey).slice(0, 8)}...`
+                                : "ผู้ใช้ Nostr");
+
+                            // Ensure content contains the room tag; append if missing
+                            const ensuredContent = createContent.includes(
+                              `#${tagName}`,
+                            )
+                              ? createContent
+                              : `${createContent}${createContent.trim() ? " " : ""}#${tagName}`;
+
+                            const timestamp = Math.floor(Date.now() / 1000);
+
+                            // Construct a post object that matches PostCard's expected schema
+                            const title = createTitle.trim();
+                            // Keep Markdown/HTML content as-is; include title as first-level heading for compatibility
+                            const contentMarkdown = ensuredContent;
+                            const fullContent =
+                              (title ? `# ${title}\n\n` : "") + contentMarkdown;
+
+                            const newPost = {
+                              id: `local-${Date.now()}`,
+                              pubkey: user?.pubkey || "",
+                              author: {
+                                name: authorName,
+                                verified: !!user?.nip05,
+                              },
+                              // Keep title explicit for component compatibility
+                              title: title,
+                              // Store markdown/html formatted content; PostCard will extract title via "# Title" if present
+                              content: fullContent,
+                              created_at: timestamp,
+                              kind: 23,
+                              tags: [["t", tagName]],
+                              // stats schema used by PostCard
+                              stats: {
+                                comments: 0,
+                                likes: 0,
+                                zaps: 0,
+                              },
+                            };
+
+                            // Prepend to posts list so PostCard can render it immediately
+                            setPosts((prev) => [newPost, ...(prev || [])]);
+
+                            // Reset form state and close modal
+                            setCreateContent("");
+                            setCreateTitle("");
+                            setIsModalOpen(false);
+
+                            // Show toast notification
+                            setToast({
+                              visible: true,
+                              message: "Thread posted successfully!",
+                            });
+                            window.setTimeout(() => {
+                              setToast({ visible: false, message: "" });
+                            }, 3500);
+                          } catch (err) {
+                            console.error("Failed to create post:", err);
+                          } finally {
+                            setCreating(false);
+                          }
+                        }}
+                        className="p-6"
+                      >
+                        {/* Form layout */}
+                        <div className="grid grid-cols-1 gap-4">
+                          <div>
+                            <label
+                              htmlFor="createTitle"
+                              className="text-xs font-medium text-gray-700"
+                            >
+                              หัวข้อกระทู้
+                            </label>
+                            <input
+                              id="createTitle"
+                              value={createTitle}
+                              onChange={(e) => setCreateTitle(e.target.value)}
+                              type="text"
+                              className="mt-1 block w-full rounded-md border border-gray-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-black"
+                              placeholder="พิมพ์ชื่อกระทู้ที่นี่..."
+                              required
+                              aria-required="true"
+                            />
+                          </div>
+
+                          <div>
+                            <label
+                              htmlFor="createContent"
+                              className="text-xs font-medium text-gray-700"
+                            >
+                              เนื้อหา (รองรับ Markdown และสื่อฝัง)
+                            </label>
+
+                            {/* Toolbar */}
+                            <div className="mt-2 flex flex-wrap items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const el =
+                                    document.getElementById("createContent");
+                                  if (!el) return;
+                                  const start = el.selectionStart;
+                                  const end = el.selectionEnd;
+                                  const selected = el.value.substring(
+                                    start,
+                                    end,
+                                  );
+                                  const wrapped = `**${selected}**`;
+                                  el.setRangeText(wrapped, start, end, "end");
+                                  setCreateContent(el.value);
+                                  el.focus();
+                                }}
+                                className="px-2 py-1 bg-gray-100 rounded text-sm text-black"
+                                aria-label="Bold"
+                              >
+                                B
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const el =
+                                    document.getElementById("createContent");
+                                  if (!el) return;
+                                  const start = el.selectionStart;
+                                  const end = el.selectionEnd;
+                                  const selected = el.value.substring(
+                                    start,
+                                    end,
+                                  );
+                                  const wrapped = `*${selected}*`;
+                                  el.setRangeText(wrapped, start, end, "end");
+                                  setCreateContent(el.value);
+                                  el.focus();
+                                }}
+                                className="px-2 py-1 bg-gray-100 rounded text-sm text-black"
+                                aria-label="Italic"
+                              >
+                                I
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const el =
+                                    document.getElementById("createContent");
+                                  if (!el) return;
+                                  const start = el.selectionStart;
+                                  const end = el.selectionEnd;
+                                  const selected = el.value.substring(
+                                    start,
+                                    end,
+                                  );
+                                  const wrapped = `~~${selected}~~`;
+                                  el.setRangeText(wrapped, start, end, "end");
+                                  setCreateContent(el.value);
+                                  el.focus();
+                                }}
+                                className="px-2 py-1 bg-gray-100 rounded text-sm text-black"
+                                aria-label="Strikethrough"
+                              >
+                                S
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const url = prompt("Enter image URL:");
+                                  if (!url) return;
+                                  const el =
+                                    document.getElementById("createContent");
+                                  if (!el) return;
+                                  const insert = `![image](${url})`;
+                                  const pos =
+                                    el.selectionStart || el.value.length;
+                                  el.setRangeText(insert, pos, pos, "end");
+                                  setCreateContent(el.value);
+                                  el.focus();
+                                }}
+                                className="px-2 py-1 bg-gray-100 rounded text-sm text-black"
+                                aria-label="Insert image"
+                              >
+                                Image
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const url = prompt(
+                                    "Enter video URL (YouTube/Vimeo or direct MP4):",
+                                  );
+                                  if (!url) return;
+                                  const el =
+                                    document.getElementById("createContent");
+                                  if (!el) return;
+                                  // Auto-embed YouTube/Vimeo as iframe, otherwise insert HTML5 video tag
+                                  let insert = "";
+                                  if (/youtube\.com|youtu\.be/.test(url)) {
+                                    // Try to convert to embed src
+                                    const videoIdMatch = url.match(
+                                      /(?:v=|\/)([A-Za-z0-9_-]{6,})/,
+                                    );
+                                    const id = videoIdMatch
+                                      ? videoIdMatch[1]
+                                      : null;
+                                    const src = id
+                                      ? `https://www.youtube.com/embed/${id}`
+                                      : url;
+                                    insert = `\n\n<iframe width="560" height="315" src="${src}" frameborder="0" allowfullscreen></iframe>\n\n`;
+                                  } else if (/vimeo\.com/.test(url)) {
+                                    const idMatch =
+                                      url.match(/vimeo\.com\/(\d+)/);
+                                    const id = idMatch ? idMatch[1] : null;
+                                    const src = id
+                                      ? `https://player.vimeo.com/video/${id}`
+                                      : url;
+                                    insert = `\n\n<iframe src="${src}" width="640" height="360" frameborder="0" allowfullscreen></iframe>\n\n`;
+                                  } else {
+                                    // Direct video file fallback
+                                    insert = `\n\n<video controls src="${url}" style="max-width:100%"></video>\n\n`;
+                                  }
+                                  const pos =
+                                    el.selectionStart || el.value.length;
+                                  el.setRangeText(insert, pos, pos, "end");
+                                  setCreateContent(el.value);
+                                  el.focus();
+                                }}
+                                className="px-2 py-1 bg-gray-100 rounded text-sm text-black"
+                                aria-label="Insert video"
+                              >
+                                Video
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const url = prompt("Enter link URL:");
+                                  if (!url) return;
+                                  const el =
+                                    document.getElementById("createContent");
+                                  if (!el) return;
+                                  const start = el.selectionStart;
+                                  const end = el.selectionEnd;
+                                  const selected =
+                                    el.value.substring(start, end) || url;
+                                  const link = `[${selected}](${url})`;
+                                  el.setRangeText(link, start, end, "end");
+                                  setCreateContent(el.value);
+                                  el.focus();
+                                }}
+                                className="px-2 py-1 bg-gray-100 rounded text-sm text-black"
+                                aria-label="Insert link"
+                              >
+                                Link
+                              </button>
+                            </div>
+
+                            {/* Content editor (Markdown textarea for now) */}
+                            <textarea
+                              id="createContent"
+                              value={createContent}
+                              onChange={(e) => setCreateContent(e.target.value)}
+                              rows={10}
+                              className="mt-3 block w-full rounded-md border border-gray-200 p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-sans text-black"
+                              placeholder="เขียนกระทู้ของคุณที่นี่... รองรับ Markdown, image and video embeds (paste URL or use toolbar)"
+                              aria-label="Thread content"
+                              required
+                            />
+                          </div>
+
+                          <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                            <div className="text-sm text-gray-600">
+                              แท็กจะถูกเพิ่มอัตโนมัติตามห้องที่เลือก:{" "}
+                              <span className="font-medium text-gray-700">
+                                {activeRoom?.tag || "#general"}
+                              </span>
+                            </div>
+                            <div className="flex items-center space-x-3">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setIsModalOpen(false);
+                                }}
+                                className="px-4 py-2 rounded-md bg-gray-100 text-sm text-gray-700 hover:bg-gray-200"
+                              >
+                                ยกเลิก
+                              </button>
+                              <button
+                                type="submit"
+                                disabled={creating}
+                                className="px-4 py-2 rounded-md bg-indigo-600 text-white text-sm hover:bg-indigo-700 disabled:opacity-60"
+                              >
+                                {creating ? "กำลังสร้าง..." : "สร้างกระทู้"}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </form>
+                    </div>
+
+                    {/* Toast Notification */}
+                    {toast.visible && (
+                      <div className="fixed right-4 top-6 z-60">
+                        <div className="bg-white shadow-md rounded-md px-4 py-2 border border-gray-200 flex items-center space-x-3">
+                          <div className="text-sm text-gray-800">
+                            {toast.message}
+                          </div>
+                          <button
+                            onClick={() =>
+                              setToast({ visible: false, message: "" })
+                            }
+                            className="text-gray-400 hover:text-gray-600"
+                            aria-label="Close notification"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
