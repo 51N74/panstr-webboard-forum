@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import NostrWidget from "./components/NostrWidget";
+import { useNostrAuth } from "./context/NostrAuthContext";
 import { MOCK_POSTS, MOCK_TRENDING_TAGS } from "./data/mockPosts";
 import {
   initializePool,
@@ -10,6 +11,7 @@ import {
   searchEvents,
   queryEvents,
   formatPubkey,
+  getUserProfile,
   getAllRelays,
   testRelay,
 } from "./lib/nostrClient";
@@ -19,6 +21,10 @@ function SiamstrBox() {
   const [siamstrEvents, setSiamstrEvents] = useState([]);
   const [siamstrLoading, setSiamstrLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [profiles, setProfiles] = useState({});
+
+  // Use NostrAuthContext to access authenticated user's profile and prefer it when available.
+  const nostrAuth = useNostrAuth();
 
   useEffect(() => {
     fetchSiamstrEvents();
@@ -42,6 +48,44 @@ function SiamstrBox() {
       setSiamstrLoading(false);
     }
   };
+
+  // Load and cache profile metadata for event authors (pubkeys)
+  useEffect(() => {
+    let mounted = true;
+    const loadProfiles = async () => {
+      const pubkeys = [
+        ...new Set(siamstrEvents.map((e) => e.pubkey).filter(Boolean)),
+      ].filter((pk) => !profiles[pk]);
+
+      if (pubkeys.length === 0) return;
+
+      const updated = { ...profiles };
+      await Promise.all(
+        pubkeys.map(async (pk) => {
+          try {
+            // If the pubkey matches the currently authenticated user in NostrAuthContext,
+            // prefer that profile data (avoids refetching).
+            if (nostrAuth && nostrAuth.user && nostrAuth.user.pubkey === pk) {
+              updated[pk] = nostrAuth.user;
+            } else {
+              const p = await getUserProfile(pk);
+              // Store whatever metadata we can get (may include display_name/name/picture)
+              updated[pk] = p || null;
+            }
+          } catch (err) {
+            updated[pk] = null;
+          }
+        }),
+      );
+
+      if (mounted) setProfiles(updated);
+    };
+
+    loadProfiles();
+    return () => {
+      mounted = false;
+    };
+  }, [siamstrEvents]);
 
   const formatSiamstrTime = (timestamp) => {
     const date = new Date(timestamp * 1000);
@@ -91,8 +135,10 @@ function SiamstrBox() {
                 className="bg-white p-3 rounded border border-purple-200"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs text-purple-600 font-mono">
-                    {formatPubkey(event.pubkey).slice(0, 8)}...
+                  <span className="text-xs text-purple-600 font-medium">
+                    {profiles[event.pubkey]?.display_name ||
+                      profiles[event.pubkey]?.name ||
+                      `${formatPubkey(event.pubkey).slice(0, 8)}...`}
                   </span>
                   <span className="text-xs text-gray-500">
                     {formatSiamstrTime(event.created_at)}
