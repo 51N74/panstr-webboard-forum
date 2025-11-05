@@ -510,54 +510,8 @@ export default function NostrWidget({
         )}
       </div>
 
-      {/* Content Input */}
-      <div className="mb-4 space-y-3">
-        <label className="block text-sm font-medium text-gray-700">
-          Write a note
-        </label>
-        <textarea
-          className="textarea textarea-bordered w-full"
-          rows={3}
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder={
-            thread
-              ? `Replying to: ${thread.title || "thread"}`
-              : "What's on your mind?"
-          }
-          disabled={!connected || (!useExtension && !privKey)}
-        />
-        {thread && (
-          <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded">
-            Replying to: <strong>{thread.title || "Unknown"}</strong>
-          </div>
-        )}
-      </div>
-
       {/* Action Buttons */}
       <div className="flex gap-2 mb-4">
-        <button
-          onClick={handlePublish}
-          className="btn btn-primary btn-sm"
-          disabled={
-            !connected ||
-            (!useExtension && !privKey) ||
-            !content.trim() ||
-            status === "publishing"
-          }
-        >
-          {status === "publishing" && (
-            <span className="loading loading-spinner loading-xs"></span>
-          )}
-          Publish Note
-        </button>
-        <button
-          onClick={() => setContent("")}
-          className="btn btn-sm"
-          disabled={!content.trim()}
-        >
-          Clear
-        </button>
         <button
           onClick={() => setShowAdvanced(!showAdvanced)}
           className="btn btn-sm btn-outline"
@@ -710,6 +664,7 @@ export default function NostrWidget({
                 >
                   {status.connected ? "Connected" : "Failed"}
                 </span>
+                <span>Remove</span>
                 {getCustomRelays().includes(url) && (
                   <button
                     onClick={() => handleRemoveRelay(url)}

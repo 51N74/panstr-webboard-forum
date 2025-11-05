@@ -14,6 +14,116 @@ import {
   testRelay,
 } from "./lib/nostrClient";
 
+// SiamstrBox Component for #siamstr tag events
+function SiamstrBox() {
+  const [siamstrEvents, setSiamstrEvents] = useState([]);
+  const [siamstrLoading, setSiamstrLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchSiamstrEvents();
+  }, []);
+
+  const fetchSiamstrEvents = async () => {
+    setSiamstrLoading(true);
+    setError(null);
+
+    try {
+      const events = await searchEvents("#siamstr", {
+        kinds: [1],
+        limit: 10,
+      });
+
+      setSiamstrEvents(events);
+    } catch (err) {
+      setError("Failed to fetch #siamstr events");
+      console.error("Error fetching #siamstr events:", err);
+    } finally {
+      setSiamstrLoading(false);
+    }
+  };
+
+  const formatSiamstrTime = (timestamp) => {
+    const date = new Date(timestamp * 1000);
+    const now = new Date();
+    const diff = now - date;
+
+    if (diff < 60000) return "just now";
+    if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+    return `${Math.floor(diff / 86400000)}d ago`;
+  };
+
+  return (
+    <div
+      className="bg-white rounded-lg border-2 border-purple-300 p-4 w-full"
+      style={{ minHeight: "400px" }}
+    >
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-bold text-purple-800 text-lg">#siamstr Events</h3>
+        <button
+          onClick={fetchSiamstrEvents}
+          className="text-purple-600 hover:text-purple-800 text-sm font-medium"
+          disabled={siamstrLoading}
+        >
+          {siamstrLoading ? "Loading..." : "Refresh"}
+        </button>
+      </div>
+
+      {/* Rectangular box with distinct border and defined dimensions */}
+      <div className="border-2 border-dashed border-purple-200 rounded-lg p-3 bg-purple-50">
+        {siamstrLoading ? (
+          <div className="flex justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+          </div>
+        ) : error ? (
+          <div className="text-red-600 text-center py-4">{error}</div>
+        ) : siamstrEvents.length === 0 ? (
+          <div className="text-gray-500 text-center py-8">
+            <p>No events found with #siamstr tag</p>
+            <p className="text-sm mt-2">Try refreshing to check again</p>
+          </div>
+        ) : (
+          <div className="space-y-3 max-h-80 overflow-y-auto">
+            {siamstrEvents.map((event) => (
+              <div
+                key={event.id}
+                className="bg-white p-3 rounded border border-purple-200"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs text-purple-600 font-mono">
+                    {formatPubkey(event.pubkey).slice(0, 8)}...
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    {formatSiamstrTime(event.created_at)}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-800 line-clamp-3">
+                  {event.content}
+                </p>
+                {event.tags && event.tags.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {event.tags
+                      .filter((tag) => tag[0] === "t" && tag[1])
+                      .map((tag, index) => (
+                        <span
+                          key={index}
+                          className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded"
+                        >
+                          #{tag[1]}
+                        </span>
+                      ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // Official Room Configuration - moved to Header component
 import Header, { OFFICIAL_ROOMS } from "./components/Header";
 
@@ -194,6 +304,7 @@ export default function Page() {
           <div className="lg:col-span-1">
             <div className="sticky top-24 space-y-6">
               <RoomStats activeRoom={activeRoom} />
+              <SiamstrBox />
               <TrendingInRoom roomTag={activeRoom.tag} />
               <NostrWidget />
             </div>
