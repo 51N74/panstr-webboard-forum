@@ -101,14 +101,24 @@ export default function BoardList() {
             🌏 Welcome to Panstr Forum
           </h1>
           <p className="text-lg text-base-content/70 max-w-2xl mx-auto">
-            Discover conversations across technology, lifestyle, and the Nostr
+            Discover conversations across technology, lifestyle, and Nostr
             ecosystem. Join rooms that match your interests and connect with the
             community.
           </p>
+
+          {/* Quick Access */}
+          <div className="flex justify-center mt-6 space-x-4">
+            <Link
+              href="/siamstr-test"
+              className="btn btn-outline btn-sm hover:btn-primary"
+            >
+              🏴 #siamstr Test Room
+            </Link>
+          </div>
         </div>
 
         {/* Categories */}
-        <div className="space-y-6">
+        <div className="space-y-6 mt-8">
           {BOARD_CATEGORIES.map((category) => {
             const isExpanded = expandedCategories[category.id];
             const roomCount = category.rooms.length;
