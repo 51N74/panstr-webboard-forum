@@ -4,6 +4,7 @@ import Link from "next/link";
 import Footer from "./components/Footer.js";
 import Header from "./components/Header.js";
 import { NostrAuthProvider } from "./context/NostrAuthContext";
+import { NostrProvider } from "./context/NostrContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -17,11 +18,13 @@ export default function RootLayout({ children }) {
     <html data-theme="nord" lang="en">
       <body className={inter.className}>
         <NostrAuthProvider>
-          <div className="min-h-screen bg-gray-50">
-            <Header />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </div>
+          <NostrProvider>
+            <div className="min-h-screen bg-base-200">
+              <Header />
+              <main className="flex-1">{children}</main>
+              <Footer />
+            </div>
+          </NostrProvider>
         </NostrAuthProvider>
       </body>
     </html>

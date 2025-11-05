@@ -76,6 +76,38 @@ export function generatePrivateKey() {
 }
 
 /**
+ * Generate a deterministic thread id from a title.
+ *
+ * Behavior:
+ * - Slugifies the title (lowercase, alphanum + hyphens)
+ * - Appends a short, deterministic hash derived from the title so the id
+ *   is repeatable for the same title (helpful for replaceable events).
+ *
+ * Example output: "hello-world-1a2b3c"
+ */
+export function generateThreadId(title = "thread") {
+  // Slugify: lowercase, replace non-alnum with hyphen, collapse hyphens, trim
+  const slug = String(title || "thread")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+
+  // Simple deterministic hash (djb2-like) -> base36 short string
+  function simpleHash(str) {
+    let h = 5381;
+    for (let i = 0; i < str.length; i++) {
+      h = (h * 33) ^ str.charCodeAt(i);
+    }
+    // Ensure unsigned and convert to base36, take last 6 chars for brevity
+    return (h >>> 0).toString(36).slice(-6);
+  }
+
+  const hash = simpleHash(slug || "thread");
+  return `${slug || "thread"}-${hash}`;
+}
+
+/**
  * Convert private key to hex string
  */
 export function privateKeyToHex(sk) {
@@ -334,19 +366,71 @@ export function createReplyEvent(
   privKey,
   additionalTags = [],
 ) {
-  const tags = [
-    ["e", originalEvent.id],
-    ["p", originalEvent.pubkey],
-  ];
+  // Build tags following the forum reply requirements while remaining backward-compatible.
+  // Required/desired tags per spec:
+  //  - ["e", "thread-event-id", "", "root"]   -> reference to main thread (root)
+  //  - ["e", "parent-reply-id", "", "reply"]  -> reference to the parent reply (if replying to a reply)
+  //  - ["p", "thread-author-pubkey"]          -> thread author's pubkey
+  //  - ["p", "parent-reply-author-pubkey"]    -> parent reply author pubkey (if applicable)
+  //  - ["board", "board-name"]                -> board tag propagated from original event
+  //  - ["t", "forum-reply"]                   -> marker for forum replies
+  //
+  // We keep older simple e/p tags for compatibility with clients expecting them.
 
-  // Add thread context
+  const tags = [];
+
+  // Parse thread context (NIP-10)
   const thread = parseThread(originalEvent);
-  if (thread.root && thread.root.id !== originalEvent.id) {
-    tags.push(["e", thread.root.id, "root"]);
+
+  // Root: prefer thread.root.id if available, else originalEvent.id
+  const rootId =
+    thread && thread.root && thread.root.id ? thread.root.id : originalEvent.id;
+  // Add root e-tag (with placeholder relay and role 'root' to be compatible with NIP-10 expectations)
+  tags.push(["e", rootId, "", "root"]);
+
+  // If originalEvent is itself a reply (not the root), mark the parent reply relation
+  // If originalEvent.id !== rootId, it's likely a reply to the thread or another reply.
+  if (originalEvent.id && originalEvent.id !== rootId) {
+    // parent reply reference with role 'reply'
+    tags.push(["e", originalEvent.id, "", "reply"]);
+  } else {
+    // Keep a plain e-tag pointing to the original event to preserve prior behavior
+    tags.push(["e", originalEvent.id]);
   }
 
-  tags.push(...additionalTags);
+  // p-tags: add thread author pubkey (from parsed root if available), then parent author
+  try {
+    if (thread && thread.root && thread.root.pubkey) {
+      tags.push(["p", thread.root.pubkey]);
+    } else if (originalEvent.pubkey) {
+      // Fallback: treat originalEvent author as thread author when root not available
+      tags.push(["p", originalEvent.pubkey]);
+    }
+  } catch (e) {
+    // ignore
+  }
 
+  // Parent reply author (the author of the event being replied to)
+  if (originalEvent.pubkey) {
+    tags.push(["p", originalEvent.pubkey]);
+  }
+
+  // Propagate board tag if present on originalEvent
+  const boardTag =
+    originalEvent.tags && originalEvent.tags.find((t) => t[0] === "board");
+  if (boardTag && boardTag[1]) {
+    tags.push(["board", boardTag[1]]);
+  }
+
+  // Marker to identify forum reply
+  tags.push(["t", "forum-reply"]);
+
+  // Preserve any additional tags provided by caller (e.g., category, custom markers)
+  if (Array.isArray(additionalTags) && additionalTags.length > 0) {
+    tags.push(...additionalTags);
+  }
+
+  // Return the reply event object (unsigned). Publishing/signing is handled by publishToPool.
   return {
     kind: 1,
     content: replyContent,
@@ -663,6 +747,85 @@ export function createMetadataEvent(metadata, privKey) {
     tags: [],
     created_at: Math.floor(Date.now() / 1000),
   };
+}
+
+/**
+ * Helper to publish a forum thread event (kind: 30023 - long-form / NIP-23)
+ *
+ * Required tags (per project spec):
+ *  - ["d", "unique-thread-id"]          // unique replaceable id
+ *  - ["title", "thread title"]
+ *  - ["board", "board-name"]
+ *  - ["t", "forum"]
+ *  - ["t", "webboard"]
+ *  - ["published_at", "timestamp"]
+ * Optional:
+ *  - ["summary", "brief description"]
+ *  - ["sticky", "true"/"false"]
+ *  - ["locked", "true"/"false"]
+ *  - ["category", "category-name"]
+ *
+ * Parameters:
+ *  - pool: SimplePool instance (from initializePool)
+ *  - relayUrls: array of relay URLs (optional)
+ *  - privKey: private key string (hex) OR rely on browser extension signer already initialized
+ *  - opts: object with fields:
+ *      - threadId (required) : string
+ *      - title (required-ish) : string
+ *      - board (required-ish) : string (e.g., "nostr-cafe")
+ *      - content : markdown string (body)
+ *      - published_at : unix timestamp (seconds) - defaults to now
+ *      - summary, sticky, locked, category : optional metadata
+ *
+ * Returns the signed and published event (as returned by publishToPool implementation).
+ */
+export async function publishThread(
+  pool,
+  relayUrls = DEFAULT_RELAYS,
+  privKey,
+  opts = {},
+) {
+  const {
+    threadId,
+    title = "",
+    board = "",
+    content = "",
+    published_at = Math.floor(Date.now() / 1000),
+    summary,
+    sticky,
+    locked,
+    category,
+  } = opts || {};
+
+  if (!threadId) {
+    throw new Error("publishThread: 'threadId' (d-tag) is required");
+  }
+
+  // Build required tags
+  const tags = [
+    ["d", threadId],
+    ["title", title],
+    ["board", board],
+    ["t", "forum"],
+    ["t", "webboard"],
+    ["published_at", String(published_at)],
+  ];
+
+  // Optional tags
+  if (summary) tags.push(["summary", summary]);
+  if (typeof sticky !== "undefined")
+    tags.push(["sticky", sticky ? "true" : "false"]);
+  if (typeof locked !== "undefined")
+    tags.push(["locked", locked ? "true" : "false"]);
+  if (category) tags.push(["category", category]);
+
+  // Use the existing publish helper which handles signing (browser extension or local key)
+  const event = await publishToPool(pool, relayUrls, privKey, content, {
+    kind: 30023,
+    tags,
+  });
+
+  return event;
 }
 
 // Re-exports for convenience
