@@ -257,7 +257,8 @@ const nip19Encode = {
     return nip19.naddrEncode({ kind, pubkey, identifier, relays });
   },
   nrelay: (url) => {
-    return nip19.nrelayEncode(url);
+    // nrelayEncode is not available in nostr-tools, return the URL directly
+    return url;
   },
 };
 
@@ -347,35 +348,162 @@ export async function getUserProfile(pubkey) {
  */
 export function parseThread(event) {
   try {
+    // Validate event structure
+    if (!event || !event.tags || !Array.isArray(event.tags)) {
+      throw new Error("Invalid event structure for thread parsing");
+    }
+
     // Use official NIP-10 parsing
     const refs = nip10.parse(event);
 
-    return {
-      root: refs.root ? refs.root.id : null,
-      reply: refs.reply ? refs.reply.id : null,
-      mentions: refs.mentions.map((mention) => mention.id),
-      profiles: refs.profiles.map((profile) => profile.pubkey),
+    // Handle all marker types: root, reply, mention
+    const parsed = {
+      root: refs.root
+        ? {
+            id: refs.root.id,
+            relay: refs.root.relay || null,
+            marker: refs.root.marker || "root",
+          }
+        : null,
+      reply: refs.reply
+        ? {
+            id: refs.reply.id,
+            relay: refs.reply.relay || null,
+            marker: refs.reply.marker || "reply",
+          }
+        : null,
+      mentions: refs.mentions.map((mention) => ({
+        id: mention.id,
+        relay: mention.relay || null,
+        marker: mention.marker || "mention",
+        pubkey: mention.pubkey || null,
+      })),
+      profiles: refs.profiles.map((profile) => ({
+        pubkey: profile.pubkey,
+        relay: profile.relay || null,
+      })),
     };
+
+    // Calculate thread depth
+    parsed.depth = calculateThreadDepth(event);
+
+    return parsed;
   } catch (error) {
     console.warn(
-      "Failed to parse thread with NIP-10, falling back to custom parser:",
+      "Failed to parse thread with NIP-10, falling back to enhanced custom parser:",
       error,
     );
 
-    // Fallback to custom implementation
-    const root = event.tags.find((tag) => tag[0] === "e" && tag[3] === "root");
-    const reply = event.tags.find(
-      (tag) => tag[0] === "e" && tag[3] === "reply",
-    );
-    const mentions = event.tags.filter((tag) => tag[0] === "p");
-    const profiles = event.tags.filter((tag) => tag[0] === "profile");
+    // Enhanced fallback implementation with all marker types
+    const eTags = event.tags.filter((tag) => tag[0] === "e");
+    const pTags = event.tags.filter((tag) => tag[0] === "p");
 
-    return {
-      root: root ? root[1] : null,
-      reply: reply ? reply[1] : null,
-      mentions: mentions.map((tag) => tag[1]),
-      profiles: profiles.map((tag) => tag[1]),
+    const root =
+      eTags.find((tag) => tag[3] === "root") || eTags.find((tag) => !tag[3]);
+    const reply = eTags.find((tag) => tag[3] === "reply");
+    const mentions = eTags.filter(
+      (tag) =>
+        tag[3] === "mention" || (!tag[3] && tag !== root && tag !== reply),
+    );
+
+    const profiles = pTags.map((tag) => ({
+      pubkey: tag[1],
+      relay: tag[2] || null,
+    }));
+
+    const parsed = {
+      root: root
+        ? {
+            id: root[1],
+            relay: root[2] || null,
+            marker: root[3] || "root",
+          }
+        : null,
+      reply: reply
+        ? {
+            id: reply[1],
+            relay: reply[2] || null,
+            marker: reply[3] || "reply",
+          }
+        : null,
+      mentions: mentions.map((mention) => ({
+        id: mention[1],
+        relay: mention[2] || null,
+        marker: mention[3] || "mention",
+        pubkey: null,
+      })),
+      profiles: profiles,
+      depth: calculateThreadDepth(event),
     };
+
+    return parsed;
+  }
+}
+
+/**
+ * Calculate thread depth based on reply markers and event structure
+ */
+function calculateThreadDepth(event) {
+  try {
+    if (!event.tags) return 0;
+
+    const eTags = event.tags.filter((tag) => tag[0] === "e");
+    const replyTags = eTags.filter((tag) => tag[3] === "reply");
+
+    // Each reply tag indicates a level of depth
+    return replyTags.length;
+  } catch (error) {
+    console.warn("Error calculating thread depth:", error);
+    return 0;
+  }
+}
+
+/**
+ * Optimize thread structure for display
+ */
+export function optimizeThreadStructure(events) {
+  try {
+    const eventMap = new Map();
+    const threads = [];
+
+    // Create event map
+    events.forEach((event) => {
+      eventMap.set(event.id, {
+        ...event,
+        replies: [],
+        mentions: [],
+      });
+    });
+
+    // Build thread structure
+    events.forEach((event) => {
+      const parsed = parseThread(event);
+      const eventData = eventMap.get(event.id);
+
+      if (parsed.root && eventMap.has(parsed.root.id)) {
+        eventMap.get(parsed.root.id).replies.push(eventData);
+      }
+
+      if (parsed.reply && eventMap.has(parsed.reply.id)) {
+        eventMap.get(parsed.reply.id).replies.push(eventData);
+      }
+
+      parsed.mentions.forEach((mention) => {
+        if (eventMap.has(mention.id)) {
+          eventMap.get(mention.id).mentions.push(eventData);
+        }
+      });
+
+      // If this is a root event, add to threads
+      if (!parsed.root && !parsed.reply) {
+        threads.push(eventData);
+      }
+    });
+
+    return threads;
+  } catch (error) {
+    console.error("Error optimizing thread structure:", error);
+    return events;
   }
 }
 
@@ -424,13 +552,24 @@ export function createReplyEvent(
 /**
  * Create zap request
  */
+/**
+ * Create a zap request with optional splits and metadata
+ */
 export function createZapRequest(
   amount,
   recipient,
   eventId,
   relays,
   message = "",
+  options = {},
 ) {
+  const {
+    splits = [],
+    anon = false,
+    zapType = "public",
+    lightningAddress = null,
+  } = options;
+
   const zapRequest = {
     kind: 9734,
     content: message,
@@ -441,40 +580,201 @@ export function createZapRequest(
       ["relays", ...relays],
     ],
     ...(eventId ? [["e", eventId]] : []),
+    ...(anon ? [["anon"]] : []),
+    ...(zapType !== "public" ? [["zap_type", zapType]] : []),
+    ...(lightningAddress ? [["lnurl", lightningAddress]] : []),
   };
+
+  // Add zap splits
+  splits.forEach((split) => {
+    if (split.pubkey && split.percentage) {
+      zapRequest.tags.push([
+        "zap_split",
+        split.pubkey,
+        split.percentage.toString(),
+        split.relay || "",
+      ]);
+    }
+  });
 
   return zapRequest;
 }
 
 /**
- * Verify zap receipt
+ * Verify zap receipt with enhanced validation
  */
 export function verifyZapReceipt(zapEvent) {
   try {
+    if (!zapEvent || !zapEvent.tags) {
+      throw new Error("Invalid zap event structure");
+    }
+
     const bolt11 = zapEvent.tags.find((tag) => tag[0] === "bolt11")?.[1];
     const description = zapEvent.tags.find(
       (tag) => tag[0] === "description",
     )?.[1];
+    const preimage = zapEvent.tags.find((tag) => tag[0] === "preimage")?.[1];
 
-    if (!bolt11 || !description) return false;
+    if (!bolt11) {
+      throw new Error("Missing bolt11 invoice");
+    }
 
-    // In a real implementation, you would verify the bolt11 invoice
-    // This is a simplified check
-    const isValid = verifyEvent(zapEvent);
+    // Parse description to extract zap request
+    let zapRequest = null;
+    try {
+      zapRequest = JSON.parse(description);
+    } catch (parseError) {
+      throw new Error("Invalid description format");
+    }
+
+    // Validate zap request structure
+    if (!zapRequest || !zapRequest.tags) {
+      throw new Error("Invalid zap request structure");
+    }
+
+    // Extract zap details
     const amount = extractAmountFromBolt11(bolt11);
-    const sender = zapEvent.tags.find((tag) => tag[0] === "p")?.[1];
+    const sender = zapRequest.tags.find((tag) => tag[0] === "p")?.[1];
     const recipient = zapEvent.tags.find((tag) => tag[0] === "P")?.[1];
+    const eventId = zapRequest.tags.find((tag) => tag[0] === "e")?.[1];
+    const message = zapRequest.content || "";
+    const isAnon = zapRequest.tags.some((tag) => tag[0] === "anon");
+    const zapType = zapRequest.tags.find((tag) => tag[0] === "zap_type")?.[1];
+
+    // Extract zap splits
+    const splits = zapRequest.tags
+      .filter((tag) => tag[0] === "zap_split")
+      .map((tag) => ({
+        pubkey: tag[1],
+        percentage: parseInt(tag[2]),
+        relay: tag[3] || null,
+      }));
+
+    // Validate event signature
+    const isValidSignature = verifyEvent(zapEvent);
+
+    // Validate preimage if present (for paid invoices)
+    let isValidPayment = true;
+    if (preimage) {
+      isValidPayment = verifyPreimage(preimage, bolt11);
+    }
 
     return {
-      isValid,
+      isValid: isValidSignature && isValidPayment,
       amount,
       sender,
       recipient,
+      eventId,
+      message,
+      isAnon,
+      zapType: zapType || "public",
+      splits,
+      bolt11,
+      preimage,
     };
   } catch (error) {
     console.error("Error verifying zap receipt:", error);
-    return { isValid: false };
+    return { isValid: false, error: error.message };
   }
+}
+
+/**
+ * Create a zap goal (NIP-75)
+ */
+export function createZapGoal(pubkey, relays, amount, message, options = {}) {
+  const { closed = false, image = null, goalId = null } = options;
+
+  const goal = {
+    kind: 9041, // Zap goal kind
+    content: message,
+    created_at: Math.floor(Date.now() / 1000),
+    tags: [
+      ["p", pubkey],
+      ["amount", amount.toString()],
+      ["relays", ...relays],
+    ],
+    ...(closed ? [["closed"]] : []),
+    ...(image ? [["image", image]] : []),
+    ...(goalId ? [["d", goalId]] : []),
+  };
+
+  return goal;
+}
+
+/**
+ * Calculate zap goal progress
+ */
+export function calculateZapGoalProgress(goalEvent, zapEvents = []) {
+  try {
+    const targetAmount = parseInt(
+      goalEvent.tags.find((tag) => tag[0] === "amount")?.[1] || "0",
+    );
+    const recipient = goalEvent.tags.find((tag) => tag[0] === "p")?.[1];
+    const goalId = goalEvent.tags.find((tag) => tag[0] === "d")?.[1];
+
+    let currentAmount = 0;
+    let zappers = new Set();
+
+    zapEvents.forEach((zapEvent) => {
+      const zapReceipt = verifyZapReceipt(zapEvent);
+      if (
+        zapReceipt.isValid &&
+        zapReceipt.recipient === recipient &&
+        (!goalId || zapReceipt.eventId === goalId)
+      ) {
+        currentAmount += zapReceipt.amount;
+        if (zapReceipt.sender) {
+          zappers.add(zapReceipt.sender);
+        }
+      }
+    });
+
+    return {
+      targetAmount,
+      currentAmount,
+      percentage: targetAmount > 0 ? (currentAmount / targetAmount) * 100 : 0,
+      zapperCount: zappers.size,
+      isCompleted: currentAmount >= targetAmount,
+      zappers: Array.from(zappers),
+    };
+  } catch (error) {
+    console.error("Error calculating zap goal progress:", error);
+    return {
+      targetAmount: 0,
+      currentAmount: 0,
+      percentage: 0,
+      zapperCount: 0,
+      isCompleted: false,
+      zappers: [],
+    };
+  }
+}
+
+/**
+ * Extract zap splits from zap request
+ */
+export function extractZapSplits(zapRequest) {
+  try {
+    return zapRequest.tags
+      .filter((tag) => tag[0] === "zap_split")
+      .map((tag) => ({
+        pubkey: tag[1],
+        percentage: parseInt(tag[2]),
+        relay: tag[3] || null,
+      }));
+  } catch (error) {
+    console.error("Error extracting zap splits:", error);
+    return [];
+  }
+}
+
+/**
+ * Verify preimage for bolt11 invoice (simplified implementation)
+ */
+function verifyPreimage(preimage, bolt11) {
+  // In a real implementation, you would verify the preimage against the bolt11 invoice
+  // This is a simplified check - in production, use a proper Lightning library
+  return preimage && bolt11 && preimage.length > 0;
 }
 
 /**
@@ -580,6 +880,547 @@ export function removeCustomRelay(relayUrl) {
  */
 export function getAllRelays() {
   return [...DEFAULT_RELAYS, ...getCustomRelays()];
+}
+
+/**
+ * Get user's relay list (NIP-65)
+ */
+export async function getRelayList(pubkey, relays = DEFAULT_RELAYS) {
+  try {
+    const pool = getPool();
+    const filter = {
+      kinds: [10002], // Relay list kind
+      authors: [pubkey],
+      limit: 1,
+    };
+
+    const events = await pool.list(relays, [filter]);
+
+    if (events.length === 0) {
+      return { read: [], write: [], both: [] };
+    }
+
+    const relayList = events[0];
+    const read = [];
+    const write = [];
+    const both = [];
+
+    relayList.tags.forEach((tag) => {
+      if (tag[0] === "r") {
+        const relay = tag[1];
+        const permissions = tag[2];
+
+        if (!permissions || permissions === "both") {
+          both.push(relay);
+        } else if (permissions === "read") {
+          read.push(relay);
+        } else if (permissions === "write") {
+          write.push(relay);
+        }
+      }
+    });
+
+    return { read, write, both, event: relayList };
+  } catch (error) {
+    console.error("Error getting relay list:", error);
+    return { read: [], write: [], both: [] };
+  }
+}
+
+/**
+ * Create relay list event (NIP-65)
+ */
+export function createRelayListEvent(readRelays, writeRelays, bothRelays = []) {
+  const tags = [];
+
+  readRelays.forEach((relay) => {
+    tags.push(["r", relay, "read"]);
+  });
+
+  writeRelays.forEach((relay) => {
+    tags.push(["r", relay, "write"]);
+  });
+
+  bothRelays.forEach((relay) => {
+    tags.push(["r", relay, "both"]);
+  });
+
+  return {
+    kind: 10002,
+    content: "",
+    created_at: Math.floor(Date.now() / 1000),
+    tags,
+  };
+}
+
+/**
+ * Update user's relay list
+ */
+export async function updateRelayList(
+  pubkey,
+  privateKey,
+  readRelays = [],
+  writeRelays = [],
+  bothRelays = [],
+  targetRelays = DEFAULT_RELAYS,
+) {
+  try {
+    const event = createRelayListEvent(readRelays, writeRelays, bothRelays);
+
+    const signedEvent = await finalizeEvent(event, privateKey);
+    await publishToPool(targetRelays, signedEvent);
+
+    return signedEvent;
+  } catch (error) {
+    console.error("Error updating relay list:", error);
+    throw error;
+  }
+}
+
+/**
+ * Test relay health and performance
+ */
+export async function testRelayHealth(relayUrl, timeout = 5000) {
+  const startTime = Date.now();
+  const healthMetrics = {
+    url: relayUrl,
+    connected: false,
+    latency: null,
+    error: null,
+    supportedKinds: [],
+    information: null,
+  };
+
+  try {
+    const pool = getPool();
+
+    // Test basic connectivity
+    const testFilter = {
+      kinds: [1],
+      limit: 1,
+    };
+
+    const events = await Promise.race([
+      pool.list([relayUrl], [testFilter]),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Timeout")), timeout),
+      ),
+    ]);
+
+    healthMetrics.connected = true;
+    healthMetrics.latency = Date.now() - startTime;
+
+    // Get relay information (NIP-11)
+    try {
+      const info = await getRelayInfo(relayUrl);
+      healthMetrics.information = info;
+
+      if (info && info.supported_nips) {
+        // Map NIPs to kinds
+        const nipToKind = {
+          1: [1, 2, 3, 4], // Basic protocol
+          9: [5], // Event deletion
+          10: [1, 42], // Text notes/threads
+          11: [], // Relay info (no specific kind)
+          12: [], // Generic tag queries
+          15: [], // Marketplace
+          16: [], // Event treatment
+          18: [6], // Reposts
+          19: [0], // Metadata
+          21: [], // nostr: URIs
+          22: [1111], // Comments
+          23: [30023], // Long-form content
+          25: [7], // Reactions
+          26: [], // Delegated event signing
+          28: [], // Public chat
+          33: [], // Prompts
+          34: [], // Git stuff
+          40: [], // Event expiration
+          42: [22242], // Authentication
+          44: [], // Encrypted payloads
+          50: [], // Search capability
+          51: [30000, 30001], // Lists
+          57: [9734, 9735], // Lightning zaps
+          58: [], // Badges
+          59: [], // Gift wrap
+          65: [10002], // Relay list metadata
+          70: [], // Protected events
+          71: [], // Video events
+          72: [], // Moderated communities
+          75: [9041], // Zap goals
+          84: [], // Highlights
+          89: [], // App handlers
+          90: [], // Data vending machines
+          92: [], // Media attachments
+          94: [], // File metadata
+          96: [], // HTTP file storage
+          98: [], // HTTP auth
+          99: [], // Classified listings
+        };
+
+        healthMetrics.supportedKinds = [
+          ...new Set(
+            Object.entries(nipToKind)
+              .filter(([nip]) => info.supported_nips.includes(parseInt(nip)))
+              .flatMap(([_, kinds]) => kinds),
+          ),
+        ];
+      }
+    } catch (infoError) {
+      console.warn(`Could not get relay info for ${relayUrl}:`, infoError);
+    }
+  } catch (error) {
+    healthMetrics.error = error.message;
+    healthMetrics.latency = Date.now() - startTime;
+  }
+
+  return healthMetrics;
+}
+
+/**
+ * Monitor multiple relays' health
+ */
+export async function monitorRelayHealth(relayUrls, concurrency = 5) {
+  const results = [];
+
+  for (let i = 0; i < relayUrls.length; i += concurrency) {
+    const batch = relayUrls.slice(i, i + concurrency);
+    const batchResults = await Promise.allSettled(
+      batch.map((relay) => testRelayHealth(relay)),
+    );
+
+    batchResults.forEach((result, index) => {
+      if (result.status === "fulfilled") {
+        results.push(result.value);
+      } else {
+        results.push({
+          url: batch[index],
+          connected: false,
+          latency: null,
+          error: result.reason?.message || "Unknown error",
+          supportedKinds: [],
+          information: null,
+        });
+      }
+    });
+  }
+
+  return results;
+}
+
+/**
+ * Get optimal relays for a user based on their relay list and health
+ */
+export async function getOptimalRelays(
+  pubkey,
+  purpose = "both",
+  maxRelays = 5,
+) {
+  try {
+    const relayList = await getRelayList(pubkey);
+
+    let candidateRelays = [];
+
+    if (purpose === "read" || purpose === "both") {
+      candidateRelays.push(...relayList.read, ...relayList.both);
+    }
+
+    if (purpose === "write" || purpose === "both") {
+      candidateRelays.push(...relayList.write, ...relayList.both);
+    }
+
+    // Fallback to default relays if user has no relays
+    if (candidateRelays.length === 0) {
+      candidateRelays = DEFAULT_RELAYS;
+    }
+
+    // Remove duplicates
+    candidateRelays = [...new Set(candidateRelays)];
+
+    // Test health and select best performing relays
+    const healthResults = await monitorRelayHealth(candidateRelays);
+
+    const healthyRelays = healthResults
+      .filter((result) => result.connected)
+      .sort((a, b) => a.latency - b.latency)
+      .slice(0, maxRelays)
+      .map((result) => result.url);
+
+    return healthyRelays.length > 0
+      ? healthyRelays
+      : DEFAULT_RELAYS.slice(0, maxRelays);
+  } catch (error) {
+    console.error("Error getting optimal relays:", error);
+    return DEFAULT_RELAYS.slice(0, maxRelays);
+  }
+}
+
+/**
+ * Discover relays from user's network
+ */
+export async function discoverRelaysFromNetwork(
+  pubkey,
+  maxDepth = 2,
+  maxRelays = 20,
+) {
+  try {
+    const discoveredRelays = new Set(DEFAULT_RELAYS);
+    const visitedUsers = new Set([pubkey]);
+    let currentDepth = 0;
+    let usersToProcess = [pubkey];
+
+    while (currentDepth < maxDepth && usersToProcess.length > 0) {
+      const nextBatchUsers = [];
+
+      for (const userPubkey of usersToProcess) {
+        if (visitedUsers.has(userPubkey)) continue;
+
+        const followList = await getFollowList(userPubkey);
+        const relayList = await getRelayList(userPubkey);
+
+        // Add all relays from this user
+        [...relayList.read, ...relayList.write, ...relayList.both].forEach(
+          (relay) => {
+            discoveredRelays.add(relay);
+          },
+        );
+
+        // Add followed users for next batch (limit to avoid explosion)
+        const followedUsers = followList.slice(0, 10);
+        nextBatchUsers.push(
+          ...followedUsers.filter((u) => !visitedUsers.has(u)),
+        );
+
+        visitedUsers.add(userPubkey);
+      }
+
+      usersToProcess = nextBatchUsers;
+      currentDepth++;
+
+      // Stop if we have enough relays
+      if (discoveredRelays.size >= maxRelays) {
+        break;
+      }
+    }
+
+    return Array.from(discoveredRelays).slice(0, maxRelays);
+  } catch (error) {
+    console.error("Error discovering relays from network:", error);
+    return DEFAULT_RELAYS;
+  }
+}
+
+/**
+ * Score relays based on performance metrics
+ */
+export function scoreRelays(healthResults) {
+  return healthResults
+    .map((result) => {
+      let score = 0;
+
+      // Connection score (max 40 points)
+      if (result.connected) {
+        score += 40;
+
+        // Latency bonus (max 30 points)
+        if (result.latency < 500) score += 30;
+        else if (result.latency < 1000) score += 20;
+        else if (result.latency < 2000) score += 10;
+        else score += 5;
+
+        // Supported kinds bonus (max 20 points)
+        score += Math.min(result.supportedKinds.length * 2, 20);
+
+        // Has relay info bonus (max 10 points)
+        if (result.information) score += 10;
+      }
+
+      return {
+        ...result,
+        score,
+      };
+    })
+    .sort((a, b) => b.score - a.score);
+}
+
+/**
+ * Get relay statistics for analytics dashboard
+ */
+export async function getRelayStatistics(relayUrls = DEFAULT_RELAYS) {
+  try {
+    const healthResults = await monitorRelayHealth(relayUrls);
+    const scoredRelays = scoreRelays(healthResults);
+
+    const stats = {
+      total: scoredRelays.length,
+      connected: scoredRelays.filter((r) => r.connected).length,
+      averageLatency:
+        scoredRelays
+          .filter((r) => r.connected && r.latency)
+          .reduce((sum, r) => sum + r.latency, 0) /
+          scoredRelays.filter((r) => r.connected).length || 0,
+      supportedKinds: [
+        ...new Set(scoredRelays.flatMap((r) => r.supportedKinds)),
+      ],
+      topRelays: scoredRelays.slice(0, 10),
+      failed: scoredRelays.filter((r) => !r.connected),
+    };
+
+    return stats;
+  } catch (error) {
+    console.error("Error getting relay statistics:", error);
+    return {
+      total: 0,
+      connected: 0,
+      averageLatency: 0,
+      supportedKinds: [],
+      topRelays: [],
+      failed: [],
+    };
+  }
+}
+
+/**
+ * Get zap analytics dashboard data
+ */
+export async function getZapAnalytics(pubkey, timeFrame = "7d") {
+  try {
+    const since = getTimeframeSince(timeFrame);
+    const pool = getPool();
+
+    // Query for zap receipts sent to this user
+    const receivedZapsFilter = {
+      kinds: [9735],
+      "#P": [pubkey],
+      since,
+      limit: 1000,
+    };
+
+    // Query for zap receipts sent by this user
+    const sentZapsFilter = {
+      kinds: [9735],
+      authors: [pubkey],
+      since,
+      limit: 1000,
+    };
+
+    // Query for zap goals created by this user
+    const zapGoalsFilter = {
+      kinds: [9041],
+      authors: [pubkey],
+      since,
+      limit: 100,
+    };
+
+    const [receivedZaps, sentZaps, zapGoals] = await Promise.all([
+      pool.list(DEFAULT_RELAYS, [receivedZapsFilter]),
+      pool.list(DEFAULT_RELAYS, [sentZapsFilter]),
+      pool.list(DEFAULT_RELAYS, [zapGoalsFilter]),
+    ]);
+
+    // Process received zaps
+    const receivedAnalytics = processZapEvents(receivedZaps, "received");
+
+    // Process sent zaps
+    const sentAnalytics = processZapEvents(sentZaps, "sent");
+
+    // Process zap goals progress
+    const goalsAnalytics = await Promise.all(
+      zapGoals.map(async (goal) => {
+        const goalZaps = receivedZaps.filter((zap) => {
+          const zapData = verifyZapReceipt(zap);
+          return zapData.isValid && zapData.eventId === goal.id;
+        });
+
+        return calculateZapGoalProgress(goal, goalZaps);
+      }),
+    );
+
+    return {
+      timeFrame,
+      received: receivedAnalytics,
+      sent: sentAnalytics,
+      goals: goalsAnalytics,
+      summary: {
+        totalReceived: receivedAnalytics.totalAmount,
+        totalSent: sentAnalytics.totalAmount,
+        netAmount: receivedAnalytics.totalAmount - sentAnalytics.totalAmount,
+        totalZappers: receivedAnalytics.uniqueSenders,
+        totalGoals: goalsAnalytics.length,
+        completedGoals: goalsAnalytics.filter((g) => g.isCompleted).length,
+      },
+    };
+  } catch (error) {
+    console.error("Error getting zap analytics:", error);
+    return {
+      timeFrame,
+      received: {
+        totalAmount: 0,
+        zapCount: 0,
+        uniqueSenders: 0,
+        dailyTotals: [],
+      },
+      sent: {
+        totalAmount: 0,
+        zapCount: 0,
+        uniqueRecipients: 0,
+        dailyTotals: [],
+      },
+      goals: [],
+      summary: {
+        totalReceived: 0,
+        totalSent: 0,
+        netAmount: 0,
+        totalZappers: 0,
+        totalGoals: 0,
+        completedGoals: 0,
+      },
+    };
+  }
+}
+
+/**
+ * Process zap events for analytics
+ */
+function processZapEvents(zapEvents, type) {
+  const dailyTotals = {};
+  const uniqueSenders = new Set();
+  const uniqueRecipients = new Set();
+  let totalAmount = 0;
+
+  zapEvents.forEach((zapEvent) => {
+    const zapData = verifyZapReceipt(zapEvent);
+    if (!zapData.isValid) return;
+
+    const date = new Date(zapEvent.created_at * 1000)
+      .toISOString()
+      .split("T")[0];
+
+    if (!dailyTotals[date]) {
+      dailyTotals[date] = { amount: 0, count: 0 };
+    }
+
+    dailyTotals[date].amount += zapData.amount;
+    dailyTotals[date].count += 1;
+    totalAmount += zapData.amount;
+
+    if (zapData.sender) {
+      uniqueSenders.add(zapData.sender);
+    }
+    if (zapData.recipient) {
+      uniqueRecipients.add(zapData.recipient);
+    }
+  });
+
+  return {
+    totalAmount,
+    zapCount: zapEvents.length,
+    uniqueSenders: uniqueSenders.size,
+    uniqueRecipients: uniqueRecipients.size,
+    dailyTotals: Object.entries(dailyTotals)
+      .map(([date, data]) => ({ date, ...data }))
+      .sort((a, b) => new Date(a.date) - new Date(b.date)),
+  };
 }
 
 /**
