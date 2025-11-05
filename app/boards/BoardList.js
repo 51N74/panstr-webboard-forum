@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { BOARD_CATEGORIES, getRoomById } from '../data/boardsConfig';
-import { useNostr } from '../context/NostrContext';
-import Link from 'next/link';
+import { useState, useEffect } from "react";
+import { BOARD_CATEGORIES, getRoomById } from "../data/boardsConfig";
+import { useNostr } from "../context/NostrContext";
+import Link from "next/link";
 
 export default function BoardList() {
   const [expandedCategories, setExpandedCategories] = useState({});
@@ -15,38 +15,47 @@ export default function BoardList() {
   useEffect(() => {
     if (BOARD_CATEGORIES.length > 0) {
       setExpandedCategories({
-        [BOARD_CATEGORIES[0].id]: true
+        [BOARD_CATEGORIES[0].id]: true,
       });
     }
   }, []);
 
-  // Fetch thread counts for each room
+  // Fetch thread counts for each room with optimized single query
   useEffect(() => {
     const fetchRoomStats = async () => {
       setLoading(true);
       const stats = {};
 
       try {
-        // Fetch events for each room to get thread counts
-        const allRooms = BOARD_CATEGORIES.flatMap(cat => cat.rooms);
+        // Fetch all forum threads at once instead of per-room queries
+        const allRooms = BOARD_CATEGORIES.flatMap((cat) => cat.rooms);
+        const roomIds = allRooms.map((room) => room.id);
 
-        for (const room of allRooms) {
-          const events = await getEvents({
-            kinds: [30023], // Long-form posts (threads)
-            '#t': ['forum'],
-            '#board': [room.id],
-            limit: 50
-          });
+        const allEvents = await getEvents({
+          kinds: [30023], // Long-form posts (threads)
+          "#t": ["forum"],
+          "#board": roomIds, // Filter for all rooms in one query
+          limit: 200,
+        });
+
+        // Process events to calculate stats per room
+        allRooms.forEach((room) => {
+          const roomEvents = allEvents.filter((event) =>
+            event.tags.some((tag) => tag[0] === "board" && tag[1] === room.id),
+          );
 
           stats[room.id] = {
-            threadCount: events.length,
-            latestActivity: events.length > 0 ? Math.max(...events.map(e => e.created_at)) : null
+            threadCount: roomEvents.length,
+            latestActivity:
+              roomEvents.length > 0
+                ? Math.max(...roomEvents.map((e) => e.created_at))
+                : null,
           };
-        }
+        });
 
         setRoomStats(stats);
       } catch (error) {
-        console.error('Error fetching room stats:', error);
+        console.error("Error fetching room stats:", error);
       } finally {
         setLoading(false);
       }
@@ -56,19 +65,19 @@ export default function BoardList() {
   }, [getEvents]);
 
   const toggleCategory = (categoryId) => {
-    setExpandedCategories(prev => ({
+    setExpandedCategories((prev) => ({
       ...prev,
-      [categoryId]: !prev[categoryId]
+      [categoryId]: !prev[categoryId],
     }));
   };
 
   const formatTimeAgo = (timestamp) => {
-    if (!timestamp) return 'No activity';
+    if (!timestamp) return "No activity";
 
     const now = Math.floor(Date.now() / 1000);
     const diff = now - timestamp;
 
-    if (diff < 60) return 'Just now';
+    if (diff < 60) return "Just now";
     if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
     if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
     if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
@@ -92,8 +101,9 @@ export default function BoardList() {
             🌏 Welcome to Panstr Forum
           </h1>
           <p className="text-lg text-base-content/70 max-w-2xl mx-auto">
-            Discover conversations across technology, lifestyle, and the Nostr ecosystem.
-            Join rooms that match your interests and connect with the community.
+            Discover conversations across technology, lifestyle, and the Nostr
+            ecosystem. Join rooms that match your interests and connect with the
+            community.
           </p>
         </div>
 
@@ -104,11 +114,16 @@ export default function BoardList() {
             const roomCount = category.rooms.length;
 
             return (
-              <div key={category.id} className="bg-base-100 rounded-xl shadow-lg overflow-hidden">
+              <div
+                key={category.id}
+                className="bg-base-100 rounded-xl shadow-lg overflow-hidden"
+              >
                 {/* Category Header */}
                 <div
                   className={`p-6 cursor-pointer transition-all duration-200 hover:bg-base-200 ${
-                    isExpanded ? 'bg-gradient-to-r ' + category.gradient + ' text-white' : 'bg-base-100'
+                    isExpanded
+                      ? "bg-gradient-to-r " + category.gradient + " text-white"
+                      : "bg-base-100"
                   }`}
                   onClick={() => toggleCategory(category.id)}
                 >
@@ -117,19 +132,41 @@ export default function BoardList() {
                       <span className="text-3xl">{category.icon}</span>
                       <div>
                         <h2 className="text-2xl font-bold">{category.name}</h2>
-                        <p className={`text-sm ${isExpanded ? 'text-white/90' : 'text-base-content/70'}`}>
+                        <p
+                          className={`text-sm ${isExpanded ? "text-white/90" : "text-base-content/70"}`}
+                        >
                           {category.description} • {roomCount} rooms
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
                       {isExpanded ? (
-                        <svg className="w-6 h-6 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        <svg
+                          className="w-6 h-6 transform rotate-180"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 9l-7 7-7-7"
+                          />
                         </svg>
                       ) : (
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        <svg
+                          className="w-6 h-6"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 9l-7 7-7-7"
+                          />
                         </svg>
                       )}
                     </div>
@@ -141,7 +178,10 @@ export default function BoardList() {
                   <div className="p-6 pt-0">
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                       {category.rooms.map((room) => {
-                        const stats = roomStats[room.id] || { threadCount: 0, latestActivity: null };
+                        const stats = roomStats[room.id] || {
+                          threadCount: 0,
+                          latestActivity: null,
+                        };
                         const hasNewPosts = isNewRoom(stats.latestActivity);
 
                         return (
@@ -155,7 +195,9 @@ export default function BoardList() {
                                 {room.icon}
                               </span>
                               {hasNewPosts && (
-                                <span className="badge badge-primary badge-sm">New</span>
+                                <span className="badge badge-primary badge-sm">
+                                  New
+                                </span>
                               )}
                             </div>
 
@@ -169,8 +211,18 @@ export default function BoardList() {
 
                             <div className="flex items-center justify-between text-xs text-base-content/60">
                               <div className="flex items-center space-x-1">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                <svg
+                                  className="w-4 h-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                                  />
                                 </svg>
                                 <span>{stats.threadCount} threads</span>
                               </div>
@@ -200,7 +252,9 @@ export default function BoardList() {
         {/* Quick Stats */}
         {!loading && (
           <div className="mt-12 p-6 bg-base-100 rounded-xl shadow-lg">
-            <h3 className="text-xl font-bold mb-4 text-center">Forum Statistics</h3>
+            <h3 className="text-xl font-bold mb-4 text-center">
+              Forum Statistics
+            </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
               <div className="p-4 bg-base-200 rounded-lg">
                 <div className="text-2xl font-bold text-primary">
@@ -210,19 +264,32 @@ export default function BoardList() {
               </div>
               <div className="p-4 bg-base-200 rounded-lg">
                 <div className="text-2xl font-bold text-secondary">
-                  {BOARD_CATEGORIES.reduce((acc, cat) => acc + cat.rooms.length, 0)}
+                  {BOARD_CATEGORIES.reduce(
+                    (acc, cat) => acc + cat.rooms.length,
+                    0,
+                  )}
                 </div>
                 <div className="text-sm text-base-content/70">Rooms</div>
               </div>
               <div className="p-4 bg-base-200 rounded-lg">
                 <div className="text-2xl font-bold text-accent">
-                  {Object.values(roomStats).reduce((acc, stat) => acc + stat.threadCount, 0)}
+                  {Object.values(roomStats).reduce(
+                    (acc, stat) => acc + stat.threadCount,
+                    0,
+                  )}
                 </div>
-                <div className="text-sm text-base-content/70">Total Threads</div>
+                <div className="text-sm text-base-content/70">
+                  Total Threads
+                </div>
               </div>
               <div className="p-4 bg-base-200 rounded-lg">
                 <div className="text-2xl font-bold text-info">
-                  {Object.values(roomStats).filter(stat => stat.latestActivity && isNewRoom(stat.latestActivity)).length}
+                  {
+                    Object.values(roomStats).filter(
+                      (stat) =>
+                        stat.latestActivity && isNewRoom(stat.latestActivity),
+                    ).length
+                  }
                 </div>
                 <div className="text-sm text-base-content/70">Active Rooms</div>
               </div>

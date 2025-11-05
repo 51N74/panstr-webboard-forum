@@ -457,14 +457,8 @@ function Comment({ comment }) {
     return `${Math.floor(diff / 86400000)} วันที่แล้ว`;
   };
 
-  const formatPubkey = (pubkey, type = "short") => {
-    if (type === "short") {
-      return (
-        pubkey.substring(0, 8) + "..." + pubkey.substring(pubkey.length - 4)
-      );
-    }
-    return pubkey;
-  };
+  // Use the imported formatPubkey function from nostrClient.js
+  // Local formatPubkey function removed to avoid conflicts
 
   // Check if user is verified (mock implementation)
   const isVerified = Math.random() > 0.5;

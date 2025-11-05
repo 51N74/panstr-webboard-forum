@@ -8,6 +8,7 @@ import React, {
   useCallback,
 } from "react";
 import { useNostrAuth } from "./NostrAuthContext";
+import { hexToUint8Array } from "../lib/nostrClient";
 import {
   initializePool,
   queryEvents,
@@ -86,13 +87,24 @@ export function NostrProvider({ children }) {
 
       try {
         const pool = await initializePool();
-        let privateKey = localStorage.getItem("nostr_private_key");
+        let privateKeyHex = localStorage.getItem("nostr_private_key");
+        let privateKeyBytes = null;
 
-        const event = await publishToPool(pool, undefined, eventData.content, {
-          kind: eventData.kind || 1,
-          tags: eventData.tags || [],
-          created_at: eventData.created_at || Math.floor(Date.now() / 1000),
-        });
+        if (privateKeyHex) {
+          privateKeyBytes = hexToUint8Array(privateKeyHex);
+        }
+
+        const event = await publishToPool(
+          pool,
+          undefined,
+          privateKeyBytes,
+          eventData.content,
+          {
+            kind: eventData.kind || 1,
+            tags: eventData.tags || [],
+            created_at: eventData.created_at || Math.floor(Date.now() / 1000),
+          },
+        );
 
         return event;
       } catch (err) {
@@ -166,6 +178,12 @@ export function NostrProvider({ children }) {
 
       try {
         const pool = await initializePool();
+        let privateKeyHex = localStorage.getItem("nostr_private_key");
+        let privateKeyBytes = null;
+
+        if (privateKeyHex) {
+          privateKeyBytes = hexToUint8Array(privateKeyHex);
+        }
 
         const replyTags = [
           ["e", parentEvent.id, "", "reply"],
@@ -183,10 +201,16 @@ export function NostrProvider({ children }) {
           }
         }
 
-        const event = await publishToPool(pool, undefined, content.trim(), {
-          kind: 1,
-          tags: replyTags,
-        });
+        const event = await publishToPool(
+          pool,
+          undefined,
+          privateKeyBytes,
+          content.trim(),
+          {
+            kind: 1,
+            tags: replyTags,
+          },
+        );
 
         return event;
       } catch (err) {

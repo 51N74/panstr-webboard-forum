@@ -1,42 +1,25 @@
-"use client";
-
-/*
-  Enhanced nostr-tools client for Panstr project with full NIP support
-
-  Features:
-  - SimplePool with automatic reconnection and ping
-  - NIP-07: Browser Extension Support
-  - NIP-05: Verified Profiles
-  - NIP-10: Thread Parsing
-  - NIP-19: Encoding/Decoding
-  - NIP-57: Gift Wraps (Zaps)
-  - Relay Management
-  - Event Search
-*/
-
+import { SimplePool } from "nostr-tools/pool";
 import {
-  SimplePool,
   generateSecretKey,
   getPublicKey,
   finalizeEvent,
   verifyEvent,
   getEventHash,
-} from "nostr-tools";
+} from "nostr-tools/pure";
+import { bytesToHex, hexToBytes } from "@noble/hashes/utils";
 
-import * as nip19 from "nostr-tools/nip19";
-import * as nip05 from "nostr-tools/nip05";
-import * as nip10 from "nostr-tools/nip10";
-import * as nip46 from "nostr-tools/nip46";
-import * as nip57 from "nostr-tools/nip57";
+// Re-export core functions for use in other modules
+export { getPublicKey, bytesToHex, hexToBytes };
 
+// Default relay URLs for the pool
 const DEFAULT_RELAYS = [
   "wss://relay.damus.io",
-  "wss://nos.lol",
-  "wss://relay.nostr.band",
-  "wss://relay.snort.social",
+  "wss://fenrir-s.notoshi.win",
+  "wss://relayrs.notoshi.win",
   "wss://relay.siamdev.cc",
-  "wss://relay.iris.to",
-  "wss://relay.f7z.io",
+  "wss://nfrelay.app",
+  "wss://nos.lol",
+  "wss://relay.notoshi.win",
 ];
 
 // Global instances
@@ -72,39 +55,33 @@ export function getPool() {
  * Generate cryptographically secure private key
  */
 export function generatePrivateKey() {
-  return generateSecretKey();
+  return generateSecretKey(); // Returns Uint8Array
 }
 
 /**
  * Generate a deterministic thread id from a title.
- *
- * Behavior:
- * - Slugifies the title (lowercase, alphanum + hyphens)
- * - Appends a short, deterministic hash derived from the title so the id
- *   is repeatable for the same title (helpful for replaceable events).
- *
- * Example output: "hello-world-1a2b3c"
  */
-export function generateThreadId(title = "thread") {
-  // Slugify: lowercase, replace non-alnum with hyphen, collapse hyphens, trim
-  const slug = String(title || "thread")
+export function generateThreadId(title) {
+  // Create a slug from title
+  const slug = title
     .toLowerCase()
     .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
+    .replace(/[^\w\s-]/g, "")
+    .replace(/[\s_-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 
-  // Simple deterministic hash (djb2-like) -> base36 short string
-  function simpleHash(str) {
-    let h = 5381;
+  // Simple hash function for title
+  const simpleHash = (str) => {
+    let h = 0;
     for (let i = 0; i < str.length; i++) {
-      h = (h * 33) ^ str.charCodeAt(i);
+      h = (h << 5) - h + str.charCodeAt(i);
+      h = h & h; // Convert to 32-bit integer
     }
-    // Ensure unsigned and convert to base36, take last 6 chars for brevity
-    return (h >>> 0).toString(36).slice(-6);
-  }
+    return Math.abs(h);
+  };
 
-  const hash = simpleHash(slug || "thread");
-  return `${slug || "thread"}-${hash}`;
+  const hash = simpleHash(title).toString(16).padStart(8, "0");
+  return slug ? `${slug}-${hash}` : hash;
 }
 
 /**
@@ -113,11 +90,25 @@ export function generateThreadId(title = "thread") {
 export function privateKeyToHex(sk) {
   if (typeof sk === "string") return sk;
   if (sk instanceof Uint8Array) {
-    return Array.from(sk)
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
+    return bytesToHex(sk);
   }
   return Buffer.from(sk).toString("hex");
+}
+
+/**
+ * Convert hex string to Uint8Array
+ */
+export function hexToUint8Array(hex) {
+  if (hex instanceof Uint8Array) return hex;
+  if (typeof hex !== "string") {
+    throw new Error("hexToUint8Array expects a string or Uint8Array");
+  }
+
+  if (!/^[0-9a-fA-F]{64}$/.test(hex)) {
+    throw new Error("Hex string must be exactly 64 characters");
+  }
+
+  return hexToBytes(hex);
 }
 
 /**
@@ -126,11 +117,11 @@ export function privateKeyToHex(sk) {
 export async function publishToPool(
   pool,
   relayUrls = DEFAULT_RELAYS,
-  privKey,
+  privateKeyBytes, // Expect Uint8Array
   content,
   { kind = 1, tags = [] } = {},
 ) {
-  if (!privKey && !browserExtensionSigner) {
+  if (!privateKeyBytes && !browserExtensionSigner) {
     throw new Error("Private key or browser extension is required");
   }
 
@@ -146,9 +137,9 @@ export async function publishToPool(
   if (browserExtensionSigner) {
     // Use browser extension (NIP-07)
     signedEvent = await browserExtensionSigner.signEvent(eventTemplate);
-  } else if (privKey) {
-    // Use private key
-    signedEvent = finalizeEvent(eventTemplate, privKey);
+  } else if (privateKeyBytes) {
+    // Use private key (expecting Uint8Array)
+    signedEvent = finalizeEvent(eventTemplate, privateKeyBytes);
   } else {
     throw new Error("No signing method available");
   }
@@ -168,56 +159,33 @@ export async function publishToPool(
 /**
  * Subscribe to events using pool
  */
-export function subscribeToPool(
-  pool,
-  relayUrls = DEFAULT_RELAYS,
-  filters,
-  onEvent,
-) {
-  const sub = pool.subscribeMany(relayUrls, [filters], {
-    onevent(event, relayUrl) {
-      try {
-        onEvent(event, relayUrl);
-      } catch (error) {
-        console.error("Error in event handler:", error);
-      }
-    },
-    oneose() {
-      console.log("Subscription ended");
-    },
-  });
-
-  return () => sub.close();
+export function subscribeToPool(pool, relayUrls, filters, callback) {
+  // Use default relays if relayUrls is not provided
+  const relays = relayUrls || DEFAULT_RELAYS;
+  const sub = pool.subscribe(relays, filters, callback);
+  return sub;
 }
 
 /**
- * Query events synchronously
+ * Query events from pool
  */
-export async function queryEvents(pool, relayUrls = DEFAULT_RELAYS, filters) {
-  try {
-    return await pool.querySync(relayUrls, filters);
-  } catch (error) {
-    console.error("Error querying events:", error);
-    return [];
-  }
+export async function queryEvents(pool, relayUrls, filters) {
+  // Use default relays if relayUrls is not provided
+  const relays = relayUrls || DEFAULT_RELAYS;
+  return await pool.querySync(relays, filters);
 }
 
 /**
- * Get single event
+ * Get single event from pool
  */
-export async function getEvent(pool, relayUrls = DEFAULT_RELAYS, filters) {
-  try {
-    return await pool.get(relayUrls, filters);
-  } catch (error) {
-    console.error("Error getting event:", error);
-    return null;
-  }
+export async function getEvent(pool, relayUrls, eventId) {
+  // Use default relays if relayUrls is not provided
+  const relays = relayUrls || DEFAULT_RELAYS;
+  return await pool.get(relays, { ids: [eventId] });
 }
 
-// ==================== NIP-07: Browser Extension Support ====================
-
 /**
- * Initialize NIP-07 browser extension support
+ * Initialize browser extension signer
  */
 export async function initializeBrowserExtension() {
   if (typeof window === "undefined" || !window.nostr) {
@@ -226,8 +194,11 @@ export async function initializeBrowserExtension() {
 
   try {
     const pubkey = await window.nostr.getPublicKey();
-    browserExtensionSigner = window.nostr;
-    return pubkey;
+    if (pubkey) {
+      browserExtensionSigner = window.nostr;
+      return true;
+    }
+    return false;
   } catch (error) {
     console.error("Failed to initialize browser extension:", error);
     return false;
@@ -235,12 +206,11 @@ export async function initializeBrowserExtension() {
 }
 
 /**
- * Get browser extension public key
+ * Get public key from browser extension
  */
 export async function getBrowserExtensionPubkey() {
   if (!browserExtensionSigner) {
-    const success = await initializeBrowserExtension();
-    if (!success) return null;
+    throw new Error("Browser extension not initialized");
   }
   return await browserExtensionSigner.getPublicKey();
 }
@@ -262,98 +232,150 @@ export function isBrowserExtensionAvailable() {
   return typeof window !== "undefined" && !!window.nostr;
 }
 
-// ==================== NIP-19: Encoding/Decoding ====================
+// NIP-19 encoding helpers
+// Import NIP-19 functions from proper module
+import * as nip19 from "nostr-tools/nip19";
+// Import NIP-05 functions from proper module
+import { queryProfile } from "nostr-tools/nip05";
+// Import NIP-10 functions from proper module
+import * as nip10 from "nostr-tools/nip10";
 
-export const nip19Encode = {
-  nsec: nip19.nsecEncode,
-  npub: nip19.npubEncode,
-  nevent: nip19.neventEncode,
-  nprofile: nip19.nprofileEncode,
-  naddr: nip19.naddrEncode,
-  nrelay: nip19.nrelayEncode,
+const nip19Encode = {
+  nsec: (bytes) => {
+    return nip19.nsecEncode(bytes);
+  },
+  npub: (hex) => {
+    return nip19.npubEncode(hex);
+  },
+  nevent: (id, relays = [], author = undefined) => {
+    return nip19.neventEncode({ id, relays, author });
+  },
+  nprofile: (pubkey, relays = []) => {
+    return nip19.nprofileEncode({ pubkey, relays });
+  },
+  naddr: (kind, pubkey, identifier, relays = []) => {
+    return nip19.naddrEncode({ kind, pubkey, identifier, relays });
+  },
+  nrelay: (url) => {
+    return nip19.nrelayEncode(url);
+  },
 };
 
-export const nip19Decode = nip19.decode;
+const nip19Decode = (encoded) => {
+  return nip19.decode(encoded);
+};
+
+// Export nip19 functions for external use
+export { nip19Encode, nip19Decode };
 
 /**
  * Format public key for display
  */
-export function formatPubkey(pubkey, type = "short") {
-  if (!pubkey) return "No pubkey";
+export function formatPubkey(pubkey, format = "npub") {
+  if (!pubkey) return "";
 
-  switch (type) {
-    case "short":
-      return `${pubkey.slice(0, 8)}...${pubkey.slice(-8)}`;
+  switch (format) {
+    case "hex":
+      return pubkey;
     case "npub":
       return nip19Encode.npub(pubkey);
-    case "full":
-      return pubkey;
+    case "short":
+      const npub = nip19Encode.npub(pubkey);
+      return npub.substring(0, 12) + "...";
+    case "medium":
+      const npubMed = nip19Encode.npub(pubkey);
+      return npubMed.substring(0, 20) + "...";
     default:
-      return pubkey.slice(0, 16) + "...";
+      return pubkey;
   }
 }
 
-// ==================== NIP-05: Verified Profiles ====================
-
 /**
- * Verify NIP-05 address and get profile
+ * Verify NIP-05 address
  */
-export async function verifyNIP05(nip05Address) {
+export async function verifyNIP05(address, pubkey) {
   try {
-    const profile = await nip05.queryProfile(nip05Address);
-    return profile;
+    const profile = await queryProfile(address);
+    return profile?.pubkey === pubkey;
   } catch (error) {
-    console.error("NIP-05 verification failed:", error);
-    return null;
+    console.error("Error verifying NIP-05:", error);
+    return false;
   }
 }
 
 /**
- * Get user profile with NIP-05 and fallback
+ * Get user profile metadata
  */
-export async function getUserProfile(pubkey, nip05Address) {
-  let profile = { pubkey };
-
-  // Try NIP-05 first
-  if (nip05Address) {
-    try {
-      const nip05Profile = await verifyNIP05(nip05Address);
-      if (nip05Profile) {
-        profile = { ...profile, ...nip05Profile, nip05Verified: true };
-      }
-    } catch (error) {
-      console.warn("NIP-05 verification failed:", error);
-    }
-  }
-
-  // Try to get kind 0 metadata event as fallback
+export async function getUserProfile(pubkey) {
   try {
     const pool = await initializePool();
-    const metadataEvent = await getEvent(pool, undefined, {
+    const metadataEvent = await pool.get(DEFAULT_RELAYS, {
       kinds: [0],
       authors: [pubkey],
       limit: 1,
     });
 
-    if (metadataEvent) {
-      const metadata = JSON.parse(metadataEvent.content);
-      profile = { ...profile, ...metadata, fromMetadata: true };
+    if (!metadataEvent) {
+      return {
+        name: "Anonymous",
+        picture: `https://robohash.org/${pubkey}.png`,
+        about: "",
+      };
     }
-  } catch (error) {
-    console.warn("Failed to get metadata:", error);
-  }
 
-  return profile;
+    const metadata = JSON.parse(metadataEvent.content);
+    return {
+      name: metadata.name || "Anonymous",
+      display_name: metadata.display_name || metadata.name || "Anonymous",
+      picture: metadata.picture || `https://robohash.org/${pubkey}.png`,
+      about: metadata.about || "",
+      nip05: metadata.nip05 || null,
+      lud16: metadata.lud16 || null,
+    };
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    return {
+      name: "Anonymous",
+      picture: `https://robohash.org/${pubkey}.png`,
+      about: "",
+    };
+  }
 }
 
-// ==================== NIP-10: Thread Parsing ====================
-
+/**
+ * Parse thread from event using NIP-10
+ */
 export function parseThread(event) {
   try {
-    return nip10.parse(event);
+    // Use official NIP-10 parsing
+    const refs = nip10.parse(event);
+
+    return {
+      root: refs.root ? refs.root.id : null,
+      reply: refs.reply ? refs.reply.id : null,
+      mentions: refs.mentions.map((mention) => mention.id),
+      profiles: refs.profiles.map((profile) => profile.pubkey),
+    };
   } catch (error) {
-    console.error("Thread parsing failed:", error);
-    return { root: null, reply: null, mentions: [], profiles: [] };
+    console.warn(
+      "Failed to parse thread with NIP-10, falling back to custom parser:",
+      error,
+    );
+
+    // Fallback to custom implementation
+    const root = event.tags.find((tag) => tag[0] === "e" && tag[3] === "root");
+    const reply = event.tags.find(
+      (tag) => tag[0] === "e" && tag[3] === "reply",
+    );
+    const mentions = event.tags.filter((tag) => tag[0] === "p");
+    const profiles = event.tags.filter((tag) => tag[0] === "profile");
+
+    return {
+      root: root ? root[1] : null,
+      reply: reply ? reply[1] : null,
+      mentions: mentions.map((tag) => tag[1]),
+      profiles: profiles.map((tag) => tag[1]),
+    };
   }
 }
 
@@ -363,98 +385,62 @@ export function parseThread(event) {
 export function createReplyEvent(
   originalEvent,
   replyContent,
-  privKey,
-  additionalTags = [],
+  privateKeyBytes,
+  boardId = null,
 ) {
-  // Build tags following the forum reply requirements while remaining backward-compatible.
-  // Required/desired tags per spec:
-  //  - ["e", "thread-event-id", "", "root"]   -> reference to main thread (root)
-  //  - ["e", "parent-reply-id", "", "reply"]  -> reference to the parent reply (if replying to a reply)
-  //  - ["p", "thread-author-pubkey"]          -> thread author's pubkey
-  //  - ["p", "parent-reply-author-pubkey"]    -> parent reply author pubkey (if applicable)
-  //  - ["board", "board-name"]                -> board tag propagated from original event
-  //  - ["t", "forum-reply"]                   -> marker for forum replies
-  //
-  // We keep older simple e/p tags for compatibility with clients expecting them.
-
+  const thread = parseThread(originalEvent);
   const tags = [];
 
-  // Parse thread context (NIP-10)
-  const thread = parseThread(originalEvent);
-
-  // Root: prefer thread.root.id if available, else originalEvent.id
-  const rootId =
-    thread && thread.root && thread.root.id ? thread.root.id : originalEvent.id;
-  // Add root e-tag (with placeholder relay and role 'root' to be compatible with NIP-10 expectations)
-  tags.push(["e", rootId, "", "root"]);
-
-  // If originalEvent is itself a reply (not the root), mark the parent reply relation
-  // If originalEvent.id !== rootId, it's likely a reply to the thread or another reply.
-  if (originalEvent.id && originalEvent.id !== rootId) {
-    // parent reply reference with role 'reply'
-    tags.push(["e", originalEvent.id, "", "reply"]);
-  } else {
-    // Keep a plain e-tag pointing to the original event to preserve prior behavior
-    tags.push(["e", originalEvent.id]);
+  // Add root event tag
+  if (thread.root) {
+    tags.push(["e", thread.root, "", "root"]);
   }
 
-  // p-tags: add thread author pubkey (from parsed root if available), then parent author
-  try {
-    if (thread && thread.root && thread.root.pubkey) {
-      tags.push(["p", thread.root.pubkey]);
-    } else if (originalEvent.pubkey) {
-      // Fallback: treat originalEvent author as thread author when root not available
-      tags.push(["p", originalEvent.pubkey]);
-    }
-  } catch (e) {
-    // ignore
+  // Add reply to tag
+  tags.push(["e", originalEvent.id, "", "reply"]);
+
+  // Add author tag
+  tags.push(["p", originalEvent.pubkey]);
+
+  // Add board tag if provided
+  if (boardId) {
+    tags.push(["board", boardId]);
   }
 
-  // Parent reply author (the author of the event being replied to)
-  if (originalEvent.pubkey) {
-    tags.push(["p", originalEvent.pubkey]);
-  }
+  // Add forum tags
+  tags.push(["t", "forum"]);
+  tags.push(["t", "webboard"]);
 
-  // Propagate board tag if present on originalEvent
-  const boardTag =
-    originalEvent.tags && originalEvent.tags.find((t) => t[0] === "board");
-  if (boardTag && boardTag[1]) {
-    tags.push(["board", boardTag[1]]);
-  }
-
-  // Marker to identify forum reply
-  tags.push(["t", "forum-reply"]);
-
-  // Preserve any additional tags provided by caller (e.g., category, custom markers)
-  if (Array.isArray(additionalTags) && additionalTags.length > 0) {
-    tags.push(...additionalTags);
-  }
-
-  // Return the reply event object (unsigned). Publishing/signing is handled by publishToPool.
-  return {
-    kind: 1,
+  const eventTemplate = {
+    kind: 1, // Regular text note
     content: replyContent,
-    tags,
     created_at: Math.floor(Date.now() / 1000),
+    tags,
   };
-}
 
-// ==================== NIP-57: Gift Wraps (Zaps) ====================
+  return finalizeEvent(eventTemplate, privateKeyBytes);
+}
 
 /**
  * Create zap request
  */
-export function createZapRequest(pubkey, eventId, amount, message = "") {
+export function createZapRequest(
+  amount,
+  recipient,
+  eventId,
+  relays,
+  message = "",
+) {
   const zapRequest = {
     kind: 9734,
     content: message,
     created_at: Math.floor(Date.now() / 1000),
     tags: [
-      ["p", pubkey],
-      ["e", eventId],
+      ["p", recipient],
       ["amount", amount.toString()],
-      ["relays", ...DEFAULT_RELAYS.slice(0, 3)],
+      ["relays", ...relays],
     ],
+    ...(eventId ? [["e", eventId]] : []),
   };
 
   return zapRequest;
@@ -465,23 +451,28 @@ export function createZapRequest(pubkey, eventId, amount, message = "") {
  */
 export function verifyZapReceipt(zapEvent) {
   try {
-    if (zapEvent.kind !== 9735) return false;
-
     const bolt11 = zapEvent.tags.find((tag) => tag[0] === "bolt11")?.[1];
     const description = zapEvent.tags.find(
       (tag) => tag[0] === "description",
     )?.[1];
 
+    if (!bolt11 || !description) return false;
+
+    // In a real implementation, you would verify the bolt11 invoice
+    // This is a simplified check
+    const isValid = verifyEvent(zapEvent);
+    const amount = extractAmountFromBolt11(bolt11);
+    const sender = zapEvent.tags.find((tag) => tag[0] === "p")?.[1];
+    const recipient = zapEvent.tags.find((tag) => tag[0] === "P")?.[1];
+
     return {
-      isValid: true,
-      bolt11,
-      description,
-      amount: extractAmountFromBolt11(bolt11),
-      sender: zapEvent.pubkey,
-      recipient: zapEvent.tags.find((tag) => tag[0] === "p")?.[1],
+      isValid,
+      amount,
+      sender,
+      recipient,
     };
   } catch (error) {
-    console.error("Zap verification failed:", error);
+    console.error("Error verifying zap receipt:", error);
     return { isValid: false };
   }
 }
@@ -489,48 +480,56 @@ export function verifyZapReceipt(zapEvent) {
 /**
  * Extract amount from bolt11 invoice
  */
-function extractAmountFromBolt11(bolt11) {
-  if (!bolt11) return 0;
-
+export function extractAmountFromBolt11(bolt11) {
   try {
-    // Simple extraction - in production you'd want proper bolt11 parsing
-    const match = bolt11.match(/lnbc(\d+)/);
+    const match = bolt11.match(/lnbc(\d+)n1/);
     return match ? parseInt(match[1]) : 0;
   } catch (error) {
+    console.error("Error extracting amount from bolt11:", error);
     return 0;
   }
 }
 
-// ==================== Relay Management ====================
-
 /**
- * Test relay connectivity
+ * Test relay connection
  */
 export async function testRelay(relayUrl) {
   try {
     const pool = await initializePool([relayUrl]);
-    const testEvent = await getEvent(pool, [relayUrl], {
+    const testEvent = {
       kinds: [1],
       limit: 1,
-    });
-    return { connected: true, relay: relayUrl };
+    };
+
+    const events = await pool.querySync([relayUrl], testEvent);
+    const connected = events.length >= 0; // If we get any response, relay is working
+
+    return {
+      relay: relayUrl,
+      connected,
+      error: null,
+    };
   } catch (error) {
-    return { connected: false, relay: relayUrl, error: error.message };
+    return {
+      relay: relayUrl,
+      connected: false,
+      error: error.message,
+    };
   }
 }
 
 /**
- * Get relay information (NIP-11)
+ * Get relay info
  */
 export async function getRelayInfo(relayUrl) {
   try {
     const response = await fetch(
-      `${relayUrl.replace("wss://", "https://").replace("ws://", "http://")}/.well-known/nostr.json`,
+      `${relayUrl.replace("wss://", "https://")}/info`,
     );
     const info = await response.json();
     return info;
   } catch (error) {
-    console.error("Failed to get relay info:", error);
+    console.error("Error getting relay info:", error);
     return null;
   }
 }
@@ -539,39 +538,32 @@ export async function getRelayInfo(relayUrl) {
  * Add custom relay
  */
 export function addCustomRelay(relayUrl) {
-  if (!relayUrl) return false;
-
   try {
-    // Validate URL format
     const url = new URL(relayUrl);
-    if (!["ws:", "wss:"].includes(url.protocol)) {
-      throw new Error("Invalid relay protocol");
+    if (url.protocol !== "wss:" && url.protocol !== "ws:") {
+      throw new Error("Relay URL must use ws:// or wss:// protocol");
     }
 
-    // Store in localStorage for persistence
     const customRelays = getCustomRelays();
     if (!customRelays.includes(relayUrl)) {
       customRelays.push(relayUrl);
-      localStorage.setItem("customRelays", JSON.stringify(customRelays));
+      localStorage.setItem("custom_relays", JSON.stringify(customRelays));
     }
 
     return true;
   } catch (error) {
-    console.error("Failed to add custom relay:", error);
+    console.error("Error adding custom relay:", error);
     return false;
   }
 }
 
 /**
- * Get custom relays from localStorage
+ * Get custom relays
  */
 export function getCustomRelays() {
-  try {
-    const stored = localStorage.getItem("customRelays");
-    return stored ? JSON.parse(stored) : [];
-  } catch (error) {
-    return [];
-  }
+  if (typeof window === "undefined") return [];
+  const stored = localStorage.getItem("custom_relays");
+  return stored ? JSON.parse(stored) : [];
 }
 
 /**
@@ -579,82 +571,59 @@ export function getCustomRelays() {
  */
 export function removeCustomRelay(relayUrl) {
   const customRelays = getCustomRelays();
-  const updated = customRelays.filter((url) => url !== relayUrl);
-  localStorage.setItem("customRelays", JSON.stringify(updated));
-  return updated;
+  const updated = customRelays.filter((relay) => relay !== relayUrl);
+  localStorage.setItem("custom_relays", JSON.stringify(updated));
 }
 
 /**
- * Get all available relays
+ * Get all relays (default + custom)
  */
 export function getAllRelays() {
   return [...DEFAULT_RELAYS, ...getCustomRelays()];
 }
 
-// ==================== Event Search ====================
-
 /**
- * Search events by content
+ * Search events
  */
-export async function searchEvents(searchQuery, options = {}) {
-  const {
-    kinds = [1],
-    limit = 50,
-    authors = [],
-    since = null,
-    until = null,
-  } = options;
-
+export async function searchEvents(query) {
   try {
     const pool = await initializePool();
     const filters = {
-      kinds,
-      limit,
-      search: searchQuery,
+      search: query,
+      kinds: [1, 30023],
+      limit: 50,
     };
 
-    if (authors.length > 0) filters.authors = authors;
-    if (since) filters.since = since;
-    if (until) filters.until = until;
-
-    return await queryEvents(pool, undefined, filters);
+    const events = await pool.querySync(DEFAULT_RELAYS, filters);
+    return events;
   } catch (error) {
-    console.error("Search failed:", error);
+    console.error("Error searching events:", error);
     return [];
   }
 }
 
 /**
- * Search user profiles
+ * Search users
  */
-export async function searchUsers(searchQuery, limit = 20) {
+export async function searchUsers(query) {
   try {
     const pool = await initializePool();
-    const events = await queryEvents(pool, undefined, {
+    const events = await pool.querySync(DEFAULT_RELAYS, {
       kinds: [0],
-      search: searchQuery,
-      limit,
+      search: query,
+      limit: 20,
     });
 
-    // Extract profiles from metadata events
-    return events.map((event) => {
-      try {
-        const metadata = JSON.parse(event.content);
-        return {
-          pubkey: event.pubkey,
-          ...metadata,
-          created_at: event.created_at,
-        };
-      } catch (error) {
-        return {
-          pubkey: event.pubkey,
-          name: "Unknown",
-          created_at: event.created_at,
-        };
-      }
-    });
+    const users = events.map((metadata) => ({
+      pubkey: metadata.pubkey,
+      name: JSON.parse(metadata.content).name || "Anonymous",
+      picture: JSON.parse(metadata.content).picture || "",
+      created_at: metadata.created_at,
+    }));
+
+    return users;
   } catch (error) {
-    console.error("User search failed:", error);
+    console.error("Error searching users:", error);
     return [];
   }
 }
@@ -662,18 +631,20 @@ export async function searchUsers(searchQuery, limit = 20) {
 /**
  * Get trending events
  */
-export async function getTrendingEvents(timeframe = "day", limit = 20) {
-  const since = getTimeframeSince(timeframe);
-
+export async function getTrendingEvents(timeframe = "day") {
   try {
+    const since = getTimeframeSince(timeframe);
     const pool = await initializePool();
-    return await queryEvents(pool, undefined, {
-      kinds: [1],
+
+    const events = await pool.querySync(DEFAULT_RELAYS, {
+      kinds: [1, 30023],
       since,
-      limit,
+      limit: 100,
     });
+
+    return events;
   } catch (error) {
-    console.error("Failed to get trending events:", error);
+    console.error("Error getting trending events:", error);
     return [];
   }
 }
@@ -683,70 +654,67 @@ export async function getTrendingEvents(timeframe = "day", limit = 20) {
  */
 function getTimeframeSince(timeframe) {
   const now = Math.floor(Date.now() / 1000);
-  const day = 86400; // 24 hours in seconds
-  const week = day * 7;
-  const month = day * 30;
-
   switch (timeframe) {
+    case "hour":
+      return now - 3600;
     case "day":
-      return now - day;
+      return now - 86400;
     case "week":
-      return now - week;
+      return now - 604800;
     case "month":
-      return now - month;
+      return now - 2592000;
     default:
-      return now - day;
+      return now - 86400;
   }
 }
 
-// ==================== Utility Functions ====================
-
 /**
- * Close all connections
+ * Close pool connections
  */
 export function closePool() {
   if (globalPool) {
-    globalPool.close([]);
+    globalPool.close(DEFAULT_RELAYS);
     globalPool = null;
   }
 }
 
 /**
- * Get user kind 3 follow list
+ * Get follow list
  */
 export async function getFollowList(pubkey) {
   try {
     const pool = await initializePool();
-    const followEvent = await getEvent(pool, undefined, {
+    const followEvent = await pool.get(DEFAULT_RELAYS, {
       kinds: [3],
       authors: [pubkey],
       limit: 1,
     });
 
-    if (followEvent) {
-      return followEvent.tags
-        .filter((tag) => tag[0] === "p")
-        .map((tag) => tag[1]);
-    }
-    return [];
+    if (!followEvent) return [];
+
+    const pubkeys = followEvent.tags
+      .filter((tag) => tag[0] === "p")
+      .map((tag) => tag[1]);
+
+    return pubkeys;
   } catch (error) {
-    console.error("Failed to get follow list:", error);
+    console.error("Error getting follow list:", error);
     return [];
   }
 }
 
 /**
- * Create metadata event (kind 0)
+ * Create metadata event
  */
-export function createMetadataEvent(metadata, privKey) {
-  const content = JSON.stringify(metadata);
-
-  return {
+export function createMetadataEvent(metadata, privateKeyBytes) {
+  const eventTemplate = {
     kind: 0,
-    content,
-    tags: [],
+    content: JSON.stringify(metadata),
     created_at: Math.floor(Date.now() / 1000),
+    tags: [],
   };
+
+  return finalizeEvent(eventTemplate, privateKeyBytes);
 }
 
 /**
@@ -768,7 +736,7 @@ export function createMetadataEvent(metadata, privKey) {
  * Parameters:
  *  - pool: SimplePool instance (from initializePool)
  *  - relayUrls: array of relay URLs (optional)
- *  - privKey: private key string (hex) OR rely on browser extension signer already initialized
+ *  - privateKeyBytes: Uint8Array private key (required if no browser extension)
  *  - opts: object with fields:
  *      - threadId (required) : string
  *      - title (required-ish) : string
@@ -777,12 +745,12 @@ export function createMetadataEvent(metadata, privKey) {
  *      - published_at : unix timestamp (seconds) - defaults to now
  *      - summary, sticky, locked, category : optional metadata
  *
- * Returns the signed and published event (as returned by publishToPool implementation).
+ * Returns the signed and published event.
  */
 export async function publishThread(
   pool,
   relayUrls = DEFAULT_RELAYS,
-  privKey,
+  privateKeyBytes,
   opts = {},
 ) {
   const {
@@ -819,14 +787,11 @@ export async function publishThread(
     tags.push(["locked", locked ? "true" : "false"]);
   if (category) tags.push(["category", category]);
 
-  // Use the existing publish helper which handles signing (browser extension or local key)
-  const event = await publishToPool(pool, relayUrls, privKey, content, {
+  // Use the existing publish helper which handles signing (browser extension or private key)
+  const event = await publishToPool(pool, relayUrls, privateKeyBytes, content, {
     kind: 30023,
     tags,
   });
 
   return event;
 }
-
-// Re-exports for convenience
-export { getPublicKey, verifyEvent, getEventHash };
