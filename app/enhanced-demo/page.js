@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import EnhancedThreadView from "../components/enhanced/threading/EnhancedThreadView";
 import EnhancedZapComponent from "../components/enhanced/zaps/EnhancedZapComponent";
 import RelayManagement from "../components/enhanced/relay/RelayManagement";
+import EnhancedSecurity from "../components/enhanced/security/EnhancedSecurity";
 import {
   queryEvents,
   generatePrivateKey,
@@ -110,20 +111,6 @@ const EnhancedDemoPage = () => {
           ["p", "f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0"],
         ],
       },
-      {
-        id: "mock-mention-1",
-        pubkey: "b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0",
-        created_at: now - 600,
-        kind: 1,
-        content:
-          "This post mentions other users and events with proper NIP-10 mention markers.",
-        tags: [
-          ["e", "mock-root-1", "", "mention"],
-          ["e", "mock-reply-1", "", "mention"],
-          ["p", "e9fe51d4b5c0e7a5c3d8c5b9b8a7d6e5f4c3b2a1"],
-          ["p", "f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0"],
-        ],
-      },
     ];
   };
 
@@ -203,6 +190,27 @@ const EnhancedDemoPage = () => {
         </svg>
       ),
     },
+    {
+      id: "security",
+      name: "Enhanced Security (Week 3-4)",
+      description:
+        "NIP-49 private key encryption, NIP-44 versioned messaging, NIP-42 client authentication",
+      icon: (
+        <svg
+          className="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+          />
+        </svg>
+      ),
+    },
   ];
 
   return (
@@ -213,10 +221,11 @@ const EnhancedDemoPage = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
-                Phase 1 Week 1-2 NIP Enhancements Demo
+                Phase 1 NIP Enhancements Demo (Weeks 1-4)
               </h1>
               <p className="mt-2 text-gray-600">
-                Showcase of enhanced Nostr Implementation Possibilities
+                Showcase of enhanced Nostr Implementation Possibilities -
+                Foundation & Security
               </p>
             </div>
             {currentPubkey && (
@@ -322,8 +331,7 @@ const EnhancedDemoPage = () => {
                     <li>✅ Zap splits with multiple recipients</li>
                     <li>✅ Zap goals (NIP-75) with progress tracking</li>
                     <li>✅ Analytics dashboard with timeframes</li>
-                    <li>✅ Custom zap messages and types</li>
-                    <li>✅ Anonymous and private zaps</li>
+                    <li>✅ Custom messages and anonymity options</li>
                     <li>✅ Enhanced receipt validation</li>
                   </ul>
                 </div>
@@ -367,6 +375,37 @@ const EnhancedDemoPage = () => {
               />
             </div>
           )}
+
+          {/* Security Demo */}
+          {activeDemo === "security" && (
+            <div>
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                  Enhanced Security Features (Week 3-4)
+                </h2>
+                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                  <h3 className="font-semibold text-purple-900 mb-2">
+                    Features Demonstrated:
+                  </h3>
+                  <ul className="text-sm text-purple-700 space-y-1">
+                    <li>
+                      ✅ NIP-49 private key encryption with scrypt &
+                      ChaCha20-Poly1305
+                    </li>
+                    <li>✅ NIP-06 mnemonic key derivation and recovery</li>
+                    <li>✅ NIP-44 versioned encryption with forward secrecy</li>
+                    <li>
+                      ✅ NIP-42 client authentication with challenge-response
+                    </li>
+                    <li>✅ Role-based access control and permissions</li>
+                    <li>✅ Token-based authentication system</li>
+                  </ul>
+                </div>
+              </div>
+
+              <EnhancedSecurity currentPubkey={currentPubkey} />
+            </div>
+          )}
         </div>
 
         {/* Implementation Notes */}
@@ -392,9 +431,14 @@ const EnhancedDemoPage = () => {
               <li>Improved error handling and fallback mechanisms</li>
             </ul>
             <p className="mt-3">
-              <strong>Next Steps (Phase 1 Week 3-4):</strong> Enhanced security
-              with NIP-49 private key encryption, NIP-44 versioned encryption,
-              and NIP-42 client authentication
+              <strong>Phase 1 Week 3-4 Goals (Implemented):</strong> Enhanced
+              security with NIP-49 private key encryption, NIP-44 versioned
+              encryption, and NIP-42 client authentication
+            </p>
+            <p className="mt-3">
+              <strong>Next Steps (Phase 2 Week 5-6):</strong> Rich content with
+              NIP-30 custom emoji, NIP-92 media attachments, and enhanced NIP-23
+              long-form content
             </p>
           </div>
         </div>

@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import RoomPage from '../../rooms/RoomPage';
-import { useParams } from 'next/navigation';
+import RoomPage from "../../rooms/RoomPage";
+import { useParams } from "next/navigation";
 
 export default function RoomPageRoute() {
   const params = useParams();

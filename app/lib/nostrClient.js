@@ -6,9 +6,548 @@ import {
   verifyEvent,
   getEventHash,
 } from "nostr-tools/pure";
-import { bytesToHex, hexToBytes } from "@noble/hashes/utils";
+// Simple utility functions to avoid noble/hashes import issues
+function bytesToHex(bytes) {
+  return Array.from(bytes)
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+function hexToBytes(hex) {
+  return new Uint8Array(hex.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)));
+}
+// Note: For production, install: @noble/hashes @noble/ciphers @scure/bip39
+// Basic implementations for demo purposes
+import * as nip04 from "nostr-tools/nip04";
+import * as nip44 from "nostr-tools/nip44";
+
+// Simple random bytes function
+function getRandomBytes(length) {
+  const bytes = new Uint8Array(length);
+  for (let i = 0; i < length; i++) {
+    bytes[i] = Math.floor(Math.random() * 256);
+  }
+  return bytes;
+}
+// Note: NIP-44 encryption will use nip44.encrypt/decrypt from nostr-tools
 
 // Re-export core functions for use in other modules
+/**
+ * NIP-49: Private Key Encryption (Simplified Demo Version)
+ */
+export async function encryptPrivateKey(privateKeyHex, password, options = {}) {
+  try {
+    const { name = "" } = options;
+
+    // Simple XOR encryption for demo (NOT SECURE - use proper crypto in production)
+    const passwordBytes = new TextEncoder().encode(
+      password.padEnd(32, "0").slice(0, 32),
+    );
+    const keyBytes = hexToBytes(privateKeyHex);
+    const encrypted = keyBytes.map(
+      (byte, i) => byte ^ passwordBytes[i % passwordBytes.length],
+    );
+
+    const encryptedKeyData = {
+      version: "2",
+      key: bytesToHex(new Uint8Array(encrypted)),
+      name: name || "",
+      url: "",
+      method: "xor", // Demo only
+      tags: [],
+      timestamp: Math.floor(Date.now() / 1000),
+    };
+
+    const payload = JSON.stringify(encryptedKeyData);
+    const encoded = Buffer.from(payload).toString("base64");
+
+    return {
+      encrypted: bytesToHex(new Uint8Array(encrypted)),
+      encoded,
+      metadata: {
+        version: "2",
+        method: "xor",
+        timestamp: encryptedKeyData.timestamp,
+      },
+    };
+  } catch (error) {
+    console.error("Error encrypting private key:", error);
+    throw new Error("Failed to encrypt private key");
+  }
+}
+
+/**
+ * NIP-49: Decrypt private key (Simplified Demo Version)
+ */
+export async function decryptPrivateKey(encryptedData, password) {
+  try {
+    let encryptedKeyData;
+
+    if (typeof encryptedData === "string") {
+      const decoded = Buffer.from(encryptedData, "base64").toString("utf8");
+      encryptedKeyData = JSON.parse(decoded);
+    } else {
+      encryptedKeyData = encryptedData;
+    }
+
+    const { key } = encryptedKeyData;
+
+    // Simple XOR decryption for demo (NOT SECURE - use proper crypto in production)
+    const passwordBytes = new TextEncoder().encode(
+      password.padEnd(32, "0").slice(0, 32),
+    );
+    const encrypted = hexToBytes(key);
+    const decrypted = encrypted.map(
+      (byte, i) => byte ^ passwordBytes[i % passwordBytes.length],
+    );
+
+    return bytesToHex(new Uint8Array(decrypted));
+  } catch (error) {
+    console.error("Error decrypting private key:", error);
+    throw new Error(
+      "Failed to decrypt private key - invalid password or corrupted data",
+    );
+  }
+}
+
+/**
+ * NIP-06: Generate key from mnemonic (Demo Version)
+ */
+export function generateKeysFromMnemonic(mnemonic, passphrase = "") {
+  try {
+    // Simple validation for demo
+    if (!mnemonic || mnemonic.split(" ").length < 12) {
+      throw new Error("Invalid mnemonic phrase - must be at least 12 words");
+    }
+
+    // Generate deterministic seed from mnemonic (NOT SECURE - use proper BIP39 in production)
+    const seed = new TextEncoder().encode(mnemonic + (passphrase || ""));
+    const privateKey = generateSecretKey(seed);
+    const publicKey = getPublicKey(privateKey);
+
+    return {
+      mnemonic,
+      seed: bytesToHex(seed),
+      privateKeyHex: bytesToHex(privateKey),
+      publicKeyHex: bytesToHex(publicKey),
+    };
+  } catch (error) {
+    console.error("Error generating keys from mnemonic:", error);
+    throw new Error("Failed to generate keys from mnemonic");
+  }
+}
+
+/**
+ * Generate new mnemonic phrase (Demo Version)
+ */
+export function generateMnemonic(strength = 128) {
+  try {
+    // Simple 12-word mnemonic generator for demo
+    const words = [
+      "abandon",
+      "ability",
+      "able",
+      "about",
+      "above",
+      "absent",
+      "absorb",
+      "abstract",
+      "absurd",
+      "abuse",
+      "access",
+      "accident",
+      "account",
+      "accuse",
+      "achieve",
+      "acid",
+      "acoustic",
+      "acquire",
+      "across",
+      "act",
+      "action",
+      "actor",
+      "actress",
+      "actual",
+      "adapt",
+      "add",
+      "addict",
+      "address",
+      "adjust",
+      "admit",
+      "adult",
+      "advance",
+      "advice",
+      "aerobic",
+      "affair",
+      "afford",
+      "afraid",
+      "again",
+      "age",
+      "agent",
+      "agree",
+      "ahead",
+      "aim",
+      "air",
+      "airport",
+      "aisle",
+      "alarm",
+      "album",
+    ];
+
+    const wordCount = 12;
+    const mnemonic = [];
+    for (let i = 0; i < wordCount; i++) {
+      const index = Math.floor(Math.random() * words.length);
+      mnemonic.push(words[index]);
+    }
+
+    return mnemonic.join(" ");
+  } catch (error) {
+    console.error("Error generating mnemonic:", error);
+    throw new Error("Failed to generate mnemonic phrase");
+  }
+}
+
+/**
+ * Secure key storage with encryption
+ */
+export async function storeEncryptedKey(privateKeyHex, password, name = "") {
+  try {
+    const encrypted = await encryptPrivateKey(privateKeyHex, password, {
+      name,
+    });
+    const storageKey = `encrypted_key_${encrypted.metadata.timestamp}`;
+
+    // Store in localStorage (in production, use secure storage)
+    localStorage.setItem(storageKey, encrypted.encoded);
+
+    // Cache for current session
+    encryptedKeyCache.set(storageKey, encrypted);
+
+    return storageKey;
+  } catch (error) {
+    console.error("Error storing encrypted key:", error);
+    throw error;
+  }
+}
+
+/**
+ * Retrieve and decrypt stored key
+ */
+export async function retrieveEncryptedKey(storageKey, password) {
+  try {
+    // Check cache first
+    if (encryptedKeyCache.has(storageKey)) {
+      const cached = encryptedKeyCache.get(storageKey);
+      return await decryptPrivateKey(cached.encrypted, password);
+    }
+
+    // Retrieve from storage
+    const stored = localStorage.getItem(storageKey);
+    if (!stored) {
+      throw new Error("Encrypted key not found");
+    }
+
+    return await decryptPrivateKey(stored, password);
+  } catch (error) {
+    console.error("Error retrieving encrypted key:", error);
+    throw error;
+  }
+}
+
+/**
+ * List all stored encrypted keys
+ */
+export function listStoredKeys() {
+  const keys = [];
+
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key.startsWith("encrypted_key_")) {
+      try {
+        const stored = localStorage.getItem(key);
+        const decoded = Buffer.from(stored, "base64").toString("utf8");
+        const data = JSON.parse(decoded);
+
+        keys.push({
+          storageKey: key,
+          name: data.name || `Key ${keys.length + 1}`,
+          timestamp: data.timestamp,
+          version: data.version,
+        });
+      } catch (error) {
+        console.warn(`Invalid encrypted key found: ${key}`, error);
+      }
+    }
+  }
+
+  return keys.sort((a, b) => b.timestamp - a.timestamp);
+}
+
+/**
+ * Delete stored encrypted key
+ */
+export function deleteStoredKey(storageKey) {
+  try {
+    localStorage.removeItem(storageKey);
+    encryptedKeyCache.delete(storageKey);
+    return true;
+  } catch (error) {
+    console.error("Error deleting stored key:", error);
+    return false;
+  }
+}
+
+/**
+ * NIP-44: Versioned encrypted direct messages (using nostr-tools built-in)
+ */
+export async function encryptMessageNIP44(
+  message,
+  recipientPubkey,
+  senderPrivateKey,
+) {
+  try {
+    // Use NIP-44 for encryption
+    const encrypted = await nip44.encrypt(
+      message,
+      recipientPubkey,
+      senderPrivateKey,
+    );
+
+    return {
+      encrypted,
+      version: "nip44",
+      timestamp: Math.floor(Date.now() / 1000),
+    };
+  } catch (error) {
+    console.error("Error encrypting message with NIP-44:", error);
+    throw new Error("Failed to encrypt message");
+  }
+}
+
+/**
+ * NIP-44: Decrypt message (using nostr-tools built-in)
+ */
+export async function decryptMessageNIP44(
+  encryptedMessage,
+  senderPubkey,
+  recipientPrivateKey,
+) {
+  try {
+    const decrypted = await nip44.decrypt(
+      encryptedMessage,
+      senderPubkey,
+      recipientPrivateKey,
+    );
+
+    return {
+      decrypted,
+      timestamp: Math.floor(Date.now() / 1000),
+    };
+  } catch (error) {
+    console.error("Error decrypting message with NIP-44:", error);
+    throw new Error("Failed to decrypt message");
+  }
+}
+
+/**
+ * Create NIP-42 authentication event
+ */
+export function createAuthEvent(
+  relayUrl,
+  challenge,
+  privateKey,
+  additionalTags = [],
+) {
+  try {
+    const authEvent = {
+      kind: 22242, // NIP-42 authentication kind
+      created_at: Math.floor(Date.now() / 1000),
+      content: "",
+      tags: [["relay", relayUrl], ["challenge", challenge], ...additionalTags],
+    };
+
+    const signedEvent = finalizeEvent(authEvent, privateKey);
+    return signedEvent;
+  } catch (error) {
+    console.error("Error creating auth event:", error);
+    throw new Error("Failed to create authentication event");
+  }
+}
+
+/**
+ * Authenticate with relay using NIP-42
+ */
+export async function authenticateWithRelay(
+  relayUrl,
+  privateKey,
+  additionalTags = [],
+) {
+  try {
+    const pool = getPool();
+    const relay = pool.relays.get(relayUrl);
+
+    if (!relay) {
+      throw new Error("Relay not connected");
+    }
+
+    // Get AUTH challenge from relay
+    const challenge = relay.auth?.challenge;
+    if (!challenge) {
+      throw new Error("No authentication challenge available");
+    }
+
+    // Create and send AUTH event
+    const authEvent = createAuthEvent(
+      relayUrl,
+      challenge,
+      privateKey,
+      additionalTags,
+    );
+
+    await new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error("Authentication timeout"));
+      }, 5000);
+
+      relay.auth(authEvent, () => {
+        clearTimeout(timeout);
+        resolve();
+      });
+    });
+
+    return {
+      success: true,
+      relayUrl,
+      timestamp: Math.floor(Date.now() / 1000),
+    };
+  } catch (error) {
+    console.error("Error authenticating with relay:", error);
+    return {
+      success: false,
+      error: error.message,
+      relayUrl,
+    };
+  }
+}
+
+/**
+ * Role-based access control for NIP-42
+ */
+export const ACCESS_ROLES = {
+  PUBLIC: "public",
+  SUBSCRIBER: "subscriber",
+  PREMIUM: "premium",
+  ADMIN: "admin",
+};
+
+export const ROLE_PERMISSIONS = {
+  [ACCESS_ROLES.PUBLIC]: {
+    canRead: true,
+    canWrite: false,
+    canCreateEvents: false,
+    maxRateLimit: 10,
+  },
+  [ACCESS_ROLES.SUBSCRIBER]: {
+    canRead: true,
+    canWrite: true,
+    canCreateEvents: true,
+    maxRateLimit: 100,
+  },
+  [ACCESS_ROLES.PREMIUM]: {
+    canRead: true,
+    canWrite: true,
+    canCreateEvents: true,
+    maxRateLimit: 1000,
+  },
+  [ACCESS_ROLES.ADMIN]: {
+    canRead: true,
+    canWrite: true,
+    canCreateEvents: true,
+    maxRateLimit: 10000,
+    canModerate: true,
+  },
+};
+
+/**
+ * Check user permissions based on role
+ */
+export function checkPermission(role, permission) {
+  const rolePerms = ROLE_PERMISSIONS[role];
+  if (!rolePerms) {
+    return false;
+  }
+
+  return rolePerms[permission] || false;
+}
+
+/**
+ * Create token-based authentication payload
+ */
+export function createAuthToken(payload, privateKey, expiresIn = 3600) {
+  try {
+    const now = Math.floor(Date.now() / 1000);
+    const tokenData = {
+      ...payload,
+      iat: now,
+      exp: now + expiresIn,
+      jti: bytesToHex(randomBytes(16)),
+    };
+
+    const tokenEvent = {
+      kind: 27235, // Custom token event kind
+      created_at: now,
+      content: JSON.stringify(tokenData),
+      tags: [],
+    };
+
+    const signedEvent = finalizeEvent(tokenEvent, privateKey);
+    return bytesToHex(JSON.stringify(signedEvent));
+  } catch (error) {
+    console.error("Error creating auth token:", error);
+    throw new Error("Failed to create authentication token");
+  }
+}
+
+/**
+ * Verify auth token
+ */
+export function verifyAuthToken(token, publicKey) {
+  try {
+    const eventData = JSON.parse(Buffer.from(token, "hex").toString("utf8"));
+
+    // Verify event signature
+    if (!verifyEvent(eventData)) {
+      throw new Error("Invalid token signature");
+    }
+
+    // Verify public key matches
+    if (eventData.pubkey !== publicKey) {
+      throw new Error("Token public key mismatch");
+    }
+
+    // Parse token data
+    const tokenData = JSON.parse(eventData.content);
+    const now = Math.floor(Date.now() / 1000);
+
+    // Check expiration
+    if (tokenData.exp < now) {
+      throw new Error("Token expired");
+    }
+
+    return {
+      valid: true,
+      payload: tokenData,
+    };
+  } catch (error) {
+    console.error("Error verifying auth token:", error);
+    return {
+      valid: false,
+      error: error.message,
+    };
+  }
+}
+
 export { getPublicKey, bytesToHex, hexToBytes };
 
 // Default relay URLs for the pool
@@ -25,6 +564,9 @@ const DEFAULT_RELAYS = [
 // Global instances
 let globalPool = null;
 let browserExtensionSigner = null;
+
+// NIP-49 encrypted keys storage
+let encryptedKeyCache = new Map();
 
 /**
  * Initialize SimplePool with enhanced configuration
