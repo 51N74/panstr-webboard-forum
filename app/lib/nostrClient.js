@@ -699,13 +699,166 @@ export async function publishToPool(
 }
 
 /**
- * Subscribe to events using pool
+ * Subscribe to events using pool (simple wrapper)
+ *
+ * NOTE: kept for backward compatibility. Prefer `liveSubscribe` for
+ * real-time subscriptions with deduplication and keep-alive management.
  */
 export function subscribeToPool(pool, relayUrls, filters, callback) {
   // Use default relays if relayUrls is not provided
   const relays = relayUrls || DEFAULT_RELAYS;
   const sub = pool.subscribe(relays, filters, callback);
   return sub;
+}
+
+/**
+ * Live subscription helper with:
+ * - event deduplication (per-subscription)
+ * - optional keep-alive heartbeat to keep relays warm
+ * - centralized subscription tracking for easier cleanup/reconnect
+ *
+ * Usage:
+ *   const unsubscribe = liveSubscribe(pool, relays, filters, (event, relay) => { ... }, options);
+ *   // When finished:
+ *   unsubscribe();
+ */
+const _activeSubscriptions = new Map(); // id -> { sub, heartbeat, seen }
+
+export function liveSubscribe(pool, relayUrls, filters, onEvent, options = {}) {
+  const {
+    dedupe = true,
+    keepAlive = true,
+    heartbeatMs = 30 * 1000, // default 30s
+    idempotencyKey = null, // optional external id for tracking
+  } = options || {};
+
+  const relays = relayUrls || DEFAULT_RELAYS;
+  const subId =
+    idempotencyKey || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+  // Per-subscription seen set for deduplication
+  const seen = new Set();
+
+  // Wrapped callback applies deduplication and error isolation
+  const wrappedCallback = (event, relay) => {
+    try {
+      if (dedupe && event && event.id) {
+        if (seen.has(event.id)) return;
+        seen.add(event.id);
+      }
+      // Forward event
+      onEvent && onEvent(event, relay);
+    } catch (err) {
+      // Prevent subscription callback exceptions from breaking pool internals
+      console.error("liveSubscribe wrappedCallback error:", err);
+    }
+  };
+
+  // Subscribe using pool
+  const sub = pool.subscribe(relays, filters, wrappedCallback);
+
+  // Heartbeat: periodically perform a lightweight query to keep connections alive
+  let heartbeat = null;
+  if (keepAlive && typeof pool.querySync === "function") {
+    try {
+      heartbeat = setInterval(() => {
+        try {
+          // A minimal query (limit:1) to ping relays; wrapped in try/catch
+          pool.querySync(relays, { limit: 1 });
+        } catch (err) {
+          // ignore transient errors; they will be reflected in relay health monitoring elsewhere
+        }
+      }, heartbeatMs);
+    } catch (err) {
+      // If querySync isn't available or fails, do nothing
+      heartbeat = null;
+    }
+  }
+
+  // Store subscription for external management / debugging
+  _activeSubscriptions.set(subId, {
+    sub,
+    relays,
+    filters,
+    seen,
+    heartbeat,
+    createdAt: Date.now(),
+  });
+
+  // Return unsubscribe function which cleans up timers and subscription
+  const unsubscribe = () => {
+    try {
+      // Some SimplePool subscribe wrappers expose `.unsub()` or `.unsub` method name variations.
+      // Attempt common variants defensively.
+      if (sub && typeof sub.unsub === "function") {
+        sub.unsub();
+      } else if (
+        sub &&
+        typeof sub.unsub === "undefined" &&
+        typeof sub.unsubscribe === "function"
+      ) {
+        sub.unsubscribe();
+      } else if (sub && typeof sub.close === "function") {
+        sub.close();
+      } else if (sub && typeof sub === "function") {
+        // rare case where subscribe returns an unsubscribe function
+        try {
+          sub();
+        } catch (e) {}
+      }
+    } catch (err) {
+      // ignore unsubscribe errors
+    } finally {
+      if (heartbeat) {
+        try {
+          clearInterval(heartbeat);
+        } catch (e) {}
+      }
+      _activeSubscriptions.delete(subId);
+    }
+  };
+
+  // Return unsubscribe and metadata (for consumers who want both)
+  return {
+    unsubscribe,
+    id: subId,
+    sub,
+  };
+}
+
+/**
+ * Utility: list active liveSubscribe subscriptions (for diagnostics)
+ */
+export function listActiveSubscriptions() {
+  const result = [];
+  for (const [id, info] of _activeSubscriptions.entries()) {
+    result.push({
+      id,
+      relays: info.relays,
+      filters: info.filters,
+      createdAt: info.createdAt,
+      seenCount: info.seen ? info.seen.size : 0,
+    });
+  }
+  return result;
+}
+
+/**
+ * Utility: forcefully clear all active subscriptions (useful on app teardown)
+ */
+export function clearAllLiveSubscriptions() {
+  for (const [id, info] of _activeSubscriptions.entries()) {
+    try {
+      const { sub, heartbeat } = info;
+      if (sub && typeof sub.unsub === "function") sub.unsub();
+      else if (sub && typeof sub.unsubscribe === "function") sub.unsubscribe();
+      if (heartbeat) clearInterval(heartbeat);
+    } catch (err) {
+      // continue cleaning others
+    } finally {
+      _activeSubscriptions.delete(id);
+    }
+  }
 }
 
 /**
@@ -1921,6 +2074,749 @@ export async function getZapAnalytics(pubkey, timeFrame = "7d") {
   }
 }
 
+// Add NIP-50 Server-side Search functionality
+export async function searchEventsWithNIP50(
+  pool,
+  relayUrls,
+  searchQuery,
+  options = {},
+) {
+  const {
+    kinds = [1, 30023], // Text notes and forum threads
+    authors = [],
+    tags = [],
+    since = null,
+    until = null,
+    limit = 100,
+    offset = 0,
+    sortBy = "relevance", // relevance or created_at
+  } = options;
+
+  // Use relays that support NIP-50 search
+  const searchCapableRelays = (relayUrls || DEFAULT_RELAYS).filter((relay) =>
+    // These relays are known to support NIP-50 search
+    SEARCH_CAPABLE_RELAYS.includes(relay),
+  );
+
+  if (searchCapableRelays.length === 0) {
+    throw new Error("No relays with NIP-50 search capability available");
+  }
+
+  try {
+    // NIP-50 search filter format
+    const searchFilters = {
+      kinds,
+      search: searchQuery, // This is the NIP-50 search parameter
+      limit,
+      ...(since && { since }),
+      ...(until && { until }),
+      ...(authors.length > 0 && { authors }),
+      ...(tags.length > 0 && { "#t": tags }),
+    };
+
+    // Add offset for pagination if supported
+    if (offset > 0) {
+      searchFilters.until = offset; // Some relays use 'until' for pagination
+    }
+
+    const results = await pool.querySync(searchCapableRelays, searchFilters);
+
+    // If sortBy is relevance, the relay should handle it
+    // Otherwise sort locally
+    if (sortBy === "created_at" && !results.some((r) => r.score)) {
+      results.sort((a, b) => b.created_at - a.created_at);
+    }
+
+    return {
+      results,
+      relayCount: searchCapableRelays.length,
+      query: searchQuery,
+      filters: searchFilters,
+    };
+  } catch (error) {
+    console.error("NIP-50 search failed:", error);
+    throw new Error(`Server-side search failed: ${error.message}`);
+  }
+}
+
+// Relays known to support NIP-50 search
+export const SEARCH_CAPABLE_RELAYS = [
+  "wss://relay.nostr.band",
+  "wss://search.nos.social",
+  "wss://nostr.wine",
+  "wss://relay.snort.social",
+  "wss://relay.damus.io",
+  "wss://relay.mostr.pub",
+  "wss://relay.njump.me",
+];
+
+// Enhanced search with multiple strategies
+export async function enhancedSearch(
+  pool,
+  relayUrls,
+  searchQuery,
+  options = {},
+) {
+  const {
+    useServerSide = true,
+    useClientSide = true,
+    fallbackStrategy = "client-side", // 'client-side' or 'server-side'
+  } = options;
+
+  // Try server-side search first if enabled
+  if (useServerSide) {
+    try {
+      const serverResults = await searchEventsWithNIP50(
+        pool,
+        relayUrls,
+        searchQuery,
+        {
+          ...options,
+          limit: Math.min(options.limit || 100, 50), // Limit server-side requests
+        },
+      );
+
+      if (serverResults.results.length > 0) {
+        return {
+          ...serverResults,
+          searchMethod: "server-side",
+          strategy: "nip50-first",
+        };
+      }
+    } catch (serverError) {
+      console.warn(
+        "Server-side search failed, falling back to client-side:",
+        serverError,
+      );
+    }
+  }
+
+  // Fallback to client-side search if enabled and server-side failed
+  if (useClientSide) {
+    try {
+      const { searchManager } = await import("./search/searchManager.js");
+      const clientResults = await searchManager.advancedSearch({
+        query: searchQuery,
+        ...options,
+      });
+
+      return {
+        results: clientResults.results,
+        pagination: clientResults.pagination,
+        searchMethod: "client-side",
+        strategy: fallbackStrategy,
+      };
+    } catch (clientError) {
+      console.error("Client-side search failed:", clientError);
+      throw clientError;
+    }
+  }
+
+  throw new Error("Both search methods failed");
+}
+
+// Search recommendations based on content analysis
+export async function getContentRecommendations(pool, eventId, options = {}) {
+  const { limit = 10, similarityThreshold = 0.3 } = options;
+
+  try {
+    // Get the original event
+    const originalEvent = await pool.get(
+      (options.relayUrls || DEFAULT_RELAYS).filter((r) =>
+        SEARCH_CAPABLE_RELAYS.includes(r),
+      ),
+      { ids: [eventId] },
+    );
+
+    if (!originalEvent) {
+      return [];
+    }
+
+    // Extract keywords from content
+    const keywords = extractKeywords(originalEvent.content);
+    if (keywords.length === 0) {
+      return [];
+    }
+
+    // Search for related content using keywords
+    const relatedResults = await searchEventsWithNIP50(
+      pool,
+      options.relayUrls,
+      keywords.join(" "),
+      {
+        kinds: [1, 30023],
+        limit: limit * 2, // Get more to filter for similarity
+        excludeIds: [eventId], // Don't include the original
+      },
+    );
+
+    // Calculate content similarity and return top recommendations
+    const recommendations = relatedResults.results
+      .map((result) => ({
+        ...result,
+        similarity: calculateContentSimilarity(
+          originalEvent.content,
+          result.content,
+        ),
+      }))
+      .filter((result) => result.similarity >= similarityThreshold)
+      .sort((a, b) => b.similarity - a.similarity)
+      .slice(0, limit);
+
+    return recommendations;
+  } catch (error) {
+    console.error("Failed to get content recommendations:", error);
+    return [];
+  }
+}
+
+// Extract keywords from text content
+function extractKeywords(text) {
+  // Remove common stop words and extract meaningful terms
+  const stopWords = new Set([
+    "the",
+    "a",
+    "an",
+    "and",
+    "or",
+    "but",
+    "in",
+    "on",
+    "at",
+    "to",
+    "for",
+    "of",
+    "with",
+    "by",
+    "is",
+    "are",
+    "was",
+    "were",
+    "be",
+    "have",
+    "has",
+    "had",
+    "do",
+    "does",
+    "did",
+    "will",
+    "would",
+    "could",
+    "should",
+  ]);
+
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s]/g, " ") // Keep only letters and spaces
+    .split(/\s+/)
+    .filter((word) => word.length > 2 && !stopWords.has(word))
+    .slice(0, 10); // Top 10 keywords
+}
+
+// Simple content similarity calculation (can be enhanced with better algorithms)
+function calculateContentSimilarity(text1, text2) {
+  const words1 = new Set(extractKeywords(text1));
+  const words2 = new Set(extractKeywords(text2));
+
+  const intersection = new Set([...words1].filter((x) => words2.has(x)));
+  const union = new Set([...words1, ...words2]);
+
+  return intersection.size / union.size; // Jaccard similarity
+}
+
+// Advanced NIP-50 search with full NIP-50 features
+export async function advancedNIP50Search(pool, relayUrls, options = {}) {
+  const {
+    query,
+    filters = {},
+    ranking = "relevance", // 'relevance', 'recency', 'popularity'
+    timeRange = null,
+    geohash = null,
+    includeProfiles = false,
+  } = options;
+
+  const searchCapableRelays = (relayUrls || DEFAULT_RELAYS).filter((relay) =>
+    SEARCH_CAPABLE_RELAYS.includes(relay),
+  );
+
+  if (searchCapableRelays.length === 0) {
+    throw new Error("No NIP-50 capable relays available");
+  }
+
+  try {
+    // Build NIP-50 search request with extended features
+    const searchRequest = {
+      search: query,
+      limit: filters.limit || 100,
+      kinds: filters.kinds || [1, 30023],
+      ...(filters.authors && { authors: filters.authors }),
+      ...(filters.tags && { "#t": filters.tags }),
+      ...(timeRange && {
+        since: timeRange.start
+          ? Math.floor(new Date(timeRange.start).getTime() / 1000)
+          : undefined,
+        until: timeRange.end
+          ? Math.floor(new Date(timeRange.end).getTime() / 1000)
+          : undefined,
+      }),
+      ...(geohash && { geohash }),
+      ...(ranking && { ranking }),
+      // Request profiles for authors if enabled
+      ...(includeProfiles && { include_authors: true }),
+    };
+
+    const results = await pool.querySync(searchCapableRelays, searchRequest);
+
+    // Apply additional processing based on ranking strategy
+    return {
+      results,
+      searchMethod: "nip50-advanced",
+      ranking,
+      query,
+      appliedFilters: filters,
+    };
+  } catch (error) {
+    console.error("Advanced NIP-50 search failed:", error);
+    throw error;
+  }
+}
+
+/**
+ * Initialize search index for local content (fallback when NIP-50 relays are unavailable)
+ */
+export function initializeLocalSearchIndex(events = []) {
+  const documents = events.map((event) => ({
+    id: event.id,
+    content: event.content,
+    title: event.tags?.find((tag) => tag[0] === "title")?.[1] || "",
+    author: event.pubkey,
+    created_at: event.created_at,
+    tags:
+      event.tags?.filter((tag) => tag[0] === "t")?.map((tag) => tag[1]) || [],
+    kind: event.kind,
+  }));
+
+  // Initialize Fuse.js for local search
+  if (typeof Fuse !== "undefined") {
+    return new Fuse(documents, {
+      keys: [
+        { name: "content", weight: 0.4 },
+        { name: "title", weight: 0.3 },
+        { name: "tags", weight: 0.2 },
+        { name: "author", weight: 0.1 },
+      ],
+      threshold: 0.3,
+      includeScore: true,
+      includeMatches: true,
+      minMatchCharLength: 2,
+    });
+  }
+
+  return null;
+}
+
+// NIP-89 App Handlers implementation
+export async function getAppHandlers(
+  pool,
+  relayUrls,
+  appKinds = ["app", "bot", "service"],
+) {
+  const searchCapableRelays = (relayUrls || DEFAULT_RELAYS).filter((relay) =>
+    SEARCH_CAPABLE_RELAYS.includes(relay),
+  );
+
+  if (searchCapableRelays.length === 0) {
+    throw new Error(
+      "No relays with NIP-50 search capability available for app discovery",
+    );
+  }
+
+  try {
+    // Search for NIP-89 app handler events
+    const appFilters = {
+      kinds: [31989], // NIP-89 app handler kind
+      limit: 100,
+    };
+
+    const appEvents = await pool.querySync(searchCapableRelays, appFilters);
+
+    // Group events by app type and extract metadata
+    const apps = new Map();
+
+    appEvents.forEach((event) => {
+      try {
+        const appData = JSON.parse(event.content);
+        const appType = appData.type || "unknown";
+
+        if (!apps.has(appType)) {
+          apps.set(appType, []);
+        }
+
+        apps.get(appType).push({
+          id: event.id,
+          pubkey: event.pubkey,
+          name: appData.name || appData.title || "Unknown App",
+          description: appData.description || "",
+          url: appData.url || "",
+          icon: appData.icon || "",
+          supports: appData.supports || [],
+          tags: event.tags,
+          created_at: event.created_at,
+          kind: appData.kind || "app",
+        });
+      } catch (parseError) {
+        console.warn("Failed to parse app handler event:", parseError);
+        // Skip malformed events
+      }
+    });
+
+    // Convert to array and sort by recency
+    const appList = Array.from(apps.entries())
+      .map(([type, items]) => ({
+        type,
+        apps: items.sort((a, b) => b.created_at - a.created_at),
+      }))
+      .sort((a, b) => b.apps.length - a.apps.length) // Sort by app count
+      .slice(0, 50);
+
+    return {
+      apps: appList,
+      relayCount: searchCapableRelays.length,
+      filters: appFilters,
+    };
+  } catch (error) {
+    console.error("Failed to get app handlers:", error);
+    throw new Error(`App discovery failed: ${error.message}`);
+  }
+}
+
+// Create and publish NIP-89 app handler
+export async function createAppHandler(
+  pool,
+  relayUrls,
+  appData,
+  privateKeyBytes,
+) {
+  if (!pool || !relayUrls || !appData) {
+    throw new Error("Pool, relays, and app data are required");
+  }
+
+  try {
+    const appEvent = {
+      kind: 31989, // NIP-89 app handler kind
+      content: JSON.stringify({
+        type: appData.type || "app",
+        name: appData.name || appData.title || "Unknown App",
+        description: appData.description || "",
+        url: appData.url || "",
+        icon: appData.icon || "",
+        supports: appData.supports || [],
+        ...(appData.metadata || {}),
+      }),
+      tags: [
+        ["d", appData.identifier || generateRandomId()], // Identifier
+        ["k", appData.type || "app"],
+        ...(appData.url ? [["web", appData.url]] : []),
+        ...(appData.tags || []),
+      ],
+      created_at: Math.floor(Date.now() / 1000),
+    };
+
+    // Sign and publish using existing publishToPool function
+    const signedEvent = await publishToPool(
+      pool,
+      relayUrls,
+      privateKeyBytes,
+      appEvent.content,
+      { kind: appEvent.kind, tags: appEvent.tags },
+    );
+
+    return signedEvent;
+  } catch (error) {
+    console.error("Failed to create app handler:", error);
+    throw new Error(`App handler creation failed: ${error.message}`);
+  }
+}
+
+// Helper function to generate random ID for app handlers
+function generateRandomId() {
+  return Math.random().toString(36).substring(2, 15);
+}
+
+// Enhanced User Discovery functions
+export async function getUserRecommendations(
+  pool,
+  relayUrls,
+  userPubkey,
+  options = {},
+) {
+  const {
+    limit = 20,
+    timeRange = "30d", // Default to last 30 days
+  } = options;
+
+  try {
+    // Get user's follows to understand their network
+    const followList = await getFollowList(pool, userPubkey);
+    const followPubkeys = followList.map((f) => f[1]); // Extract followed pubkeys
+
+    // Get recent events from followed users
+    const timeSince = getTimeframeSince(timeRange);
+    const userFilters = {
+      kinds: [1, 30023, 0], // Posts, threads, metadata
+      authors: followPubkeys,
+      since: timeSince,
+      limit: 200, // More to analyze
+    };
+
+    const events = await queryEvents(pool, relayUrls, userFilters);
+
+    // Analyze interaction patterns and interests
+    const userInteractions = new Map();
+
+    events.forEach((event) => {
+      const author = event.pubkey;
+      const currentCount = userInteractions.get(author) || 0;
+      userInteractions.set(author, currentCount + 1);
+
+      // Extract topics from tags
+      if (event.tags) {
+        event.tags.forEach((tag) => {
+          if (tag[0] === "t") {
+            const topic = tag[1];
+            userInteractions.set(
+              `${author}_topics`,
+              (userInteractions.get(`${author}_topics`) || new Set()).add(
+                topic,
+              ),
+            );
+          }
+        });
+      }
+    });
+
+    // Score users based on interaction frequency and shared topics
+    const recommendations = Array.from(userInteractions.entries())
+      .filter(([key]) => !key.endsWith("_topics")) // Filter out topic entries
+      .map(([pubkey, count]) => {
+        const topics = userInteractions.get(`${pubkey}_topics`) || new Set();
+        return {
+          pubkey,
+          interactionScore: count,
+          topicCount: topics.size,
+          sharedTopics: Array.from(topics),
+        };
+      })
+      .sort((a, b) => {
+        // Sort by interaction score first, then by topic count
+        if (b.interactionScore !== a.interactionScore) {
+          return b.interactionScore - a.interactionScore;
+        }
+        return b.topicCount - a.topicCount;
+      })
+      .slice(0, limit);
+
+    return {
+      recommendations,
+      timeRange,
+      queryUser: userPubkey,
+      strategy: "network-analysis",
+    };
+  } catch (error) {
+    console.error("Failed to get user recommendations:", error);
+    return {
+      recommendations: [],
+      timeRange,
+      queryUser: userPubkey,
+      strategy: "network-analysis",
+      error: error.message,
+    };
+  }
+}
+
+// Trending topics discovery
+export async function getTrendingTopics(pool, relayUrls, options = {}) {
+  const {
+    limit = 10,
+    timeRange = "7d", // Default to last 7 days
+    minMentions = 3, // Minimum mentions to be considered trending
+  } = options;
+
+  try {
+    const timeSince = getTimeframeSince(timeRange);
+
+    // Search for posts with topic tags
+    const topicFilters = {
+      kinds: [1, 30023],
+      since: timeSince,
+      limit: 500, // Large sample for analysis
+    };
+
+    const events = await queryEvents(pool, relayUrls, topicFilters);
+
+    // Count topic mentions
+    const topicCounts = new Map();
+
+    events.forEach((event) => {
+      if (event.tags) {
+        event.tags.forEach((tag) => {
+          if (tag[0] === "t") {
+            const topic = tag[1].toLowerCase();
+            const current = topicCounts.get(topic) || 0;
+            topicCounts.set(topic, current + 1);
+          }
+        });
+      }
+    });
+
+    // Sort topics by frequency and filter by minimum mentions
+    const trending = Array.from(topicCounts.entries())
+      .filter(([_, count]) => count >= minMentions)
+      .sort((a, b) => b[1] - a[1]) // Sort by count
+      .slice(0, limit)
+      .map(([topic, count]) => ({
+        topic,
+        count,
+        trend: "rising", // Could be calculated based on velocity
+      }));
+
+    return {
+      trending,
+      timeRange,
+      minMentions,
+      strategy: "frequency-analysis",
+    };
+  } catch (error) {
+    console.error("Failed to get trending topics:", error);
+    return {
+      trending: [],
+      timeRange,
+      minMentions,
+      strategy: "frequency-analysis",
+      error: error.message,
+    };
+  }
+}
+
+// User reputation and expertise scoring
+export async function calculateUserReputation(
+  pool,
+  relayUrls,
+  userPubkey,
+  options = {},
+) {
+  const {
+    timeRange = "90d", // Default to last 90 days
+  } = options;
+
+  try {
+    const timeSince = getTimeframeSince(timeRange);
+
+    // Get user's content and interactions
+    const userEvents = await queryEvents(pool, relayUrls, {
+      kinds: [1, 30023, 6, 7, 9734, 9735], // Posts, reactions, zaps
+      authors: [userPubkey],
+      since: timeSince,
+      limit: 500,
+    });
+
+    // Calculate reputation metrics
+    let reputation = {
+      contentScore: 0,
+      interactionScore: 0,
+      zapReceived: 0,
+      zapSent: 0,
+      reactionsReceived: 0,
+      threadsCreated: 0,
+      postsCreated: 0,
+      expertise: new Map(),
+      activityLevel: "low",
+    };
+
+    userEvents.forEach((event) => {
+      switch (event.kind) {
+        case 1: // Regular post
+          reputation.postsCreated++;
+          reputation.contentScore += 1;
+          break;
+        case 30023: // Long-form thread
+          reputation.threadsCreated++;
+          reputation.contentScore += 2; // Higher weight for threads
+          break;
+        case 6: // Reaction
+          reputation.reactionsReceived++;
+          reputation.interactionScore += 0.5;
+          break;
+        case 7: // Repost
+          reputation.interactionScore += 1;
+          break;
+        case 9734: // Zap request
+          reputation.zapSent++;
+          break;
+        case 9735: // Zap receipt
+          const amount =
+            extractAmountFromBolt11(
+              event.tags?.find((t) => t[0] === "bolt11")?.[1],
+            ) || "";
+          reputation.zapReceived += parseInt(amount) || 0;
+          reputation.interactionScore += (parseInt(amount) || 0) / 1000; // Weight zaps
+          break;
+      }
+
+      // Extract topics from tags for expertise
+      if (event.tags) {
+        event.tags.forEach((tag) => {
+          if (tag[0] === "t") {
+            const topic = tag[1];
+            const current = reputation.expertise.get(topic) || 0;
+            reputation.expertise.set(topic, current + 1);
+          }
+        });
+      }
+    });
+
+    // Determine activity level
+    const totalScore = reputation.contentScore + reputation.interactionScore;
+    if (totalScore > 50) {
+      reputation.activityLevel = "high";
+    } else if (totalScore > 20) {
+      reputation.activityLevel = "medium";
+    }
+
+    // Sort expertise by topic frequency
+    reputation.topExpertise = Array.from(reputation.expertise.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([topic, count]) => ({ topic, count }));
+
+    return {
+      pubkey: userPubkey,
+      reputation,
+      timeRange,
+      strategy: "activity-analysis",
+    };
+  } catch (error) {
+    console.error("Failed to calculate user reputation:", error);
+    return {
+      pubkey: userPubkey,
+      reputation: {
+        contentScore: 0,
+        interactionScore: 0,
+        zapReceived: 0,
+        zapSent: 0,
+        reactionsReceived: 0,
+        threadsCreated: 0,
+        postsCreated: 0,
+        expertise: new Map(),
+        activityLevel: "low",
+      },
+      timeRange,
+      strategy: "activity-analysis",
+      error: error.message,
+    };
+  }
+}
+
 /**
  * Process zap events for analytics
  */
@@ -2028,6 +2924,17 @@ export async function getTrendingEvents(timeframe = "day") {
     return events;
   } catch (error) {
     console.error("Error getting trending events:", error);
+    return [];
+  }
+}
+
+export async function getEvents(filters) {
+  try {
+    const pool = await initializePool();
+    const events = await pool.querySync(DEFAULT_RELAYS, filters);
+    return events;
+  } catch (error) {
+    console.error("Error getting events:", error);
     return [];
   }
 }

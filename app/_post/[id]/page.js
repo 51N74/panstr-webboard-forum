@@ -1,13 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   initializePool,
   queryEvents,
   formatPubkey,
+  liveSubscribe,
 } from "../../lib/nostrClient";
+import { useNostrAuth } from "../../context/NostrAuthContext";
 
 // Official Room Configuration
 const OFFICIAL_ROOMS = [
@@ -48,10 +50,116 @@ const OFFICIAL_ROOMS = [
 export default function ThreadPage() {
   const params = useParams();
   const router = useRouter();
+  const { user } = useNostrAuth();
   const [mainPost, setMainPost] = useState(null);
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [newComment, setNewComment] = useState("");
+
+  // Real-time "New post" banner
+  const [newReplyBanner, setNewReplyBanner] = useState(null);
+  const [showNewReplyBanner, setShowNewReplyBanner] = useState(false);
+
+  const threadSubsRef = useRef([]);
+  const seenEventIdsRef = useRef(new Set());
+
+  // Debounced banner clear
+  const clearBannerAfterDelay = useCallback(() => {
+    const timer = setTimeout(() => {
+      setShowNewReplyBanner(false);
+      setNewReplyBanner(null);
+    }, 8000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Helper to dedupe new replies and mentions
+  const isEventSeen = useCallback((eventId) => {
+    return seenEventIdsRef.current.has(eventId);
+  }, []);
+
+  const markEventSeen = useCallback((eventId) => {
+    seenEventIdsRef.current.add(eventId);
+  }, []);
+
+  // Add a new reply to list, keep sorted order, and optionally show banner
+  const handleNewReply = useCallback(
+    (event) => {
+      if (isEventSeen(event.id)) return;
+      markEventSeen(event.id);
+      setComments((prev) => {
+        const updated = [...prev, event];
+        return updated.sort((a, b) => a.created_at - b.created_at);
+      });
+      setNewReplyBanner(event);
+      setShowNewReplyBanner(true);
+      clearBannerAfterDelay();
+    },
+    [isEventSeen, markEventSeen, clearBannerAfterDelay],
+  );
+
+  // Handle new mentions (p-tag) from other threads
+  const handleNewMention = useCallback(
+    (event) => {
+      if (!user?.pubkey || isEventSeen(event.id)) return;
+      markEventSeen(event.id);
+      // If the mention is within the current thread, we already have it; otherwise, just show a banner
+      const mentionsCurrentThread = event.tags?.some(
+        (tag) => tag[0] === "e" && tag[1] === params.id,
+      );
+      if (!mentionsCurrentThread) {
+        setShowNewMentionBanner(true);
+      }
+    },
+    [user?.pubkey, isEventSeen, params.id],
+  );
+
+  useEffect(() => {
+    if (params.id) {
+      loadThread(params.id);
+      // Immediately set up subscriptions for real-time updates
+      const setupSubscriptions = async () => {
+        const pool = await initializePool();
+        const subs = [];
+
+        // New replies to this thread (kind 1 with #e tag)
+        const replySub = liveSubscribe(
+          pool,
+          undefined,
+          [{ kinds: [1], "#e": [params.id], limit: 50 }],
+          handleNewReply,
+          { dedupe: true, keepAlive: true, heartbeatMs: 30000 },
+        );
+        subs.push(replySub);
+
+        // New mentions of the current user (kind 1 or 30023 with #p tag)
+        if (user?.pubkey) {
+          const mentionSub = liveSubscribe(
+            pool,
+            undefined,
+            [{ kinds: [1, 30023], "#p": [user.pubkey], limit: 20 }],
+            handleNewMention,
+            { dedupe: true, keepAlive: true, heartbeatMs: 30000 },
+          );
+          subs.push(mentionSub);
+        }
+
+        threadSubsRef.current = subs;
+      };
+
+      setupSubscriptions();
+    }
+
+    // Cleanup subscriptions on unmount or when params.id/user changes
+    return () => {
+      threadSubsRef.current.forEach((sub) => {
+        try {
+          sub.unsubscribe();
+        } catch (e) {}
+      });
+      threadSubsRef.current = [];
+      seenEventIdsRef.current.clear();
+    };
+  }, [params.id, user?.pubkey, handleNewReply, handleNewMention]);
 
   useEffect(() => {
     if (params.id) {
@@ -410,10 +518,53 @@ export default function ThreadPage() {
             </div>
           </div>
 
+          {/* "New post" banner for replies */}
+          {showNewReplyBanner && newReplyBanner && (
+            <div className="sticky top-16 z-40 mx-6 mt-4 mb-2 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg shadow-sm animate-pulse flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <svg
+                  className="w-5 h-5"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6z" />
+                </svg>
+                <span className="font-medium">New reply</span>
+                <span className="text-sm text-blue-600">
+                  {newReplyBanner.content.slice(0, 60)}...
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  setShowNewReplyBanner(false);
+                  setNewReplyBanner(null);
+                }}
+                className="text-blue-500 hover:text-blue-700"
+                aria-label="Dismiss"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
+            </div>
+          )}
+
           {/* Comments List */}
           <div className="divide-y divide-gray-200">
             {comments.map((comment) => (
-              <Comment key={comment.id} comment={comment} />
+              <Comment
+                key={comment.id}
+                comment={comment}
+                isMention={comment.isMention}
+              />
             ))}
 
             {comments.length === 0 && (
@@ -438,6 +589,9 @@ export default function ThreadPage() {
               </div>
             )}
           </div>
+
+          {/* Invisible element for scroll-to-bottom */}
+          <div ref={commentEndRef} className="h-1" />
         </div>
       </main>
     </div>
@@ -445,7 +599,7 @@ export default function ThreadPage() {
 }
 
 // Comment Component
-function Comment({ comment }) {
+function Comment({ comment, isMention = false }) {
   const formatTime = (timestamp) => {
     const date = new Date(timestamp * 1000);
     const now = new Date();
@@ -487,6 +641,11 @@ function Comment({ comment }) {
               <span className="text-gray-500 font-mono">
                 {formatPubkey(comment.pubkey, "short")}
               </span>
+              {isMention && (
+                <span className="ml-2 px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">
+                  @mention
+                </span>
+              )}
               {isVerified ? (
                 <div className="bg-green-100 text-green-800 px-2 py-0.5 rounded-full text-xs font-medium flex items-center space-x-1">
                   <svg

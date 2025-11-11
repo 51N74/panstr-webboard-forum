@@ -1,25 +1,152 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useNostr } from "../context/NostrContext";
+import { useNostrAuth } from "../context/NostrAuthContext";
+import {
+  initializePool,
+  liveSubscribe,
+  formatPubkey,
+  verifyZapReceipt,
+} from "../lib/nostrClient";
+import db, { liveZapsForEvent } from "../lib/storage/indexedDB";
 
 export default function ThreadCard({ thread, roomId }) {
   const { getProfile } = useNostr();
+  const { user } = useNostrAuth();
   const [author, setAuthor] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Zap totals (sats) for this thread and subscription refs
+  const [zapTotal, setZapTotal] = useState(0);
+  const zapDbSubRef = useRef(null);
+  const poolSubRef = useRef(null);
+
   useEffect(() => {
-    const fetchAuthor = async () => {
-      if (thread.pubkey) {
-        const profile = await getProfile(thread.pubkey);
-        setAuthor(profile);
+    let mounted = true;
+
+    const fetchAuthorAndSubscribeZaps = async () => {
+      try {
+        if (thread.pubkey) {
+          const profile = await getProfile(thread.pubkey);
+          if (mounted) setAuthor(profile);
+        }
+      } catch (err) {
+        console.warn("ThreadCard: failed to fetch author", err);
+      } finally {
+        if (mounted) setLoading(false);
       }
-      setLoading(false);
+
+      // Initial read of zap totals from local DB cache (fast)
+      try {
+        const summary = await db.getZapTotalForEvent(thread.id);
+        if (mounted) setZapTotal(summary?.totalAmount || 0);
+      } catch (err) {
+        // ignore DB read errors
+      }
+
+      // Subscribe to live DB updates for zaps for this event (reactive)
+      try {
+        if (zapDbSubRef.current) {
+          try {
+            zapDbSubRef.current.unsubscribe();
+          } catch (e) {}
+          zapDbSubRef.current = null;
+        }
+        const dbSub = liveZapsForEvent(thread.id).subscribe((zaps) => {
+          try {
+            const sum = (zaps || []).reduce((s, z) => s + (z.amount || 0), 0);
+            setZapTotal(sum);
+          } catch (e) {
+            console.error("Error computing live zap total:", e);
+          }
+        });
+        zapDbSubRef.current = dbSub;
+      } catch (err) {
+        // ignore live db subscription errors
+      }
+
+      // Set up a relay subscription for new zap receipts (kind 9735) tied to this event.
+      // We use the app's pool + liveSubscribe helper for deduplication & keep-alive.
+      try {
+        const pool = await initializePool();
+        // Subscribe to kind 9735 where e-tag matches this thread id
+        const sub = liveSubscribe(
+          pool,
+          undefined,
+          [{ kinds: [9735], "#e": [thread.id], limit: 50 }],
+          async (event) => {
+            try {
+              // Basic verification and extraction
+              const verification = verifyZapReceipt(event);
+              if (verification && verification.isValid) {
+                // Persist to local DB for aggregation and UI
+                await db.addZapReceipt({
+                  eventId: verification.eventId || thread.id,
+                  senderPubkey: verification.sender || null,
+                  recipientPubkey: verification.recipient || null,
+                  amount: verification.amount || 0,
+                  bolt11: verification.bolt11 || null,
+                  preimage: verification.preimage || null,
+                  timestamp: Date.now(),
+                });
+                // local DB live query will update zapTotal automatically
+              }
+            } catch (err) {
+              console.error(
+                "ThreadCard: error handling incoming zap event",
+                err,
+              );
+            }
+          },
+          { dedupe: true, keepAlive: true, heartbeatMs: 30 * 1000 },
+        );
+        poolSubRef.current = sub;
+      } catch (err) {
+        console.warn("ThreadCard: failed to subscribe to zap receipts", err);
+      }
     };
 
-    fetchAuthor();
-  }, [thread.pubkey, getProfile]);
+    fetchAuthorAndSubscribeZaps();
+
+    return () => {
+      mounted = false;
+      try {
+        if (
+          zapDbSubRef.current &&
+          typeof zapDbSubRef.current.unsubscribe === "function"
+        ) {
+          zapDbSubRef.current.unsubscribe();
+        }
+      } catch (e) {}
+      try {
+        if (
+          poolSubRef.current &&
+          typeof poolSubRef.current.unsubscribe === "function"
+        ) {
+          poolSubRef.current.unsubscribe();
+        } else if (
+          poolSubRef.current &&
+          typeof poolSubRef.current.unsubscribe === "undefined" &&
+          typeof poolSubRef.current.unsubscribe === "function"
+        ) {
+          poolSubRef.current.unsubscribe();
+        } else if (
+          poolSubRef.current &&
+          typeof poolSubRef.current.unsubscribe === "function"
+        ) {
+          poolSubRef.current.unsubscribe();
+        } else if (
+          poolSubRef.current &&
+          typeof poolSubRef.current === "object" &&
+          typeof poolSubRef.current.unsubscribe === "function"
+        ) {
+          poolSubRef.current.unsubscribe();
+        }
+      } catch (e) {}
+    };
+  }, [thread.pubkey, getProfile, thread.id]);
 
   const getThreadTitle = () => {
     // Try to get title from tags first
@@ -191,6 +318,18 @@ export default function ThreadCard({ thread, roomId }) {
                 </span>
               </div>
             )}
+
+            {/* Zap totals */}
+            <div className="flex items-center space-x-1">
+              <svg
+                className="w-4 h-4 text-yellow-500"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path d="M11.3 1L3 12h6l-1 7 8.3-11H11l.3-6z" />
+              </svg>
+              <span>{zapTotal ? `${zapTotal} sats` : "0 sats"}</span>
+            </div>
           </div>
 
           {/* Last Activity */}
@@ -205,7 +344,7 @@ export default function ThreadCard({ thread, roomId }) {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 000 16z"
               />
             </svg>
             <span>{formatTimeAgo(thread.created_at)}</span>

@@ -5,6 +5,9 @@ import Link from "next/link";
 import { useNostrAuth } from "../context/NostrAuthContext";
 import { OFFICIAL_ROOMS } from "../data/boardsConfig";
 import NostrLoginModal from "./NostrLoginModal";
+import SearchComponent from "./search/SearchComponent";
+import Notifications from "./notifications/Notifications";
+import UserProfile from "./profiles/UserProfile";
 import { formatPubkey, getAllRelays, testRelay } from "../lib/nostrClient";
 
 /**
@@ -77,6 +80,29 @@ export default function Header() {
     );
   }
 
+  // Set up global profile display function
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.showUserProfile = (pubkey) => {
+        const profileModal = document.createElement("div");
+        profileModal.id = "profile-modal";
+        document.body.appendChild(profileModal);
+
+        const { createRoot } = require("react-dom/client");
+        const root = createRoot(profileModal);
+
+        const handleClose = () => {
+          root.unmount();
+          document.body.removeChild(profileModal);
+        };
+
+        root.render(
+          <UserProfile pubkey={pubkey} onClose={handleClose} isModal={true} />,
+        );
+      };
+    }
+  }, []);
+
   return (
     <header className="bg-base-100 border-b border-base-300 sticky top-0 z-50">
       <div className="container mx-auto px-4">
@@ -92,6 +118,11 @@ export default function Header() {
                 Panstr Forum
               </span>
             </Link>
+          </div>
+
+          {/* Mobile Search */}
+          <div className="md:hidden flex-1 mx-4">
+            <SearchComponent compact={true} />
           </div>
 
           {/* Navigation */}
@@ -149,6 +180,11 @@ export default function Header() {
 
           {/* Right Section */}
           <div className="flex items-center space-x-4">
+            {/* Search */}
+            <div className="hidden md:block">
+              <SearchComponent compact={true} />
+            </div>
+
             {/* Relay Status */}
             <div className="hidden sm:flex items-center space-x-2 text-sm">
               <div
@@ -156,6 +192,9 @@ export default function Header() {
               ></div>
               <span className="text-base-content/60">{relayCount} relays</span>
             </div>
+
+            {/* Notifications */}
+            {user && <Notifications compact={true} />}
 
             {/* User Menu */}
             {user ? (

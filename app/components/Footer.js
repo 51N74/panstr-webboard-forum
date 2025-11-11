@@ -1,62 +1,189 @@
+"use client";
+
+import Link from "next/link";
+
 export default function Footer() {
-    return (
-<footer className="footer p-10 bg-neutral text-neutral-content ">
-              <aside>
-                <svg
-                  width="50"
-                  height="50"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fillRule="evenodd"
-                  clipRule="evenodd"
-                  className="fill-current"
-                >
-                  <path d="M22.672 15.226l-2.432.811.841 2.515c.33 1.019-.209 2.127-1.23 2.456-1.15.325-2.148-.321-2.463-1.226l-.84-2.518-5.013 1.677.84 2.517c.391 1.203-.434 2.542-1.831 2.542-.88 0-1.601-.564-1.86-1.314l-.842-2.516-2.431.809c-1.135.328-2.145-.317-2.463-1.229-.329-1.018.211-2.127 1.231-2.456l2.432-.809-1.621-4.823-2.432.808c-1.355.384-2.558-.59-2.558-1.839 0-.817.509-1.582 1.327-1.846l2.433-.809-.842-2.515c-.33-1.02.211-2.129 1.232-2.458 1.02-.329 2.13.209 2.461 1.229l.842 2.515 5.011-1.677-.839-2.517c-.403-1.238.484-2.553 1.843-2.553.819 0 1.585.509 1.85 1.326l.841 2.517 2.431-.81c1.02-.33 2.131.211 2.461 1.229.332 1.018-.21 2.126-1.23 2.456l-2.433.809 1.622 4.823 2.433-.809c1.242-.401 2.557.484 2.557 1.838 0 .819-.51 1.583-1.328 1.847m-8.992-6.428l-5.01 1.675 1.619 4.828 5.011-1.674-1.62-4.829z"></path>
-                </svg>
-                <p>
-                  ACME Industries Ltd.
-                  <br />
-                  Providing reliable tech since 1992
-                </p>
-              </aside>
-              <nav>
-                <h6 className="footer-title">Social</h6>
-                <div className="grid grid-flow-col gap-4">
-                  <a>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      className="fill-current"
-                    >
-                      <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"></path>
-                    </svg>
-                  </a>
-                  <a>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      className="fill-current"
-                    >
-                      <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"></path>
-                    </svg>
-                  </a>
-                  <a>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      className="fill-current"
-                    >
-                      <path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v3.385z"></path>
-                    </svg>
-                  </a>
-                </div>
-              </nav>
-            </footer>
-    )
+  const currentYear = new Date().getFullYear();
+
+  return (
+    <footer className="footer p-10 bg-neutral text-neutral-content">
+      <aside>
+        <div className="flex items-center space-x-3 mb-4">
+          <span className="text-4xl">🌏</span>
+          <div>
+            <h2 className="text-2xl font-bold">Panstr Forum</h2>
+            <p className="text-neutral-content/70">
+              Decentralized discussions on Nostr
+            </p>
+          </div>
+        </div>
+        <p className="text-neutral-content/80 max-w-md">
+          A privacy-focused, censorship-resistant forum powered by the Nostr
+          protocol. Join the decentralized web and own your conversations.
+        </p>
+      </aside>
+
+      <nav>
+        <h6 className="footer-title">Navigation</h6>
+        <Link href="/" className="link link-hover">
+          Forums
+        </Link>
+        <Link href="/search" className="link link-hover">
+          Search
+        </Link>
+        <Link href="/rooms" className="link link-hover">
+          Browse Rooms
+        </Link>
+        <Link href="/bookmarks" className="link link-hover">
+          Bookmarks
+        </Link>
+      </nav>
+
+      <nav>
+        <h6 className="footer-title">Community</h6>
+        <a
+          href="https://github.com/nostr-protocol/nips"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="link link-hover"
+        >
+          NIPs
+        </a>
+        <a
+          href="https://github.com/nostr-protocol/nostr-tools"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="link link-hover"
+        >
+          Nostr Tools
+        </a>
+        <a
+          href="https://nostr.com/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="link link-hover"
+        >
+          About Nostr
+        </a>
+        <Link href="/help" className="link link-hover">
+          Help & Support
+        </Link>
+      </nav>
+
+      <nav>
+        <h6 className="footer-title">Developers</h6>
+        <a
+          href="https://github.com/nostr-protocol/nostr"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="link link-hover"
+        >
+          Protocol Docs
+        </a>
+        <a
+          href="https://github.com/panstr/webboard-forum"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="link link-hover"
+        >
+          GitHub Repo
+        </a>
+        <a
+          href="https://discord.gg/nostr"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="link link-hover"
+        >
+          Developer Discord
+        </a>
+        <Link href="/api" className="link link-hover">
+          API Reference
+        </Link>
+      </nav>
+
+      <nav>
+        <h6 className="footer-title">Connect</h6>
+        <div className="grid grid-flow-col gap-4">
+          <a
+            href="https://twitter.com/nostrprotocol"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-2xl hover:text-blue-400 transition-colors"
+            title="Follow on Twitter"
+          >
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              className="fill-current"
+            >
+              <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z" />
+            </svg>
+          </a>
+          <a
+            href="https://discord.gg/nostr"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-2xl hover:text-indigo-400 transition-colors"
+            title="Join Discord"
+          >
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              className="fill-current"
+            >
+              <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028a14.09 14.09 0 0 0 1.226-1.994a.076.076 0 0 0-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128a10.2 10.2 0 0 0 .372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127a12.299 12.299 0 0 1-1.873.892a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z" />
+            </svg>
+          </a>
+          <a
+            href="https://github.com/panstr/webboard-forum"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-2xl hover:text-gray-400 transition-colors"
+            title="View on GitHub"
+          >
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              className="fill-current"
+            >
+              <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+            </svg>
+          </a>
+        </div>
+        <div className="mt-4">
+          <p className="text-sm text-neutral-content/70">
+            Built with ❤️ for the Nostr community
+          </p>
+        </div>
+      </nav>
+
+      <div className="divider"></div>
+
+      <div className="text-center text-neutral-content/60 text-sm">
+        <p>&copy; {currentYear} Panstr Forum. All rights reserved.</p>
+        <p className="mt-2">
+          Powered by the{" "}
+          <a
+            href="https://nostr.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline"
+          >
+            Nostr Protocol
+          </a>{" "}
+          •
+          <Link href="/privacy" className="text-primary hover:underline ml-2">
+            Privacy
+          </Link>{" "}
+          •
+          <Link href="/terms" className="text-primary hover:underline ml-2">
+            Terms
+          </Link>
+        </p>
+      </div>
+    </footer>
+  );
 }

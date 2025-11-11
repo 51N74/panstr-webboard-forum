@@ -1,21 +1,25 @@
+"use client";
 
-```'use client';
-
-import { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import Link from 'next/link';
-import { useNostrAuth } from '../../../../context/NostrAuthContext';
-import { useNostr } from '../../../../context/NostrContext';
-import { getRoomById, getCategoryByRoomId } from '../../../../data/boardsConfig';
+import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
+import Link from "next/link";
+import { useNostrAuth } from "../../../../context/NostrAuthContext";
+import { useNostr } from "../../../../context/NostrContext";
+import {
+  getRoomById,
+  getCategoryByRoomId,
+} from "../../../../data/boardsConfig";
 import {
   initializePool,
   createReplyEvent,
   publishToPool,
   getEvents,
   parseThread,
-  optimizeThreadStructure
-} from '../../../../lib/nostrClient';
-import EnhancedThreadView from '../../../../components/enhanced/threading/EnhancedThreadView';
+  optimizeThreadStructure,
+} from "../../../../lib/nostrClient";
+import EnhancedThreadView from "../../../../components/enhanced/threading/EnhancedThreadView";
+import db from "../../../../lib/storage/indexedDB";
+import UserProfile from "../../../../components/profiles/UserProfile";
 
 export default function ThreadDetailPage() {
   const router = useRouter();
@@ -27,19 +31,21 @@ export default function ThreadDetailPage() {
   const [thread, setThread] = useState(null);
   const [replies, setReplies] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [replyContent, setReplyContent] = useState('');
+  const [replyContent, setReplyContent] = useState("");
   const [isSubmittingReply, setIsSubmittingReply] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [viewCount, setViewCount] = useState(0);
   const [replyCount, setReplyCount] = useState(0);
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(null);
 
   const room = getRoomById(roomId);
   const category = getCategoryByRoomId(roomId);
 
   useEffect(() => {
     if (!room) {
-      router.push('/');
+      router.push("/");
       return;
     }
     fetchThreadData();
@@ -48,33 +54,36 @@ export default function ThreadDetailPage() {
   const fetchThreadData = async () => {
     setLoading(true);
     try {
-      // Fetch the main thread
+      // Fetch main thread
       const threadEvents = await getEvents({
         ids: [threadId],
-        kinds: [30023]
+        kinds: [30023],
       });
 
       if (threadEvents.length === 0) {
-        setError('Thread not found');
+        setError("Thread not found");
         return;
       }
 
       const threadEvent = threadEvents[0];
       setThread(threadEvent);
 
-      // Increment view count (client-side only for now)
-      const currentViews = parseInt(threadEvent.tags.find(t => t[0] === 'view_count')?.[1] || '0');
-      setViewCount(currentViews + 1);
+      // Increment view count in IndexedDB
+      if (user?.pubkey) {
+        await db.incrementViewCount(threadId, user.pubkey);
+        const viewCount = await db.getViewCount(threadId);
+        setViewCount(viewCount);
+      }
 
       // Fetch all replies for this thread
       const replyEvents = await getEvents({
         kinds: [1],
-        '#e': [threadId],
-        limit: 100
+        "#e": [threadId],
+        limit: 50,
       });
 
       // Filter and organize replies
-      const threadReplies = replyEvents.filter(event => {
+      const threadReplies = replyEvents.filter((event) => {
         const parsed = parseThread(event);
         return parsed.root?.id === threadId || parsed.reply?.id === threadId;
       });
@@ -83,10 +92,9 @@ export default function ThreadDetailPage() {
       const optimizedReplies = optimizeThreadStructure(threadReplies);
       setReplies(optimizedReplies);
       setReplyCount(threadReplies.length);
-
     } catch (err) {
-      console.error('Error fetching thread data:', err);
-      setError('Failed to load thread');
+      console.error("Error fetching thread data:", err);
+      setError("Failed to load thread");
     } finally {
       setLoading(false);
     }
@@ -94,26 +102,26 @@ export default function ThreadDetailPage() {
 
   const handleReply = async (parentEvent) => {
     if (!user) {
-      setError('Please connect your Nostr account to reply');
+      setError("Please connect your Nostr account to reply");
       return;
     }
 
     if (!replyContent.trim()) {
-      setError('Please enter a reply');
+      setError("Please enter a reply");
       return;
     }
 
     setIsSubmittingReply(true);
-    setError('');
+    setError("");
 
     try {
       // Initialize pool
       const pool = await initializePool();
 
       // Get private key from storage
-      const storedHexKey = localStorage.getItem('nostr_private_key');
+      const storedHexKey = localStorage.getItem("nostr_private_key");
       if (!storedHexKey) {
-        throw new Error('No private key found');
+        throw new Error("No private key found");
       }
 
       // Convert hex to Uint8Array
@@ -127,10 +135,10 @@ export default function ThreadDetailPage() {
         parentEvent,
         replyContent,
         privateKeyBytes,
-        roomId
+        roomId,
       );
 
-      // Publish the reply
+      // Publish reply
       const publishedEvent = await publishToPool(
         pool,
         undefined,
@@ -138,29 +146,28 @@ export default function ThreadDetailPage() {
         replyEvent.content,
         {
           kind: replyEvent.kind,
-          tags: replyEvent.tags
-        }
+          tags: replyEvent.tags,
+        },
       );
 
       if (publishedEvent && publishedEvent.id) {
-        setSuccess('Reply published successfully!');
-        setReplyContent('');
+        setSuccess("Reply published successfully!");
+        setReplyContent("");
 
-        // Refresh the thread data to show the new reply
+        // Refresh thread data to show the new reply
         setTimeout(() => {
           fetchThreadData();
         }, 1000);
 
         // Clear success message after 3 seconds
         setTimeout(() => {
-          setSuccess('');
+          setSuccess("");
         }, 3000);
       } else {
-        throw new Error('Failed to publish reply');
+        throw new Error("Failed to publish reply");
       }
-
     } catch (err) {
-      console.error('Error publishing reply:', err);
+      console.error("Error publishing reply:", err);
       setError(`Failed to publish reply: ${err.message}`);
     } finally {
       setIsSubmittingReply(false);
@@ -168,26 +175,41 @@ export default function ThreadDetailPage() {
   };
 
   const getThreadTitle = (threadEvent) => {
-    const titleTag = threadEvent.tags.find(tag => tag[0] === 'title');
-    return titleTag ? titleTag[1] : 'Untitled Thread';
+    const titleTag = threadEvent.tags.find((tag) => tag[0] === "title");
+    return titleTag ? titleTag[1] : "Untitled Thread";
   };
 
   const formatContent = (content) => {
     // Basic markdown rendering
     return content
-      .replace(/^### (.*$)/gim, '<h3 class="text-lg font-semibold mb-2">$1</h3>')
+      .replace(
+        /^### (.*$)/gim,
+        '<h3 class="text-lg font-semibold mb-2">$1</h3>',
+      )
       .replace(/^## (.*$)/gim, '<h2 class="text-xl font-semibold mb-3">$1</h2>')
       .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold mb-4">$1</h1>')
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.+?)\*/g, '<em>$1</em>')
-      .replace(/!\[([^\]]*)\]\(([^)]*)\)/g, '<img src="$2" alt="$1" class="max-w-full h-auto rounded-lg my-4" />')
-      .replace(/\[([^\]]*)\]\(([^)]*)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">$1</a>')
-      .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto my-4"><code>$2</code></pre>')
-      .replace(/`([^`]+)`/g, '<code class="bg-gray-100 px-2 py-1 rounded text-sm">$1</code>')
+      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+      .replace(/\*(.+?)\*/g, "<em>$1</em>")
+      .replace(
+        /!\[([^\]]*)\]\(([^)]*)\)/g,
+        '<img src="$2" alt="$1" class="max-w-full h-auto rounded-lg my-4" />',
+      )
+      .replace(
+        /\[([^\]]*)\]\(([^)]*)\)/g,
+        '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">$1</a>',
+      )
+      .replace(
+        /```(\w+)?\n([\s\S]*?)```/g,
+        '<pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto my-4"><code>$2</code></pre>',
+      )
+      .replace(
+        /`([^`]+)`/g,
+        '<code class="bg-gray-100 px-2 py-1 rounded text-sm">$1</code>',
+      )
       .replace(/\n\n/g, '</p><p class="mb-4">')
       .replace(/^\n/, '<p class="mb-4">')
-      .replace(/\n$/, '</p>')
-      .replace(/\n/g, '<br />');
+      .replace(/\n$/, "</p>")
+      .replace(/\n/g, "<br />");
   };
 
   if (!room) {
@@ -231,7 +253,9 @@ export default function ThreadDetailPage() {
         <div className="container mx-auto">
           {/* Breadcrumb */}
           <nav className="flex items-center space-x-2 text-sm mb-4 opacity-90">
-            <Link href="/" className="hover:underline">Home</Link>
+            <Link href="/" className="hover:underline">
+              Home
+            </Link>
             <span>›</span>
             <Link href={`/category/${category.id}`} className="hover:underline">
               {category.name}
@@ -260,8 +284,17 @@ export default function ThreadDetailPage() {
         {/* Error/Success Messages */}
         {error && (
           <div className="alert alert-error mb-6">
-            <svg className="w-6 h-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <svg
+              className="w-6 h-6 shrink-0 stroke-current"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
             </svg>
             <span>{error}</span>
           </div>
@@ -269,8 +302,17 @@ export default function ThreadDetailPage() {
 
         {success && (
           <div className="alert alert-success mb-6">
-            <svg className="w-6 h-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <svg
+              className="w-6 h-6 shrink-0 stroke-current"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
             </svg>
             <span>{success}</span>
           </div>
@@ -288,20 +330,45 @@ export default function ThreadDetailPage() {
                 <div className="flex items-center space-x-4 text-sm text-base-content/60">
                   <span>Thread ID: {thread.id.substring(0, 16)}...</span>
                   <span>•</span>
-                  <span>{new Date(thread.created_at * 1000).toLocaleDateString()}</span>
+                  <span>
+                    {new Date(thread.created_at * 1000).toLocaleDateString()}
+                  </span>
                   <span>•</span>
                   <span>{viewCount} views</span>
                   <span>•</span>
-                  <span>{replyCount} {replyCount === 1 ? 'reply' : 'replies'}</span>
+                  <span>
+                    {replyCount} {replyCount === 1 ? "reply" : "replies"}
+                  </span>
                 </div>
               </div>
+
+              {/* Author Profile Link */}
+              <button
+                onClick={() => setShowProfileModal(thread.pubkey)}
+                className="btn btn-ghost btn-sm flex items-center space-x-2"
+              >
+                <span>View Author</span>
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </button>
             </div>
 
             {/* Thread Body */}
             <div className="prose max-w-none">
               <div
                 dangerouslySetInnerHTML={{
-                  __html: formatContent(thread.content)
+                  __html: formatContent(thread.content),
                 }}
               />
             </div>
@@ -310,9 +377,16 @@ export default function ThreadDetailPage() {
             <div className="mt-6 pt-6 border-t border-base-300">
               <div className="flex flex-wrap gap-2">
                 {thread.tags.map((tag, index) => {
-                  if (tag[0] && tag[1] && !['d', 'title', 'board', 'published_at'].includes(tag[0])) {
+                  if (
+                    tag[0] &&
+                    tag[1] &&
+                    !["d", "title", "board", "published_at"].includes(tag[0])
+                  ) {
                     return (
-                      <span key={index} className="badge badge-outline badge-sm">
+                      <span
+                        key={index}
+                        className="badge badge-outline badge-sm"
+                      >
                         {tag[0]}: {tag[1]}
                       </span>
                     );
@@ -349,7 +423,7 @@ export default function ThreadDetailPage() {
                       <span>Posting...</span>
                     </div>
                   ) : (
-                    'Post Reply'
+                    "Post Reply"
                   )}
                 </button>
               </div>
@@ -381,6 +455,7 @@ export default function ThreadDetailPage() {
                 events={replies}
                 onReply={handleReply}
                 currentPubkey={user?.pubkey}
+                threadId={threadId}
               />
             </div>
           </div>
@@ -394,6 +469,15 @@ export default function ThreadDetailPage() {
               <p>Be the first to reply to this thread!</p>
             </div>
           </div>
+        )}
+
+        {/* Profile Modal */}
+        {showProfileModal && (
+          <UserProfile
+            pubkey={showProfileModal}
+            onClose={() => setShowProfileModal(null)}
+            isModal={true}
+          />
         )}
       </div>
     </div>

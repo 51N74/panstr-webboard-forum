@@ -1,16 +1,28 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import {
   parseThread,
   optimizeThreadStructure,
   getUserProfile,
   formatPubkey,
+  getEvents,
 } from "../../../lib/nostrClient";
+import db from "../../../lib/storage/indexedDB";
 
-const EnhancedThreadView = ({ events, onReply, currentPubkey }) => {
+const EnhancedThreadView = ({ events, onReply, currentPubkey, threadId }) => {
   const [expandedThreads, setExpandedThreads] = useState(new Set());
   const [profiles, setProfiles] = useState(new Map());
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [allReplies, setAllReplies] = useState(new Map());
+  const [replyCounts, setReplyCounts] = useState(new Map());
+  const loadingRef = useRef(false);
 
   // Optimize thread structure
   const optimizedThreads = useMemo(() => {
@@ -31,10 +43,18 @@ const EnhancedThreadView = ({ events, onReply, currentPubkey }) => {
         });
       });
 
-      // Load profiles
+      // Load profiles with caching
       const profilePromises = Array.from(uniquePubkeys).map(async (pubkey) => {
         try {
-          const profile = await getUserProfile(pubkey);
+          // Try cache first
+          let profile = await db.getCachedProfile(pubkey);
+
+          if (!profile) {
+            profile = await getUserProfile(pubkey);
+            // Cache the profile
+            await db.cacheProfile(pubkey, profile);
+          }
+
           return [pubkey, profile];
         } catch (error) {
           console.warn(`Failed to load profile for ${pubkey}:`, error);
@@ -52,6 +72,79 @@ const EnhancedThreadView = ({ events, onReply, currentPubkey }) => {
     }
   }, [events]);
 
+  // Load additional replies for expanded threads
+  const loadMoreReplies = useCallback(
+    async (parentEventId, offset = 0) => {
+      if (loadingRef.current || !threadId) return;
+
+      loadingRef.current = true;
+      setLoadingMore(true);
+
+      try {
+        const filters = {
+          kinds: [1],
+          "#e": [parentEventId],
+          limit: 20,
+          ...(offset > 0 && { until: offset }),
+        };
+
+        const additionalReplies = await getEvents(filters);
+
+        if (additionalReplies.length > 0) {
+          setAllReplies((prev) => {
+            const newReplies = new Map(prev);
+            const existingReplies = newReplies.get(parentEventId) || [];
+            newReplies.set(parentEventId, [
+              ...existingReplies,
+              ...additionalReplies,
+            ]);
+            return newReplies;
+          });
+
+          // Update reply counts
+          const counts = await calculateReplyCounts([
+            parentEventId,
+            ...additionalReplies.map((r) => r.id),
+          ]);
+          setReplyCounts((prev) => ({ ...prev, ...counts }));
+        }
+      } catch (error) {
+        console.error("Error loading more replies:", error);
+      } finally {
+        loadingRef.current = false;
+        setLoadingMore(false);
+      }
+    },
+    [threadId],
+  );
+
+  // Calculate reply counts for events
+  const calculateReplyCounts = useCallback(async (eventIds) => {
+    const counts = {};
+
+    for (const eventId of eventIds) {
+      try {
+        const replyFilters = {
+          kinds: [1],
+          "#e": [eventId],
+          limit: 1000,
+        };
+        const replies = await getEvents(replyFilters);
+        counts[eventId] = replies.length;
+      } catch (error) {
+        counts[eventId] = 0;
+      }
+    }
+
+    return counts;
+  }, []);
+
+  // Initialize reply counts for current events
+  useEffect(() => {
+    const eventIds = events.map((e) => e.id);
+    calculateReplyCounts(eventIds).then(setReplyCounts);
+  }, [events, calculateReplyCounts]);
+
   const toggleThread = (threadId) => {
     setExpandedThreads((prev) => {
       const newSet = new Set(prev);
@@ -64,74 +157,116 @@ const EnhancedThreadView = ({ events, onReply, currentPubkey }) => {
     });
   };
 
-  const renderEvent = (event, depth = 0, isLast = false) => {
+  const renderEvent = (
+    event,
+    depth = 0,
+    isLast = false,
+    parentEventId = null,
+  ) => {
     const parsed = parseThread(event);
     const profile = profiles.get(event.pubkey) || {
       name: "Unknown",
       pubkey: event.pubkey,
     };
     const isExpanded = expandedThreads.has(event.id);
+    const replyCount = replyCounts.get(event.id) || 0;
+    const hasMoreReplies =
+      allReplies.get(event.id)?.length > (event.replies?.length || 0);
 
     return (
       <div key={event.id} className={`relative ${depth > 0 ? "ml-6" : ""}`}>
         {/* Thread line connector */}
         {depth > 0 && (
-          <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gray-300 -ml-3" />
+          <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-base-300 -ml-3" />
         )}
 
         {/* Event card */}
         <div
           className={`
-          bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-3
+          bg-base-100 rounded-lg shadow-sm border border-base-300 p-4 mb-3
           ${isLast ? "" : "border-b-2"}
           ${depth > 0 ? "ml-6" : ""}
           transition-all duration-200 hover:shadow-md
+          ${currentPubkey === event.pubkey ? "border-primary/30" : ""}
         `}
         >
           {/* Header with profile info */}
           <div className="flex items-start justify-between mb-3">
             <div className="flex items-center space-x-3">
-              {profile.picture && (
-                <img
-                  src={profile.picture}
-                  alt={profile.name}
-                  className="w-10 h-10 rounded-full object-cover"
-                />
-              )}
-              <div>
-                <div className="font-semibold text-gray-900">
-                  {profile.name}
+              <div className="avatar">
+                <div className="w-10 h-10 rounded-full">
+                  {profile.picture ? (
+                    <img
+                      src={profile.picture}
+                      alt={profile.name}
+                      className="w-full h-full rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="bg-neutral text-neutral-content flex items-center justify-center h-full">
+                      {profile.name?.[0]?.toUpperCase() ||
+                        event.pubkey.substring(0, 2).toUpperCase()}
+                    </div>
+                  )}
                 </div>
-                <div className="text-sm text-gray-500">
+              </div>
+
+              <div>
+                <button
+                  onClick={() => {
+                    // Trigger profile modal
+                    if (window.showUserProfile) {
+                      window.showUserProfile(event.pubkey);
+                    }
+                  }}
+                  className="font-semibold text-base-content hover:text-primary transition-colors text-left"
+                >
+                  {profile.display_name || profile.name || "Anonymous"}
+                </button>
+
+                {profile.name && profile.name !== profile.display_name && (
+                  <div className="text-sm text-base-content/60">
+                    @{profile.name}
+                  </div>
+                )}
+
+                <div className="text-xs text-base-content/50">
                   {formatPubkey(profile.pubkey)}
                 </div>
               </div>
             </div>
-            <div className="flex items-center space-x-2 text-sm text-gray-500">
+
+            <div className="flex items-center space-x-2 text-sm text-base-content/60">
               {parsed.depth > 0 && (
                 <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs">
                   Depth {parsed.depth}
                 </span>
               )}
-              <span>
-                {new Date(event.created_at * 1000).toLocaleDateString()}
+              {currentPubkey === event.pubkey && (
+                <span className="bg-primary/10 text-primary px-2 py-1 rounded-full text-xs">
+                  You
+                </span>
+              )}
+              <span title={new Date(event.created_at * 1000).toLocaleString()}>
+                {formatTimeAgo(event.created_at)}
               </span>
             </div>
           </div>
 
           {/* Content */}
           <div className="prose prose-sm max-w-none mb-3">
-            <p className="whitespace-pre-wrap break-words">{event.content}</p>
+            <p className="whitespace-pre-wrap break-words text-base-content/90">
+              {parseMentions(event.content, profiles)}
+            </p>
           </div>
 
           {/* Thread metadata */}
           <div className="flex flex-wrap gap-2 mb-3">
-            {parsed.root && (
+            {parsed.root && parsed.root.id !== threadId && (
               <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs">
                 Root: {parsed.root.id.slice(0, 8)}...
               </span>
             )}
-            {parsed.reply && (
+            {parsed.reply && parsed.reply.id !== threadId && (
               <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">
                 Reply to: {parsed.reply.id.slice(0, 8)}...
               </span>
@@ -147,7 +282,7 @@ const EnhancedThreadView = ({ events, onReply, currentPubkey }) => {
           {/* Mentions */}
           {parsed.mentions.length > 0 && (
             <div className="mb-3">
-              <div className="text-sm text-gray-600 mb-1">Mentions:</div>
+              <div className="text-sm text-base-content/60 mb-1">Mentions:</div>
               <div className="flex flex-wrap gap-1">
                 {parsed.mentions.map((mention, index) => {
                   const mentionProfile = profiles.get(mention.pubkey) || {
@@ -155,12 +290,17 @@ const EnhancedThreadView = ({ events, onReply, currentPubkey }) => {
                     pubkey: mention.pubkey,
                   };
                   return (
-                    <span
+                    <button
                       key={index}
-                      className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs"
+                      onClick={() => {
+                        if (window.showUserProfile) {
+                          window.showUserProfile(mention.pubkey);
+                        }
+                      }}
+                      className="bg-base-200 text-base-content/80 px-2 py-1 rounded text-xs hover:bg-primary/10 hover:text-primary transition-colors"
                     >
-                      {mentionProfile.name}
-                    </span>
+                      {mentionProfile.display_name || mentionProfile.name}
+                    </button>
                   );
                 })}
               </div>
@@ -168,12 +308,12 @@ const EnhancedThreadView = ({ events, onReply, currentPubkey }) => {
           )}
 
           {/* Actions */}
-          <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+          <div className="flex items-center justify-between pt-3 border-t border-base-200">
             <div className="flex items-center space-x-4">
               {onReply && (
                 <button
                   onClick={() => onReply(event)}
-                  className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center space-x-1"
+                  className="text-primary hover:text-primary/80 text-sm font-medium flex items-center space-x-1 transition-colors"
                 >
                   <svg
                     className="w-4 h-4"
@@ -191,16 +331,30 @@ const EnhancedThreadView = ({ events, onReply, currentPubkey }) => {
                   <span>Reply</span>
                 </button>
               )}
+
+              {replyCount > 0 && (
+                <span className="text-sm text-base-content/60">
+                  {replyCount} {replyCount === 1 ? "reply" : "replies"}
+                </span>
+              )}
             </div>
 
-            {event.replies && event.replies.length > 0 && (
+            {(event.replies?.length > 0 || replyCount > 0) && (
               <button
-                onClick={() => toggleThread(event.id)}
-                className="text-gray-600 hover:text-gray-700 text-sm flex items-center space-x-1"
+                onClick={() => {
+                  toggleThread(event.id);
+                  if (
+                    !isExpanded &&
+                    replyCount > (event.replies?.length || 0)
+                  ) {
+                    loadMoreReplies(event.id);
+                  }
+                }}
+                className="text-base-content/60 hover:text-base-content text-sm flex items-center space-x-1 transition-colors"
               >
                 <span>
-                  {isExpanded ? "Hide" : "Show"} {event.replies.length} repl
-                  {event.replies.length === 1 ? "y" : "ies"}
+                  {isExpanded ? "Hide" : "Show"} {replyCount} repl
+                  {replyCount === 1 ? "y" : "ies"}
                 </span>
                 <svg
                   className={`w-4 h-4 transform transition-transform ${isExpanded ? "rotate-180" : ""}`}
@@ -220,23 +374,77 @@ const EnhancedThreadView = ({ events, onReply, currentPubkey }) => {
           </div>
         </div>
 
+        {/* Loading indicator for more replies */}
+        {isExpanded && loadingMore && parentEventId === event.id && (
+          <div className="ml-6 mb-3">
+            <div className="bg-base-100 rounded-lg border border-base-300 p-4">
+              <div className="flex items-center space-x-2">
+                <div className="loading loading-spinner loading-sm"></div>
+                <span className="text-sm text-base-content/60">
+                  Loading more replies...
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Nested replies */}
         {isExpanded && event.replies && (
           <div className="mt-3">
             {event.replies.map((reply, index) =>
-              renderEvent(reply, depth + 1, index === event.replies.length - 1),
+              renderEvent(
+                reply,
+                depth + 1,
+                index === event.replies.length - 1,
+                event.id,
+              ),
             )}
+          </div>
+        )}
+
+        {/* Load more replies button */}
+        {isExpanded && hasMoreReplies && !loadingMore && (
+          <div className="ml-6 mb-3">
+            <button
+              onClick={() => loadMoreReplies(event.id)}
+              className="bg-base-100 hover:bg-base-200 border border-base-300 rounded-lg p-3 w-full text-center text-sm text-primary hover:text-primary/80 transition-colors"
+            >
+              Load more replies...
+            </button>
           </div>
         )}
       </div>
     );
   };
 
+  // Helper function to parse mentions in content
+  const parseMentions = (content, profileMap) => {
+    // Simple mention parsing - replace #[0] with profile names
+    return content.replace(/#\[(\d+)\]/g, (match, index) => {
+      // This would need to be enhanced to properly map to the actual p-tags
+      const profile = Array.from(profileMap.values())[parseInt(index)];
+      return profile ? `@${profile.display_name || profile.name}` : match;
+    });
+  };
+
+  // Format time ago helper
+  const formatTimeAgo = (timestamp) => {
+    const now = Math.floor(Date.now() / 1000);
+    const diff = now - timestamp;
+
+    if (diff < 60) return "Just now";
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
+
+    return new Date(timestamp * 1000).toLocaleDateString();
+  };
+
   if (!events || events.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500">
+      <div className="text-center py-8 text-base-content/50">
         <svg
-          className="w-12 h-12 mx-auto mb-4 text-gray-300"
+          className="w-12 h-12 mx-auto mb-4 opacity-50"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -255,20 +463,29 @@ const EnhancedThreadView = ({ events, onReply, currentPubkey }) => {
 
   return (
     <div className="enhanced-thread-view">
-      <div className="mb-4 p-4 bg-blue-50 rounded-lg">
-        <h3 className="text-sm font-semibold text-blue-900 mb-1">
+      <div className="mb-4 p-4 bg-primary/5 rounded-lg border border-primary/20">
+        <h3 className="text-sm font-semibold text-primary mb-1">
           Enhanced NIP-10 Threading
         </h3>
-        <p className="text-xs text-blue-700">
+        <p className="text-xs text-primary/80">
           Showing {optimizedThreads.length} thread
-          {optimizedThreads.length !== 1 ? "s" : ""} with improved marker
-          support and depth calculation
+          {optimizedThreads.length !== 1 ? "s" : ""} with hierarchical replies,
+          batch loading, and improved marker support
         </p>
       </div>
 
       <div className="space-y-4">
         {optimizedThreads.map((thread) => renderEvent(thread))}
       </div>
+
+      {loadingMore && (
+        <div className="text-center py-4">
+          <div className="loading loading-spinner loading-md"></div>
+          <p className="text-sm text-base-content/60 mt-2">
+            Loading more replies...
+          </p>
+        </div>
+      )}
     </div>
   );
 };

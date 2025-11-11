@@ -21,6 +21,11 @@ export default function GeneralForum() {
   const [relayStatuses, setRelayStatuses] = useState({});
   const [pool, setPool] = useState(null);
 
+  // Stats tab state
+  const [activeTab, setActiveTab] = useState("posts");
+  const [stats, setStats] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(false);
+
   // Load general forum events
   useEffect(() => {
     const loadEvents = async () => {
@@ -88,6 +93,42 @@ export default function GeneralForum() {
 
     return () => clearInterval(interval);
   }, [pool]);
+
+  // Calculate board stats on load and refresh
+  useEffect(() => {
+    const loadBoardStats = async () => {
+      setStatsLoading(true);
+      try {
+        const cached = await db.getCachedBoardStats("general", 5 * 60 * 1000); // 5 min cache
+        if (cached) {
+          setStats(cached);
+          setStatsLoading(false);
+          return;
+        }
+        // Compute fresh stats if not cached
+        const fresh = await db.calculateBoardStats("general");
+        setStats(fresh);
+      } catch (err) {
+        console.error("Failed to load board stats:", err);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+    loadBoardStats();
+  }, []);
+
+  // Periodic background refresh of stats (every 5 minutes)
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        await db.calculateBoardStats("general");
+        setStats(await db.getCachedBoardStats("general"));
+      } catch (e) {
+        console.error("Background stats refresh error:", e);
+      }
+    }, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleReply = useCallback((event) => {
     setReplyToEvent(event);
@@ -171,6 +212,96 @@ export default function GeneralForum() {
       .length;
   };
 
+  // Render Stats tab content
+  const renderStatsTab = () => {
+    if (statsLoading) {
+      return (
+        <div className="p-6 text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-2 text-sm text-gray-500">Loading statistics...</p>
+        </div>
+      );
+    }
+    if (!stats) {
+      return (
+        <div className="p-6 text-center text-gray-500">
+          <p>Statistics unavailable</p>
+        </div>
+      );
+    }
+    return (
+      <div className="p-6 space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-blue-50 rounded-lg p-4">
+            <div className="text-2xl font-bold text-blue-600">{stats.totalThreads}</div>
+            <div className="text-sm text-blue-800">Total Threads</div>
+          </div>
+          <div className="bg-green-50 rounded-lg p-4">
+            <div className="text-2xl font-bold text-green-600">{stats.activeThreads}</div>
+            <div className="text-sm text-green-800">Active Threads (7d)</div>
+          </div>
+          <div className="bg-purple-50 rounded-lg p-4">
+            <div className="text-2xl font-bold text-purple-600">{stats.uniqueAuthors}</div>
+            <div className="text-sm text-purple-800">Unique Authors</div>
+          </div>
+          <div className="bg-yellow-50 rounded-lg p-4">
+            <div className="text-2xl font-bold text-yellow-600">{stats.topUsers?.length || 0}</div>
+            <div className="text-sm text-yellow-800">Top Contributors</div>
+          </div>
+        </div>
+
+        {/* Top Users List */}
+        {stats.topUsers && stats.topUsers.length > 0 && (
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">Top 5 Most Active Users</h3>
+            <ul className="space-y-2">
+              {stats.topUsers.slice(0, 5).map((user, idx) => (
+                <li key={user.userId} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                  <span className="text-sm font-medium text-gray-700">
+                    {idx + 1}. {user.userId}
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    {user.replies} replies, {user.views} views
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Simple heatmap representation (last 30 days) */}
+        {stats.heatmap && (
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">Activity Heatmap (Last 30 Days)</h3>
+            <div className="grid grid-cols-7 gap-1 text-xs">
+              {Object.entries(stats.heatmap).map(([date, count]) => (
+                <div
+                  key={date}
+                  className={`h-6 flex items-center justify-center rounded ${
+                    count > 0
+                      ? count > 10
+                        ? "bg-red-500 text-white"
+                        : count > 5
+                          ? "bg-yellow-500 text-gray-900"
+                          : "bg-green-500 text-white"
+                      : "bg-gray-200 text-gray-400"
+                  }`}
+                  title={`${date}: ${count} activity`}
+                >
+                  {count > 0 ? count : ""}
+                </div>
+              ))}
+            </div>
+            <div className="mt-2 text-xs text-gray-500 flex justify-between">
+              <span>30 days ago</span>
+              <span>Today</span>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="max-w-6xl mx-auto p-6">
       {/* Header */}
@@ -209,6 +340,45 @@ export default function GeneralForum() {
             >
               🔄 Refresh
             </button>
+          </div>
+
+          {/* Tab Navigation */}
+          <div className="border-b border-gray-200 mt-6">
+            <nav className="flex space-x-8" aria-label="Tabs">
+              <button
+                onClick={() => setActiveTab("posts")}
+                className={`whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === "posts"
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                }`}
+              >
+                Posts
+              </button>
+              <button
+                onClick={() => setActiveTab("stats")}
+                className={`whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === "stats"
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                }`}
+              >
+                Stats
+              </button>
+            </nav>
+          </div>
+        </div>
+      </div>
+
+      {/* Tab Content */}
+      {activeTab === "posts" && (
+      {/* NostrWidget for posting */}
+      <div className="mt-8">
+        <NostrWidget />
+      </div>
+      )}
+
+      {activeTab === "stats" && renderStatsTab()}
           </div>
 
           {/* Create Post Button */}
