@@ -180,44 +180,81 @@ export default function ThreadDetailPage() {
   };
 
   const formatContent = (content) => {
-    // Basic markdown rendering
-    return content
-      .replace(
-        /^### (.*$)/gim,
-        '<h3 class="text-lg font-semibold mb-2">$1</h3>',
-      )
-      .replace(/^## (.*$)/gim, '<h2 class="text-xl font-semibold mb-3">$1</h2>')
-      .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold mb-4">$1</h1>')
-      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-      .replace(/\*(.+?)\*/g, "<em>$1</em>")
-      .replace(
-        /!\[([^\]]*)\]\(([^)]*)\)/g,
-        '<img src="$2" alt="$1" class="max-w-full h-auto rounded-lg my-4" />',
-      )
-      .replace(
-        /\[([^\]]*)\]\(([^)]*)\)/g,
-        '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">$1</a>',
-      )
-      .replace(
-        /```(\w+)?\n([\s\S]*?)```/g,
-        '<pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto my-4"><code>$2</code></pre>',
-      )
-      .replace(
-        /`([^`]+)`/g,
-        '<code class="bg-gray-100 px-2 py-1 rounded text-sm">$1</code>',
-      )
-      .replace(/\n\n/g, '</p><p class="mb-4">')
-      .replace(/^\n/, '<p class="mb-4">')
-      .replace(/\n$/, "</p>")
-      .replace(/\n/g, "<br />");
+    // Enhanced markdown rendering with modern styling
+    return (
+      content
+        // Headers with better styling
+        .replace(
+          /^### (.*$)/gim,
+          '<h3 class="text-xl font-semibold mb-3 text-gray-800">$1</h3>',
+        )
+        .replace(
+          /^## (.*$)/gim,
+          '<h2 class="text-2xl font-bold mb-4 gradient-text">$1</h2>',
+        )
+        .replace(
+          /^# (.*$)/gim,
+          '<h1 class="text-3xl font-bold mb-6 gradient-text">$1</h1>',
+        )
+        // Bold and italic
+        .replace(
+          /\*\*(.+?)\*\*/g,
+          '<strong class="font-bold text-gray-900">$1</strong>',
+        )
+        .replace(/\*(.+?)\*/g, '<em class="italic text-gray-700">$1</em>')
+        // Images with modern styling
+        .replace(
+          /!\[([^\]]*)\]\(([^)]*)\)/g,
+          '<img src="$2" alt="$1" class="max-w-full h-auto rounded-xl shadow-lg my-6 hover:shadow-xl transition-shadow duration-300" />',
+        )
+        // Links with modern styling
+        .replace(
+          /\[([^\]]*)\]\(([^)]*)\)/g,
+          '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline decoration-2 hover:decoration-blue-400 transition-all duration-200 font-medium">$1</a>',
+        )
+        // Code blocks with enhanced styling
+        .replace(
+          /```(\w+)?\n([\s\S]*?)```/g,
+          '<div class="my-6"><pre class="bg-gradient-to-br from-gray-900 to-gray-800 text-gray-100 p-6 rounded-xl overflow-x-auto shadow-lg border border-gray-700"><code class="text-sm font-mono leading-relaxed">$2</code></pre></div>',
+        )
+        // Inline code with modern styling
+        .replace(
+          /`([^`]+)`/g,
+          '<code class="bg-gradient-to-r from-gray-100 to-gray-200 px-3 py-1.5 rounded-lg text-sm font-mono text-gray-800 border border-gray-300 shadow-sm">$1</code>',
+        )
+        // Blockquotes with modern styling
+        .replace(
+          /^> (.+)$/gm,
+          '<blockquote class="border-l-4 border-blue-500 pl-6 py-3 my-4 bg-gradient-to-r from-blue-50 to-transparent rounded-r-lg italic text-gray-700">$1</blockquote>',
+        )
+        // Lists with modern styling
+        .replace(/^\* (.+)$/gm, '<li class="mb-2 text-gray-700">$1</li>')
+        .replace(
+          /(<li.*<\/li>)/s,
+          '<ul class="list-disc list-inside space-y-2 mb-6 pl-4">$1</ul>',
+        )
+        // Horizontal rule
+        .replace(/^---$/gm, '<hr class="border-gray-300 my-8 border-t-2" />')
+        // Line breaks and paragraphs
+        .replace(/\n\n/g, '</p><p class="mb-6 text-gray-700 leading-relaxed">')
+        .replace(/^\n/, '<p class="mb-6 text-gray-700 leading-relaxed">')
+        .replace(/\n$/, "</p>")
+        .replace(/\n/g, "<br />")
+    );
   };
 
   if (!room) {
     return (
-      <div className="min-h-screen bg-base-200 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Room Not Found</h2>
-          <Link href="/" className="btn btn-primary">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 flex items-center justify-center">
+        <div className="text-center glass-morphism p-12 rounded-2xl">
+          <div className="text-6xl mb-6">🚫</div>
+          <h2 className="text-3xl font-bold mb-4 text-gray-800">
+            Room Not Found
+          </h2>
+          <p className="text-gray-600 mb-8">
+            This room doesn't exist or has been removed.
+          </p>
+          <Link href="/" className="modern-button-primary px-8 py-3">
             Back to Forums
           </Link>
         </div>
@@ -227,18 +264,32 @@ export default function ThreadDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-base-200 flex items-center justify-center">
-        <div className="loading loading-spinner loading-lg"></div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 flex items-center justify-center">
+        <div className="glass-morphism p-8 rounded-2xl text-center">
+          <div className="loading loading-spinner loading-lg text-blue-600 mb-4"></div>
+          <p className="text-gray-800 font-medium">
+            Loading amazing discussion...
+          </p>
+        </div>
       </div>
     );
   }
 
   if (!thread) {
     return (
-      <div className="min-h-screen bg-base-200 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Thread Not Found</h2>
-          <Link href={`/room/${roomId}`} className="btn btn-primary">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 flex items-center justify-center">
+        <div className="text-center glass-morphism p-12 rounded-2xl">
+          <div className="text-6xl mb-6">📄</div>
+          <h2 className="text-3xl font-bold mb-4 text-gray-800">
+            Thread Not Found
+          </h2>
+          <p className="text-gray-600 mb-8">
+            This thread doesn't exist or has been removed.
+          </p>
+          <Link
+            href={`/room/${roomId}`}
+            className="modern-button-primary px-8 py-3"
+          >
             Back to {room.name}
           </Link>
         </div>
@@ -247,109 +298,196 @@ export default function ThreadDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-base-200">
-      {/* Header */}
-      <div className={`bg-gradient-to-r ${room.gradient} text-white p-8`}>
-        <div className="container mx-auto">
-          {/* Breadcrumb */}
-          <nav className="flex items-center space-x-2 text-sm mb-4 opacity-90">
-            <Link href="/" className="hover:underline">
-              Home
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100">
+      {/* Enhanced Header */}
+      <div
+        className={`relative bg-gradient-to-br ${room.gradient} text-white overflow-hidden`}
+      >
+        {/* Background decoration */}
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute -right-20 -top-20 w-64 h-64 rounded-full bg-white/30 animate-pulse"></div>
+          <div className="absolute -left-32 -bottom-32 w-96 h-96 rounded-full bg-white/20 animate-pulse-slow"></div>
+        </div>
+
+        <div className="relative container mx-auto px-4 py-12">
+          {/* Enhanced Breadcrumb */}
+          <nav className="flex items-center space-x-2 text-sm mb-6 opacity-90">
+            <Link href="/" className="hover:text-white/80 transition-colors">
+              🏠 Home
             </Link>
-            <span>›</span>
-            <Link href={`/category/${category.id}`} className="hover:underline">
+            <span className="opacity-60">›</span>
+            <Link
+              href={`/category/${category.id}`}
+              className="hover:text-white/80 transition-colors"
+            >
               {category.name}
             </Link>
-            <span>›</span>
-            <Link href={`/room/${roomId}`} className="hover:underline">
-              {room.name}
+            <span className="opacity-60">›</span>
+            <Link
+              href={`/room/${roomId}`}
+              className="hover:text-white/80 transition-colors"
+            >
+              {room.icon} {room.name}
             </Link>
-            <span>›</span>
-            <span>{getThreadTitle(thread)}</span>
+            <span className="opacity-60">›</span>
+            <span className="font-medium">{getThreadTitle(thread)}</span>
           </nav>
 
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <span className="text-4xl">{room.icon}</span>
+            <div className="flex items-center space-x-6">
+              <span className="text-6xl animate-float">{room.icon}</span>
               <div>
-                <h1 className="text-3xl font-bold">{room.name}</h1>
-                <p className="text-white/90">{room.description}</p>
+                <h1 className="text-4xl font-bold mb-2">{room.name}</h1>
+                <p className="text-white/90 text-lg">{room.description}</p>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        {/* Error/Success Messages */}
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        {/* Enhanced Error/Success Messages */}
         {error && (
-          <div className="alert alert-error mb-6">
-            <svg
-              className="w-6 h-6 shrink-0 stroke-current"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <span>{error}</span>
+          <div className="glass-morphism border-2 border-red-300 bg-red-50/90 text-red-800 p-6 rounded-xl mb-8 animate-slide-up">
+            <div className="flex items-center space-x-4">
+              <div className="flex-shrink-0">
+                <svg
+                  className="w-6 h-6 text-red-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
+                </svg>
+              </div>
+              <span className="font-medium">{error}</span>
+            </div>
           </div>
         )}
 
         {success && (
-          <div className="alert alert-success mb-6">
-            <svg
-              className="w-6 h-6 shrink-0 stroke-current"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <span>{success}</span>
+          <div className="glass-morphism border-2 border-green-300 bg-green-50/90 text-green-800 p-6 rounded-xl mb-8 animate-slide-up">
+            <div className="flex items-center space-x-4">
+              <div className="flex-shrink-0">
+                <svg
+                  className="w-6 h-6 text-green-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <span className="font-medium">{success}</span>
+            </div>
           </div>
         )}
 
-        {/* Thread Content */}
-        <div className="bg-base-100 rounded-lg shadow-sm mb-6">
-          <div className="p-6">
-            {/* Thread Header */}
-            <div className="flex items-start justify-between mb-6">
+        {/* Enhanced Thread Content */}
+        <div className="modern-card modern-card-hover mb-8 animate-slide-up">
+          <div className="p-8">
+            {/* Enhanced Thread Header */}
+            <div className="flex items-start justify-between mb-8">
               <div className="flex-1">
-                <h2 className="text-2xl font-bold text-base-content mb-2">
+                <h2 className="text-3xl font-bold gradient-text mb-4 leading-tight">
                   {getThreadTitle(thread)}
                 </h2>
-                <div className="flex items-center space-x-4 text-sm text-base-content/60">
-                  <span>Thread ID: {thread.id.substring(0, 16)}...</span>
-                  <span>•</span>
-                  <span>
-                    {new Date(thread.created_at * 1000).toLocaleDateString()}
-                  </span>
-                  <span>•</span>
-                  <span>{viewCount} views</span>
-                  <span>•</span>
-                  <span>
-                    {replyCount} {replyCount === 1 ? "reply" : "replies"}
-                  </span>
+                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                  <div className="flex items-center space-x-2 px-3 py-1 bg-gray-100/80 rounded-full">
+                    <svg
+                      className="w-4 h-4 text-gray-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                      />
+                    </svg>
+                    <span className="font-mono">
+                      {thread.id.substring(0, 16)}...
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-2 px-3 py-1 bg-blue-100/80 rounded-full">
+                    <svg
+                      className="w-4 h-4 text-blue-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                    <span>
+                      {new Date(thread.created_at * 1000).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-2 px-3 py-1 bg-purple-100/80 rounded-full">
+                    <svg
+                      className="w-4 h-4 text-purple-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                      />
+                    </svg>
+                    <span className="font-medium">{viewCount} views</span>
+                  </div>
+                  <div className="flex items-center space-x-2 px-3 py-1 bg-green-100/80 rounded-full">
+                    <svg
+                      className="w-4 h-4 text-green-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                      />
+                    </svg>
+                    <span className="font-medium">
+                      {replyCount} {replyCount === 1 ? "reply" : "replies"}
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              {/* Author Profile Link */}
+              {/* Enhanced Author Profile Link */}
               <button
                 onClick={() => setShowProfileModal(thread.pubkey)}
-                className="btn btn-ghost btn-sm flex items-center space-x-2"
+                className="modern-button-secondary px-4 py-2 flex items-center space-x-2 group"
               >
                 <span>View Author</span>
                 <svg
-                  className="w-4 h-4"
+                  className="w-4 h-4 transform group-hover:scale-110 transition-transform"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -364,18 +502,19 @@ export default function ThreadDetailPage() {
               </button>
             </div>
 
-            {/* Thread Body */}
-            <div className="prose max-w-none">
+            {/* Enhanced Thread Body */}
+            <div className="prose prose-lg max-w-none leading-relaxed text-gray-700">
               <div
+                className="animate-fade-in"
                 dangerouslySetInnerHTML={{
                   __html: formatContent(thread.content),
                 }}
               />
             </div>
 
-            {/* Thread Tags */}
-            <div className="mt-6 pt-6 border-t border-base-300">
-              <div className="flex flex-wrap gap-2">
+            {/* Enhanced Thread Tags */}
+            <div className="mt-8 pt-8 border-t border-gray-200/50">
+              <div className="flex flex-wrap gap-3">
                 {thread.tags.map((tag, index) => {
                   if (
                     tag[0] &&
@@ -383,10 +522,7 @@ export default function ThreadDetailPage() {
                     !["d", "title", "board", "published_at"].includes(tag[0])
                   ) {
                     return (
-                      <span
-                        key={index}
-                        className="badge badge-outline badge-sm"
-                      >
+                      <span key={index} className="modern-badge-primary">
                         {tag[0]}: {tag[1]}
                       </span>
                     );
@@ -398,32 +534,34 @@ export default function ThreadDetailPage() {
           </div>
         </div>
 
-        {/* Reply Form */}
+        {/* Enhanced Reply Form */}
         {user && (
-          <div className="bg-base-100 rounded-lg shadow-sm mb-6">
-            <div className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Post a Reply</h3>
+          <div className="modern-card mb-8 animate-slide-up">
+            <div className="p-8">
+              <h3 className="text-2xl font-bold gradient-text mb-6">
+                💬 Post a Reply
+              </h3>
               <textarea
                 value={replyContent}
                 onChange={(e) => setReplyContent(e.target.value)}
-                placeholder="Write your reply here..."
-                rows={4}
-                className="w-full px-4 py-3 border border-base-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+                placeholder="Share your thoughts on this discussion..."
+                rows={5}
+                className="modern-input w-full resize-none focus-ring-green"
                 disabled={isSubmittingReply}
               />
-              <div className="flex justify-end mt-4">
+              <div className="flex justify-end mt-6">
                 <button
                   onClick={() => handleReply(thread)}
                   disabled={isSubmittingReply || !replyContent.trim()}
-                  className="btn btn-primary"
+                  className="modern-button-primary px-8 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSubmittingReply ? (
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-3">
                       <div className="loading loading-spinner loading-sm"></div>
-                      <span>Posting...</span>
+                      <span>Posting Reply...</span>
                     </div>
                   ) : (
-                    "Post Reply"
+                    "🚀 Post Reply"
                   )}
                 </button>
               </div>
@@ -432,25 +570,31 @@ export default function ThreadDetailPage() {
         )}
 
         {!user && (
-          <div className="bg-base-100 rounded-lg shadow-sm mb-6">
-            <div className="p-6 text-center">
-              <p className="text-base-content/70 mb-4">
-                You need to connect your Nostr account to reply to this thread.
-              </p>
-              <Link href="/" className="btn btn-primary">
-                Connect Account
-              </Link>
-            </div>
+          <div className="glass-morphism p-8 rounded-xl mb-8 text-center animate-slide-up">
+            <div className="text-6xl mb-6">🔐</div>
+            <h3 className="text-2xl font-bold text-gray-800 mb-4">
+              Join the Conversation
+            </h3>
+            <p className="text-gray-600 mb-8 text-lg">
+              You need to connect your Nostr account to reply to this thread and
+              join the decentralized discussion.
+            </p>
+            <Link href="/" className="modern-button-primary px-8 py-3">
+              🔗 Connect Nostr Account
+            </Link>
           </div>
         )}
 
-        {/* Replies Section */}
+        {/* Enhanced Replies Section */}
         {replies.length > 0 && (
-          <div className="bg-base-100 rounded-lg shadow-sm">
-            <div className="p-6">
-              <h3 className="text-lg font-semibold mb-4">
-                Replies ({replyCount})
-              </h3>
+          <div className="modern-card animate-slide-up">
+            <div className="p-8">
+              <div className="flex items-center space-x-3 mb-6">
+                <h3 className="text-2xl font-bold gradient-text">
+                  💬 Discussion ({replyCount})
+                </h3>
+                <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+              </div>
               <EnhancedThreadView
                 events={replies}
                 onReply={handleReply}
@@ -462,22 +606,32 @@ export default function ThreadDetailPage() {
         )}
 
         {replies.length === 0 && !loading && (
-          <div className="bg-base-100 rounded-lg shadow-sm">
-            <div className="p-6 text-center text-base-content/50">
-              <div className="text-6xl mb-4 opacity-50">💬</div>
-              <h3 className="text-lg font-medium mb-2">No replies yet</h3>
-              <p>Be the first to reply to this thread!</p>
+          <div className="glass-morphism p-12 rounded-xl text-center animate-slide-up">
+            <div className="text-8xl mb-6 opacity-60 animate-pulse">💭</div>
+            <h3 className="text-3xl font-bold text-gray-800 mb-4">
+              No replies yet
+            </h3>
+            <p className="text-gray-600 text-lg mb-8">
+              Be the first to share your thoughts on this interesting
+              discussion!
+            </p>
+            <div className="text-center">
+              <span className="text-2xl">✨</span>
             </div>
           </div>
         )}
 
-        {/* Profile Modal */}
+        {/* Enhanced Profile Modal */}
         {showProfileModal && (
-          <UserProfile
-            pubkey={showProfileModal}
-            onClose={() => setShowProfileModal(null)}
-            isModal={true}
-          />
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="glass-morphism rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden animate-fade-in">
+              <UserProfile
+                pubkey={showProfileModal}
+                onClose={() => setShowProfileModal(null)}
+                isModal={true}
+              />
+            </div>
+          </div>
         )}
       </div>
     </div>
