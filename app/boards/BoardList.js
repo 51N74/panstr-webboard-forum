@@ -9,10 +9,12 @@ export default function BoardList() {
   const [expandedCategories, setExpandedCategories] = useState({});
   const [roomStats, setRoomStats] = useState({});
   const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
   const { getEvents } = useNostr();
 
-  // Auto-expand first category initially
+  // Auto-expand first category initially and handle mount
   useEffect(() => {
+    setMounted(true);
     if (BOARD_CATEGORIES.length > 0) {
       setExpandedCategories({
         [BOARD_CATEGORIES[0].id]: true,
@@ -22,6 +24,8 @@ export default function BoardList() {
 
   // Fetch thread counts for each room with optimized single query
   useEffect(() => {
+    if (!mounted) return;
+
     const fetchRoomStats = async () => {
       setLoading(true);
       const stats = {};
@@ -62,7 +66,7 @@ export default function BoardList() {
     };
 
     fetchRoomStats();
-  }, [getEvents]);
+  }, [getEvents, mounted]);
 
   const toggleCategory = (categoryId) => {
     setExpandedCategories((prev) => ({
@@ -92,102 +96,155 @@ export default function BoardList() {
     return diff < 86400; // New if activity in last 24 hours
   };
 
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 flex items-center justify-center">
+        <div className="loading loading-spinner loading-lg text-blue-600"></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-base-200">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100">
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-base-content mb-4">
-            🌏 Welcome to Panstr Forum
+        {/* Enhanced Header */}
+        <div className="text-center mb-16 animate-fade-in">
+          <div className="mb-8">
+            <span className="text-6xl animate-float inline-block">🌏</span>
+          </div>
+          <h1 className="text-5xl font-bold mb-6">
+            <span className="gradient-text">Welcome to Panstr Forum</span>
           </h1>
-          <p className="text-lg text-base-content/70 max-w-2xl mx-auto">
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed mb-8">
             Discover conversations across technology, lifestyle, and Nostr
             ecosystem. Join rooms that match your interests and connect with the
             community.
           </p>
 
-          {/* Quick Access */}
-          <div className="flex justify-center mt-6 space-x-4">
+          {/* Enhanced Quick Access */}
+          <div className="flex justify-center mt-8 space-x-6">
             <Link
               href="/siamstr-test"
-              className="btn btn-outline btn-sm hover:btn-primary"
+              className="modern-button-secondary group"
             >
               🏴 #siamstr Test Room
+              <span className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                →
+              </span>
             </Link>
           </div>
         </div>
 
-        {/* Categories */}
-        <div className="space-y-6 mt-8">
-          {BOARD_CATEGORIES.map((category) => {
+        {/* Enhanced Categories */}
+        <div className="space-y-8 mt-8">
+          {BOARD_CATEGORIES.map((category, index) => {
             const isExpanded = expandedCategories[category.id];
             const roomCount = category.rooms.length;
 
             return (
               <div
                 key={category.id}
-                className="bg-base-100 rounded-xl shadow-lg overflow-hidden"
+                className={`modern-card animate-slide-up ${isExpanded ? "shadow-2xl" : ""}`}
+                style={{ animationDelay: `${index * 100}ms` }}
               >
-                {/* Category Header */}
+                {/* Enhanced Category Header */}
                 <div
-                  className={`p-6 cursor-pointer transition-all duration-200 hover:bg-base-200 ${
+                  className={`p-8 cursor-pointer transition-all duration-300 relative overflow-hidden ${
                     isExpanded
-                      ? "bg-gradient-to-r " + category.gradient + " text-white"
-                      : "bg-base-100"
+                      ? "bg-gradient-to-br " + category.gradient + " text-white"
+                      : "bg-gradient-to-r from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200"
                   }`}
                   onClick={() => toggleCategory(category.id)}
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <span className="text-3xl">{category.icon}</span>
+                  {/* Background decoration */}
+                  <div className="absolute inset-0 opacity-10">
+                    <div
+                      className={`absolute -right-10 -top-10 w-40 h-40 rounded-full bg-white/30 ${isExpanded ? "animate-pulse" : ""}`}
+                    ></div>
+                    <div
+                      className={`absolute -left-10 -bottom-10 w-32 h-32 rounded-full bg-white/20 ${isExpanded ? "animate-pulse-slow" : ""}`}
+                    ></div>
+                  </div>
+
+                  <div className="relative flex items-center justify-between">
+                    <div className="flex items-center space-x-6">
+                      <span
+                        className={`text-5xl ${isExpanded ? "animate-bounce" : "group-hover:animate-pulse"} transition-transform duration-300`}
+                      >
+                        {category.icon}
+                      </span>
                       <div>
-                        <h2 className="text-2xl font-bold">{category.name}</h2>
-                        <p
-                          className={`text-sm ${isExpanded ? "text-white/90" : "text-base-content/70"}`}
+                        <h2
+                          className={`text-3xl font-bold mb-2 ${isExpanded ? "text-white" : "text-gray-800"}`}
                         >
-                          {category.description} • {roomCount} rooms
+                          {category.name}
+                        </h2>
+                        <p
+                          className={`text-base ${isExpanded ? "text-white/90" : "text-gray-600"}`}
+                        >
+                          {category.description} •{" "}
+                          <span className="font-semibold">
+                            {roomCount} rooms
+                          </span>
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      {isExpanded ? (
-                        <svg
-                          className="w-6 h-6 transform rotate-180"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 9l-7 7-7-7"
-                          />
-                        </svg>
-                      ) : (
-                        <svg
-                          className="w-6 h-6"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 9l-7 7-7-7"
-                          />
-                        </svg>
-                      )}
+                    <div className="flex items-center space-x-3">
+                      <div
+                        className={`px-4 py-2 rounded-full text-sm font-medium backdrop-blur-sm ${
+                          isExpanded
+                            ? "bg-white/20 text-white"
+                            : "bg-gray-200/80 text-gray-700"
+                        }`}
+                      >
+                        {roomCount} rooms
+                      </div>
+                      <div
+                        className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 ${
+                          isExpanded
+                            ? "bg-white/20 text-white"
+                            : "bg-gray-200 text-gray-600"
+                        }`}
+                      >
+                        {isExpanded ? (
+                          <svg
+                            className="w-6 h-6 transform rotate-180"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 9l-7 7-7-7"
+                            />
+                          </svg>
+                        ) : (
+                          <svg
+                            className="w-6 h-6"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 9l-7 7-7-7"
+                            />
+                          </svg>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Rooms */}
+                {/* Enhanced Rooms */}
                 {isExpanded && (
-                  <div className="p-6 pt-0">
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                      {category.rooms.map((room) => {
+                  <div className="p-8 pt-0">
+                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                      {category.rooms.map((room, roomIndex) => {
                         const stats = roomStats[room.id] || {
                           threadCount: 0,
                           latestActivity: null,
@@ -198,31 +255,34 @@ export default function BoardList() {
                           <Link
                             key={room.id}
                             href={`/room/${room.id}`}
-                            className="group block p-6 rounded-lg border border-base-300 hover:border-primary hover:shadow-md transition-all duration-200 bg-base-50 hover:bg-base-100"
+                            className={`modern-card modern-card-hover p-6 border border-gray-200/50 hover:border-blue-300/50 group/card`}
+                            style={{
+                              animationDelay: `${index * 100 + roomIndex * 50}ms`,
+                            }}
                           >
-                            <div className="flex items-start justify-between mb-3">
-                              <span className="text-2xl group-hover:scale-110 transition-transform duration-200">
+                            <div className="flex items-start justify-between mb-4">
+                              <span className="text-3xl group-hover/card:scale-110 transition-transform duration-300 group-hover/card:animate-bounce">
                                 {room.icon}
                               </span>
                               {hasNewPosts && (
-                                <span className="badge badge-primary badge-sm">
-                                  New
+                                <span className="modern-badge-success animate-pulse">
+                                  ✨ New
                                 </span>
                               )}
                             </div>
 
-                            <h3 className="font-semibold text-lg text-base-content mb-2 group-hover:text-primary transition-colors">
+                            <h3 className="font-bold text-xl text-gray-800 mb-3 group-hover/card:text-blue-600 transition-colors">
                               {room.name}
                             </h3>
 
-                            <p className="text-sm text-base-content/70 mb-4 line-clamp-2">
+                            <p className="text-gray-600 mb-6 line-clamp-3 leading-relaxed">
                               {room.description}
                             </p>
 
-                            <div className="flex items-center justify-between text-xs text-base-content/60">
-                              <div className="flex items-center space-x-1">
+                            <div className="flex items-center justify-between text-sm text-gray-500">
+                              <div className="flex items-center space-x-2">
                                 <svg
-                                  className="w-4 h-4"
+                                  className="w-5 h-5 text-gray-400 group-hover/card:text-blue-500 transition-colors"
                                   fill="none"
                                   stroke="currentColor"
                                   viewBox="0 0 24 24"
@@ -234,9 +294,33 @@ export default function BoardList() {
                                     d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
                                   />
                                 </svg>
-                                <span>{stats.threadCount} threads</span>
+                                <span className="font-medium">
+                                  {stats.threadCount} threads
+                                </span>
                               </div>
-                              <span>{formatTimeAgo(stats.latestActivity)}</span>
+                              <div className="flex items-center space-x-1 text-gray-400">
+                                <svg
+                                  className="w-4 h-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 018 8z"
+                                  />
+                                </svg>
+                                <span className="text-xs">
+                                  {formatTimeAgo(stats.latestActivity)}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Hover indicator */}
+                            <div className="mt-4 pt-4 border-t border-gray-100 text-center text-sm text-blue-600 opacity-0 group-hover/card:opacity-100 transition-all duration-300 font-medium">
+                              Enter Room →
                             </div>
                           </Link>
                         );
@@ -249,51 +333,60 @@ export default function BoardList() {
           })}
         </div>
 
-        {/* Loading State */}
+        {/* Enhanced Loading State */}
         {loading && (
-          <div className="fixed inset-0 bg-base-300/50 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="flex flex-col items-center space-y-4">
-              <div className="loading loading-spinner loading-lg text-primary"></div>
-              <p className="text-base-content">Loading room statistics...</p>
+          <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="glass-morphism p-8 rounded-2xl text-center">
+              <div className="loading loading-spinner loading-lg text-blue-600 mb-4"></div>
+              <p className="text-gray-800 font-medium">
+                Loading room statistics...
+              </p>
+              <div className="mt-4 text-sm text-gray-600">
+                Discovering amazing conversations
+              </div>
             </div>
           </div>
         )}
 
-        {/* Quick Stats */}
+        {/* Enhanced Quick Stats */}
         {!loading && (
-          <div className="mt-12 p-6 bg-base-100 rounded-xl shadow-lg">
-            <h3 className="text-xl font-bold mb-4 text-center">
-              Forum Statistics
+          <div className="mt-16 p-8 glass-morphism rounded-2xl animate-fade-in">
+            <h3 className="text-2xl font-bold text-center mb-8 gradient-text">
+              📊 Forum Statistics
             </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-              <div className="p-4 bg-base-200 rounded-lg">
-                <div className="text-2xl font-bold text-primary">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              <div className="stat-card text-center group">
+                <div className="text-4xl font-bold text-blue-600 group-hover:scale-110 transition-transform duration-200">
                   {BOARD_CATEGORIES.length}
                 </div>
-                <div className="text-sm text-base-content/70">Categories</div>
+                <div className="text-sm text-gray-600 mt-2 font-medium">
+                  Categories
+                </div>
               </div>
-              <div className="p-4 bg-base-200 rounded-lg">
-                <div className="text-2xl font-bold text-secondary">
+              <div className="stat-card text-center group">
+                <div className="text-4xl font-bold text-purple-600 group-hover:scale-110 transition-transform duration-200">
                   {BOARD_CATEGORIES.reduce(
                     (acc, cat) => acc + cat.rooms.length,
                     0,
                   )}
                 </div>
-                <div className="text-sm text-base-content/70">Rooms</div>
+                <div className="text-sm text-gray-600 mt-2 font-medium">
+                  Rooms
+                </div>
               </div>
-              <div className="p-4 bg-base-200 rounded-lg">
-                <div className="text-2xl font-bold text-accent">
+              <div className="stat-card text-center group">
+                <div className="text-4xl font-bold text-green-600 group-hover:scale-110 transition-transform duration-200">
                   {Object.values(roomStats).reduce(
                     (acc, stat) => acc + stat.threadCount,
                     0,
                   )}
                 </div>
-                <div className="text-sm text-base-content/70">
+                <div className="text-sm text-gray-600 mt-2 font-medium">
                   Total Threads
                 </div>
               </div>
-              <div className="p-4 bg-base-200 rounded-lg">
-                <div className="text-2xl font-bold text-info">
+              <div className="stat-card text-center group">
+                <div className="text-4xl font-bold text-orange-600 group-hover:scale-110 transition-transform duration-200">
                   {
                     Object.values(roomStats).filter(
                       (stat) =>
@@ -301,7 +394,9 @@ export default function BoardList() {
                     ).length
                   }
                 </div>
-                <div className="text-sm text-base-content/70">Active Rooms</div>
+                <div className="text-sm text-gray-600 mt-2 font-medium">
+                  Active Rooms
+                </div>
               </div>
             </div>
           </div>

@@ -212,13 +212,13 @@ export default function ThreadCard({ thread, roomId }) {
 
   return (
     <Link href={`/room/${roomId}/thread/${thread.id}`}>
-      <div className="block p-6 bg-base-100 rounded-lg border border-base-300 hover:border-primary hover:shadow-md transition-all duration-200 cursor-pointer group">
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center space-x-3">
-            {/* Author Avatar */}
-            <div className="avatar placeholder">
-              <div className="w-10 h-10 rounded-full bg-neutral text-neutral-content">
-                <span className="text-sm">
+      <div className="block modern-card modern-card-hover p-7 border border-gray-200/50 hover:border-blue-300/70 cursor-pointer group/thread">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center space-x-4">
+            {/* Enhanced Author Avatar */}
+            <div className="avatar placeholder relative">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 ring-2 ring-white shadow-md group-hover/thread:ring-blue-500/30 transition-all duration-300">
+                <span className="text-base font-medium">
                   {author?.picture ? (
                     <img
                       src={author.picture}
@@ -226,56 +226,68 @@ export default function ThreadCard({ thread, roomId }) {
                       className="w-full h-full rounded-full object-cover"
                     />
                   ) : (
-                    author?.name?.[0]?.toUpperCase() ||
-                    thread.pubkey?.substring(0, 2)?.toUpperCase()
+                    <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 text-white rounded-full flex items-center justify-center font-bold">
+                      {author?.name?.[0]?.toUpperCase() ||
+                        thread.pubkey?.substring(0, 2)?.toUpperCase()}
+                    </div>
                   )}
                 </span>
+                {author?.nip05 && (
+                  <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
+                )}
               </div>
             </div>
 
-            <div>
-              <div className="font-medium text-sm text-base-content">
+            <div className="min-w-0 flex-1">
+              <div className="font-semibold text-base text-gray-800 mb-1">
                 {loading ? (
-                  <div className="w-20 h-4 bg-base-300 rounded animate-pulse"></div>
+                  <div className="w-24 h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded loading-skeleton"></div>
                 ) : (
-                  author?.name ||
-                  author?.display_name ||
-                  `Anonymous ${thread.pubkey?.substring(0, 8)}...`
+                  <div className="flex items-center space-x-2">
+                    <span className="truncate">
+                      {author?.name || author?.display_name || "Anonymous"}
+                    </span>
+                    {author?.nip05 && (
+                      <span className="modern-badge-success text-xs">✓</span>
+                    )}
+                  </div>
                 )}
               </div>
-              <div className="text-xs text-base-content/60">
+              <div className="text-xs text-gray-500 font-medium">
                 {formatTimeAgo(thread.created_at)}
               </div>
             </div>
           </div>
 
-          {/* Status Badges */}
+          {/* Enhanced Status Badges */}
           <div className="flex items-center space-x-2">
             {isPinned() && (
-              <span className="badge badge-warning badge-xs">📌 Pinned</span>
+              <span className="modern-badge-warning animate-pulse">
+                📌 Pinned
+              </span>
             )}
             {isLocked() && (
-              <span className="badge badge-error badge-xs">🔒 Locked</span>
+              <span className="modern-badge-error">🔒 Locked</span>
             )}
           </div>
         </div>
 
-        {/* Thread Title */}
-        <h3 className="font-semibold text-lg text-base-content mb-2 group-hover:text-primary transition-colors line-clamp-2">
+        {/* Enhanced Thread Title */}
+        <h3 className="font-bold text-xl text-gray-900 mb-3 group-hover/thread:text-blue-600 transition-colors line-clamp-2 leading-tight">
           {title}
         </h3>
 
-        {/* Content Preview */}
-        <p className="text-sm text-base-content/70 mb-4 line-clamp-2">
+        {/* Enhanced Content Preview */}
+        <p className="text-gray-600 mb-6 line-clamp-3 leading-relaxed">
           {getContentPreview()}
         </p>
 
-        {/* Thread Stats */}
-        <div className="flex items-center justify-between text-xs text-base-content/60">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-1">
+        {/* Enhanced Thread Stats */}
+        <div className="flex items-center justify-between text-sm text-gray-500 border-t border-gray-100 pt-4">
+          <div className="flex items-center space-x-6">
+            <div className="flex items-center space-x-2 group/stat">
               <svg
-                className="w-4 h-4"
+                className="w-5 h-5 text-gray-400 group-hover/stat:text-blue-500 transition-colors"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -287,15 +299,15 @@ export default function ThreadCard({ thread, roomId }) {
                   d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
                 />
               </svg>
-              <span>
+              <span className="font-medium">
                 {replyCount} {replyCount === 1 ? "reply" : "replies"}
               </span>
             </div>
 
             {viewCount > 0 && (
-              <div className="flex items-center space-x-1">
+              <div className="flex items-center space-x-2 group/stat">
                 <svg
-                  className="w-4 h-4"
+                  className="w-5 h-5 text-gray-400 group-hover/stat:text-purple-500 transition-colors"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -313,27 +325,31 @@ export default function ThreadCard({ thread, roomId }) {
                     d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                   />
                 </svg>
-                <span>
+                <span className="font-medium">
                   {viewCount} {viewCount === 1 ? "view" : "views"}
                 </span>
               </div>
             )}
 
-            {/* Zap totals */}
-            <div className="flex items-center space-x-1">
+            {/* Enhanced Zap totals */}
+            <div className="flex items-center space-x-2 group/stat">
               <svg
-                className="w-4 h-4 text-yellow-500"
+                className="w-5 h-5 text-yellow-500 group-hover/stat:text-yellow-600 transition-colors"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
                 <path d="M11.3 1L3 12h6l-1 7 8.3-11H11l.3-6z" />
               </svg>
-              <span>{zapTotal ? `${zapTotal} sats` : "0 sats"}</span>
+              <span
+                className={`font-medium ${zapTotal > 0 ? "text-yellow-600" : "text-gray-500"}`}
+              >
+                {zapTotal ? `${zapTotal.toLocaleString()} sats` : "0 sats"}
+              </span>
             </div>
           </div>
 
-          {/* Last Activity */}
-          <div className="flex items-center space-x-1">
+          {/* Enhanced Last Activity */}
+          <div className="flex items-center space-x-2 text-xs text-gray-400">
             <svg
               className="w-4 h-4"
               fill="none"
@@ -351,9 +367,11 @@ export default function ThreadCard({ thread, roomId }) {
           </div>
         </div>
 
-        {/* Hover indicator */}
-        <div className="mt-3 text-xs text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-          Click to read thread →
+        {/* Enhanced Hover indicator */}
+        <div className="mt-4 pt-3 border-t border-gray-100 text-center">
+          <div className="text-sm text-blue-600 font-medium opacity-0 group-hover/thread:opacity-100 transition-all duration-300 transform translate-y-1 group-hover/thread:translate-y-0">
+            Read full thread →
+          </div>
         </div>
       </div>
     </Link>

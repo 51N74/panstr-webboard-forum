@@ -5,7 +5,11 @@ import Link from "next/link";
 import searchManager from "../../lib/search/searchManager";
 import db from "../../lib/storage/indexedDB";
 
-const SearchComponent = ({ onSearch, compact = false, placeholder = "Search threads and users..." }) => {
+const SearchComponent = ({
+  onSearch,
+  compact = false,
+  placeholder = "Search threads and users...",
+}) => {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState(null);
   const [suggestions, setSuggestions] = useState([]);
@@ -18,7 +22,7 @@ const SearchComponent = ({ onSearch, compact = false, placeholder = "Search thre
     timeRange: "all", // all, today, week, month, year
     sortBy: "relevance", // relevance, recent, popular
     room: "",
-    author: ""
+    author: "",
   });
 
   const searchRef = useRef(null);
@@ -89,13 +93,13 @@ const SearchComponent = ({ onSearch, compact = false, placeholder = "Search thre
       // Prepare search options
       let searchOptions = {
         limit: 20,
-        useCache: true
+        useCache: true,
       };
 
       if (useAdvanced && showAdvanced) {
         searchOptions = {
           ...searchOptions,
-          ...prepareAdvancedFilters()
+          ...prepareAdvancedFilters(),
         };
       }
 
@@ -104,25 +108,41 @@ const SearchComponent = ({ onSearch, compact = false, placeholder = "Search thre
       const searchType = filters.type;
 
       if (searchType === "users") {
-        searchResults = await searchManager.searchUsers(searchQuery, searchOptions);
+        searchResults = await searchManager.searchUsers(
+          searchQuery,
+          searchOptions,
+        );
       } else if (searchType === "threads") {
-        searchResults = await searchManager.searchThreads(searchQuery, searchOptions);
+        searchResults = await searchManager.searchThreads(
+          searchQuery,
+          searchOptions,
+        );
       } else {
         // Search both
         const [threadResults, userResults] = await Promise.all([
-          searchManager.searchThreads(searchQuery, { ...searchOptions, limit: 15 }),
-          searchManager.searchUsers(searchQuery, { ...searchOptions, limit: 5 })
+          searchManager.searchThreads(searchQuery, {
+            ...searchOptions,
+            limit: 15,
+          }),
+          searchManager.searchUsers(searchQuery, {
+            ...searchOptions,
+            limit: 5,
+          }),
         ]);
 
         searchResults = {
           results: [
-            ...threadResults.results.map(r => ({ ...r, resultType: "thread" })),
-            ...userResults.results.map(r => ({ ...r, resultType: "user" }))
+            ...threadResults.results.map((r) => ({
+              ...r,
+              resultType: "thread",
+            })),
+            ...userResults.results.map((r) => ({ ...r, resultType: "user" })),
           ],
           pagination: {
             ...threadResults.pagination,
-            total: threadResults.pagination.total + userResults.pagination.total
-          }
+            total:
+              threadResults.pagination.total + userResults.pagination.total,
+          },
         };
       }
 
@@ -132,13 +152,12 @@ const SearchComponent = ({ onSearch, compact = false, placeholder = "Search thre
       if (onSearch) {
         onSearch(searchQuery, searchResults);
       }
-
     } catch (error) {
       console.error("Search error:", error);
       setResults({
         results: [],
         pagination: { total: 0, limit: 20, offset: 0, hasMore: false },
-        error: error.message
+        error: error.message,
       });
     } finally {
       setLoading(false);
@@ -157,16 +176,16 @@ const SearchComponent = ({ onSearch, compact = false, placeholder = "Search thre
 
       switch (filters.timeRange) {
         case "today":
-          since = now - (24 * 60 * 60);
+          since = now - 24 * 60 * 60;
           break;
         case "week":
-          since = now - (7 * 24 * 60 * 60);
+          since = now - 7 * 24 * 60 * 60;
           break;
         case "month":
-          since = now - (30 * 24 * 60 * 60);
+          since = now - 30 * 24 * 60 * 60;
           break;
         case "year":
-          since = now - (365 * 24 * 60 * 60);
+          since = now - 365 * 24 * 60 * 60;
           break;
       }
 
@@ -224,9 +243,13 @@ const SearchComponent = ({ onSearch, compact = false, placeholder = "Search thre
 
     const parts = text.split(new RegExp(`(${highlight})`, "gi"));
     return parts.map((part, index) =>
-      part.toLowerCase() === highlight.toLowerCase() ?
-        <mark key={index} className="bg-yellow-200 px-1 rounded">{part}</mark> :
+      part.toLowerCase() === highlight.toLowerCase() ? (
+        <mark key={index} className="bg-yellow-200 px-1 rounded">
+          {part}
+        </mark>
+      ) : (
         part
+      ),
     );
   };
 
@@ -236,8 +259,17 @@ const SearchComponent = ({ onSearch, compact = false, placeholder = "Search thre
     if (results.error) {
       return (
         <div className="alert alert-error">
-          <svg className="w-6 h-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <svg
+            className="w-6 h-6 shrink-0 stroke-current"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
           </svg>
           <span>Search failed: {results.error}</span>
         </div>
@@ -258,17 +290,19 @@ const SearchComponent = ({ onSearch, compact = false, placeholder = "Search thre
       <div className="space-y-4">
         <div className="flex justify-between items-center mb-4">
           <p className="text-sm text-base-content/60">
-            Found {results.pagination.total} result{results.pagination.total !== 1 ? "s" : ""}
+            Found {results.pagination.total} result
+            {results.pagination.total !== 1 ? "s" : ""}
           </p>
           {results.pagination.hasMore && (
-            <button className="btn btn-sm btn-outline">
-              Load more
-            </button>
+            <button className="btn btn-sm btn-outline">Load more</button>
           )}
         </div>
 
         {results.results.map((result, index) => (
-          <div key={`${result.resultType}-${result.id || result.pubkey}-${index}`} className="bg-base-100 rounded-lg border border-base-300 p-4 hover:border-primary transition-colors">
+          <div
+            key={`${result.resultType}-${result.id || result.pubkey}-${index}`}
+            className="bg-base-100 rounded-lg border border-base-300 p-4 hover:border-primary transition-colors"
+          >
             {result.resultType === "thread" ? (
               <ThreadSearchResult result={result} query={query} />
             ) : (
@@ -284,8 +318,12 @@ const SearchComponent = ({ onSearch, compact = false, placeholder = "Search thre
     <div>
       <div className="flex items-start justify-between mb-2">
         <h4 className="font-semibold text-base-content hover:text-primary transition-colors">
-          <Link href={`/room/${result.room?.id || 'general'}/thread/${result.id}`}>
-            {result.title ? highlightText(result.title, query) : "Untitled Thread"}
+          <Link
+            href={`/room/${result.room?.id || "general"}/thread/${result.id}`}
+          >
+            {result.title
+              ? highlightText(result.title, query)
+              : "Untitled Thread"}
           </Link>
         </h4>
         <span className="text-xs text-base-content/50">
@@ -308,7 +346,10 @@ const SearchComponent = ({ onSearch, compact = false, placeholder = "Search thre
       <div className="flex items-center space-x-4 text-xs text-base-content/50">
         <div className="flex items-center space-x-1">
           <img
-            src={result.authorPicture || `https://robohash.org/${result.author}.png`}
+            src={
+              result.authorPicture ||
+              `https://robohash.org/${result.author}.png`
+            }
             alt={result.authorName}
             className="w-4 h-4 rounded-full"
           />
@@ -331,7 +372,11 @@ const SearchComponent = ({ onSearch, compact = false, placeholder = "Search thre
       <div className="avatar">
         <div className="w-12 h-12 rounded-full">
           {result.picture ? (
-            <img src={result.picture} alt={result.name} className="object-cover" />
+            <img
+              src={result.picture}
+              alt={result.name}
+              className="object-cover"
+            />
           ) : (
             <div className="bg-neutral text-neutral-content flex items-center justify-center h-full">
               {result.name?.[0]?.toUpperCase()}
@@ -355,7 +400,8 @@ const SearchComponent = ({ onSearch, compact = false, placeholder = "Search thre
 
         {result.about && (
           <p className="text-sm text-base-content/60 mt-1">
-            {result.about.substring(0, 100)}{result.about.length > 100 && "..."}
+            {result.about.substring(0, 100)}
+            {result.about.length > 100 && "..."}
           </p>
         )}
 
@@ -363,12 +409,18 @@ const SearchComponent = ({ onSearch, compact = false, placeholder = "Search thre
           {result.nip05 && (
             <div className="flex items-center space-x-1">
               <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clipRule="evenodd"
+                />
               </svg>
               <span>Verified</span>
             </div>
           )}
-          <span>Joined {new Date(result.created_at * 1000).toLocaleDateString()}</span>
+          <span>
+            Joined {new Date(result.created_at * 1000).toLocaleDateString()}
+          </span>
         </div>
       </div>
     </div>
@@ -404,7 +456,9 @@ const SearchComponent = ({ onSearch, compact = false, placeholder = "Search thre
           <div className="absolute top-full left-0 right-0 mt-1 bg-base-100 border border-base-300 rounded-lg shadow-lg z-50 max-h-80 overflow-y-auto">
             {query.trim().length >= 2 && suggestions.length > 0 && (
               <div className="p-2">
-                <p className="text-xs text-base-content/50 px-2 py-1">Suggestions</p>
+                <p className="text-xs text-base-content/50 px-2 py-1">
+                  Suggestions
+                </p>
                 {suggestions.map((suggestion, index) => (
                   <button
                     key={index}
@@ -434,8 +488,18 @@ const SearchComponent = ({ onSearch, compact = false, placeholder = "Search thre
                     onClick={() => handleRecentSearchClick(search)}
                     className="w-full text-left px-2 py-1.5 hover:bg-base-200 rounded text-sm"
                   >
-                    <svg className="w-3 h-3 inline mr-2 text-base-content/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg
+                      className="w-3 h-3 inline mr-2 text-base-content/30"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
                     </svg>
                     {search}
                   </button>
@@ -451,7 +515,22 @@ const SearchComponent = ({ onSearch, compact = false, placeholder = "Search thre
   return (
     <div className="space-y-6">
       <div className="relative" ref={searchRef}>
-        <div className="form-control">
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <svg
+              className="h-5 w-5 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          </div>
           <input
             ref={inputRef}
             type="text"
@@ -464,11 +543,11 @@ const SearchComponent = ({ onSearch, compact = false, placeholder = "Search thre
                 setShowSuggestions(true);
               }
             }}
-            className="input input-bordered w-full input-lg"
+            className="modern-input w-full pl-12 pr-24 text-base"
           />
           {loading && (
-            <div className="absolute right-3 top-3">
-              <div className="loading loading-spinner loading-sm"></div>
+            <div className="absolute inset-y-0 right-12 pr-4 flex items-center">
+              <div className="loading loading-spinner loading-sm text-blue-600"></div>
             </div>
           )}
         </div>
@@ -476,152 +555,213 @@ const SearchComponent = ({ onSearch, compact = false, placeholder = "Search thre
         {/* Advanced Search Toggle */}
         <button
           onClick={() => setShowAdvanced(!showAdvanced)}
-          className="absolute right-12 top-3 text-sm text-base-content/60 hover:text-primary"
+          className="absolute right-4 top-3 text-sm text-gray-500 hover:text-blue-600 transition-colors font-medium px-3 py-1 rounded-lg hover:bg-gray-100"
         >
-          {showAdvanced ? "Simple" : "Advanced"}
+          {showAdvanced ? "← Simple" : "Advanced →"}
         </button>
 
-        {/* Suggestions dropdown */}
+        {/* Enhanced Suggestions dropdown */}
         {showSuggestions && (
-          <div className="absolute top-full left-0 right-0 mt-2 bg-base-100 border border-base-300 rounded-lg shadow-xl z-50 max-h-80 overflow-y-auto">
+          <div className="absolute top-full left-0 right-0 mt-3 glass-morphism rounded-2xl shadow-2xl z-50 max-h-96 overflow-hidden">
             {query.trim().length >= 2 && suggestions.length > 0 && (
-              <div className="p-3">
-                <p className="text-sm text-base-content/50 px-2 py-1">Suggestions</p>
-                {suggestions.map((suggestion, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleSuggestionClick(suggestion)}
-                    className="w-full text-left px-3 py-2 hover:bg-base-200 rounded text-sm"
-                  >
-                    {highlightText(suggestion, query)}
-                  </button>
-                ))}
+              <div className="p-4 border-b border-gray-200/50">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2">
+                  Suggestions
+                </p>
+                <div className="space-y-1">
+                  {suggestions.map((suggestion, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleSuggestionClick(suggestion)}
+                      className="w-full text-left px-4 py-3 rounded-xl hover:bg-blue-50 transition-all duration-200 text-sm text-gray-700 hover:text-blue-600 group"
+                    >
+                      <svg
+                        className="w-4 h-4 inline mr-3 text-gray-400 group-hover:text-blue-500 transition-colors"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      {highlightText(suggestion, query)}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 
             {recentSearches.length > 0 && query.trim().length < 2 && (
-              <div className="p-3">
-                <div className="flex justify-between items-center px-2 py-1">
-                  <p className="text-sm text-base-content/50">Recent Searches</p>
+              <div className="p-4">
+                <div className="flex justify-between items-center px-3 py-2">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Recent Searches
+                  </p>
                   <button
                     onClick={clearRecentSearches}
-                    className="text-sm text-error hover:underline"
+                    className="text-xs text-red-500 hover:text-red-600 transition-colors font-medium"
                   >
                     Clear All
                   </button>
                 </div>
-                {recentSearches.map((search, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleRecentSearchClick(search)}
-                    className="w-full text-left px-3 py-2 hover:bg-base-200 rounded text-sm"
-                  >
-                    <svg className="w-4 h-4 inline mr-2 text-base-content/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    {search}
-                  </button>
-                ))}
+                <div className="space-y-1">
+                  {recentSearches.map((search, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleRecentSearchClick(search)}
+                      className="w-full text-left px-4 py-3 rounded-xl hover:bg-gray-50 transition-all duration-200 text-sm text-gray-700 group"
+                    >
+                      <svg
+                        className="w-4 h-4 inline mr-3 text-gray-400 group-hover:text-gray-600 transition-colors"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      {search}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </div>
         )}
       </div>
 
-      {/* Advanced Search Filters */}
+      {/* Enhanced Advanced Search Filters */}
       {showAdvanced && (
-        <div className="bg-base-100 rounded-lg border border-base-300 p-4">
-          <h3 className="font-semibold mb-4">Advanced Search</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Search Type</span>
+        <div className="glass-card p-6 border border-gray-200/50">
+          <div className="flex items-center space-x-3 mb-6">
+            <svg
+              className="w-5 h-5 text-blue-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+            </svg>
+            <h3 className="text-lg font-semibold text-gray-800">
+              Advanced Search
+            </h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                🔍 Search Type
               </label>
               <select
                 value={filters.type}
-                onChange={(e) => setFilters(prev => ({ ...prev, type: e.target.value }))}
-                className="select select-bordered select-sm"
+                onChange={(e) =>
+                  setFilters((prev) => ({ ...prev, type: e.target.value }))
+                }
+                className="modern-input w-full"
               >
-                <option value="all">All</option>
-                <option value="threads">Threads</option>
-                <option value="users">Users</option>
+                <option value="all">🌐 All Results</option>
+                <option value="threads">💬 Threads Only</option>
+                <option value="users">👤 Users Only</option>
               </select>
             </div>
 
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Time Range</span>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                ⏰ Time Range
               </label>
               <select
                 value={filters.timeRange}
-                onChange={(e) => setFilters(prev => ({ ...prev, timeRange: e.target.value }))}
-                className="select select-bordered select-sm"
+                onChange={(e) =>
+                  setFilters((prev) => ({ ...prev, timeRange: e.target.value }))
+                }
+                className="modern-input w-full"
               >
-                <option value="all">All Time</option>
-                <option value="today">Today</option>
-                <option value="week">This Week</option>
-                <option value="month">This Month</option>
-                <option value="year">This Year</option>
+                <option value="all">📅 All Time</option>
+                <option value="today">🌞 Today</option>
+                <option value="week">📆 This Week</option>
+                <option value="month">🗓️ This Month</option>
+                <option value="year">📈 This Year</option>
               </select>
             </div>
 
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Sort By</span>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                📊 Sort By
               </label>
               <select
                 value={filters.sortBy}
-                onChange={(e) => setFilters(prev => ({ ...prev, sortBy: e.target.value }))}
-                className="select select-bordered select-sm"
+                onChange={(e) =>
+                  setFilters((prev) => ({ ...prev, sortBy: e.target.value }))
+                }
+                className="modern-input w-full"
               >
-                <option value="relevance">Relevance</option>
-                <option value="recent">Most Recent</option>
-                <option value="popular">Most Popular</option>
+                <option value="relevance">🎯 Relevance</option>
+                <option value="recent">🕐 Most Recent</option>
+                <option value="popular">🔥 Most Popular</option>
               </select>
             </div>
 
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Room</span>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                🏛️ Room Filter
               </label>
               <input
                 type="text"
-                placeholder="Room ID"
+                placeholder="Enter room ID or name"
                 value={filters.room}
-                onChange={(e) => setFilters(prev => ({ ...prev, room: e.target.value }))}
-                className="input input-bordered input-sm"
+                onChange={(e) =>
+                  setFilters((prev) => ({ ...prev, room: e.target.value }))
+                }
+                className="modern-input w-full"
               />
             </div>
 
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Author</span>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                ✍️ Author Filter
               </label>
               <input
                 type="text"
-                placeholder="Author pubkey"
+                placeholder="Author pubkey or name"
                 value={filters.author}
-                onChange={(e) => setFilters(prev => ({ ...prev, author: e.target.value }))}
-                className="input input-bordered input-sm"
+                onChange={(e) =>
+                  setFilters((prev) => ({ ...prev, author: e.target.value }))
+                }
+                className="modern-input w-full"
               />
             </div>
 
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">&nbsp;</span>
-              </label>
+            <div className="flex items-end">
               <button
                 onClick={() => handleSearch(query, true)}
                 disabled={loading || !query.trim()}
-                className="btn btn-primary btn-sm"
+                className="modern-button-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <div className="flex items-center space-x-2">
-                    <div className="loading loading-spinner loading-xs"></div>
+                    <div className="loading loading-spinner loading-sm"></div>
                     <span>Searching...</span>
                   </div>
                 ) : (
-                  "Advanced Search"
+                  "🔍 Advanced Search"
                 )}
               </button>
             </div>
@@ -630,11 +770,7 @@ const SearchComponent = ({ onSearch, compact = false, placeholder = "Search thre
       )}
 
       {/* Search Results */}
-      {results && (
-        <div className="space-y-4">
-          {renderSearchResults()}
-        </div>
-      )}
+      {results && <div className="space-y-4">{renderSearchResults()}</div>}
     </div>
   );
 };

@@ -15,11 +15,11 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html data-theme="nord" lang="en">
+    <html lang="en">
       <body className={inter.className}>
         <NostrAuthProvider>
           <NostrProvider>
-            <div className="min-h-screen bg-base-200">
+            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100">
               <Header />
               <main className="flex-1">{children}</main>
               <Footer />
