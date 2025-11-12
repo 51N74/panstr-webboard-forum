@@ -41,6 +41,29 @@ export default function Header() {
     };
   }, []);
 
+  // Set up global profile display function
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.showUserProfile = (pubkey) => {
+        const profileModal = document.createElement("div");
+        profileModal.id = "profile-modal";
+        document.body.appendChild(profileModal);
+
+        const { createRoot } = require("react-dom/client");
+        const root = createRoot(profileModal);
+
+        const handleClose = () => {
+          root.unmount();
+          document.body.removeChild(profileModal);
+        };
+
+        root.render(
+          <UserProfile pubkey={pubkey} onClose={handleClose} isModal={true} />,
+        );
+      };
+    }
+  }, []);
+
   const checkRelays = async () => {
     const relays = getAllRelays();
     let connected = 0;
@@ -79,29 +102,6 @@ export default function Header() {
       </header>
     );
   }
-
-  // Set up global profile display function
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      window.showUserProfile = (pubkey) => {
-        const profileModal = document.createElement("div");
-        profileModal.id = "profile-modal";
-        document.body.appendChild(profileModal);
-
-        const { createRoot } = require("react-dom/client");
-        const root = createRoot(profileModal);
-
-        const handleClose = () => {
-          root.unmount();
-          document.body.removeChild(profileModal);
-        };
-
-        root.render(
-          <UserProfile pubkey={pubkey} onClose={handleClose} isModal={true} />,
-        );
-      };
-    }
-  }, []);
 
   return (
     <header className="bg-base-100 border-b border-base-300 sticky top-0 z-50">
@@ -281,6 +281,29 @@ export default function Header() {
                       >
                         My Profile
                       </Link>
+                      <div className="border-t border-base-300 my-2"></div>
+                      <div className="text-xs font-medium text-base-content/60 px-3 py-1">
+                        Professional Features
+                      </div>
+                      <Link
+                        href="/services"
+                        className="block w-full text-left px-3 py-2 rounded-lg hover:bg-base-200 transition-colors"
+                      >
+                        🏪 Service Marketplace
+                      </Link>
+                      <Link
+                        href="/communities"
+                        className="block w-full text-left px-3 py-2 rounded-lg hover:bg-base-200 transition-colors"
+                      >
+                        🏛️ Communities
+                      </Link>
+                      <Link
+                        href="/wiki"
+                        className="block w-full text-left px-3 py-2 rounded-lg hover:bg-base-200 transition-colors"
+                      >
+                        📚 Wiki System
+                      </Link>
+                      <div className="border-t border-base-300 my-2"></div>
                       <Link
                         href="/settings"
                         className="block w-full text-left px-3 py-2 rounded-lg hover:bg-base-200 transition-colors"

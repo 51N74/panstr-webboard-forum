@@ -21,6 +21,79 @@ function hexToBytes(hex) {
 import * as nip04 from "nostr-tools/nip04";
 import * as nip44 from "nostr-tools/nip44";
 
+// Import Phase 3 NIP implementations
+export {
+  NIP90_KINDS,
+  SERVICE_TYPES,
+  SUBSCRIPTION_TIERS,
+  createServiceConfig,
+  createServiceRequest,
+  createServiceResponse,
+  createSubscriptionEvent,
+  createPaymentRequest,
+  createAccessToken,
+  createAPIUsageEvent,
+  createServiceList,
+  publishServiceConfig,
+  requestService,
+  getAvailableServices,
+  getUserSubscriptions,
+  checkUserAccessLevel,
+  calculateAPIUsage,
+  validateSubscriptionPayment,
+  getSubscriptionAnalytics,
+} from "./data-vending/nip90.js";
+
+export {
+  NIP72_KINDS,
+  COMMUNITY_TYPES,
+  MODERATION_ACTIONS,
+  POST_STATUS,
+  createCommunityDefinition,
+  createPostApprovalRequest,
+  createModerationAction,
+  createCommunityRules,
+  createCommunityMembership,
+  createCommunityBan,
+  createCommunityInvite,
+  createCommunityStats,
+  createCommunityCrosspost,
+  publishCommunityDefinition,
+  getAvailableCommunities,
+  getPendingPosts,
+  getUserMemberships,
+  getCommunityRules,
+  getUserModerationHistory,
+  isUserModerator,
+  validatePostAgainstRules,
+  calculateCommunityHealth,
+} from "./communities/nip72.js";
+
+export {
+  NIP54_KINDS,
+  PAGE_STATUS,
+  COLLABORATION_STATUS,
+  EDIT_TYPES,
+  createWikiPage,
+  createWikiPageVersion,
+  createWikiCategory,
+  createWikiRename,
+  createWikiDelete,
+  createWikiCollaboration,
+  createWikiComment,
+  createWikiTag,
+  createWikiIndex,
+  createWikiTemplate,
+  publishWikiPage,
+  getWikiPages,
+  getWikiPageVersions,
+  getWikiCategories,
+  getWikiComments,
+  searchWikiPages,
+  getWikiTemplates,
+  calculateWikiStatistics,
+} from "./wiki/nip54.js";
+
 // Simple random bytes function
 function getRandomBytes(length) {
   const bytes = new Uint8Array(length);

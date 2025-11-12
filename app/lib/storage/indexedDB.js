@@ -654,6 +654,9 @@ export const liveNotifications = (userId) =>
       .toArray(),
   );
 
+export const liveZapsForEvent = (eventId) =>
+  liveQuery(() => db.zaps.where({ eventId }).toArray());
+
 export const liveUnreadCount = (userId) =>
   liveQuery(() =>
     db.notifications

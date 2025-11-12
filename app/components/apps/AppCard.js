@@ -10,9 +10,8 @@ import {
   CogIcon,
   SparklesIcon,
   UsersIcon,
-  ChartBarIcon
+  ChartBarIcon,
 } from "@heroicons/react/24/outline";
-import { formatDistanceToNow } from "date-fns";
 
 const AppCard = ({ app, onAction }) => {
   const getAppIcon = (type) => {
@@ -105,13 +104,15 @@ const AppCard = ({ app, onAction }) => {
                 {app.name}
               </h3>
               <div className="flex items-center space-x-2">
-                <span className={`badge badge-xs ${getTypeColor(app.kind || app.type)}`}>
+                <span
+                  className={`badge badge-xs ${getTypeColor(app.kind || app.type)}`}
+                >
                   {getTypeLabel(app.kind || app.type)}
                 </span>
                 {app.lastUpdated && (
                   <span className="text-xs text-base-content/50 flex items-center">
                     <CalendarIcon className="w-3 h-3 mr-1" />
-                    {formatDistanceToNow(new Date(app.lastUpdated), { addSuffix: true })}
+                    {new Date(app.lastUpdated).toLocaleDateString()}
                   </span>
                 )}
               </div>

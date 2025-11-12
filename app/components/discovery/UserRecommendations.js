@@ -8,9 +8,9 @@ import {
   CalendarIcon,
   TagIcon,
   SparklesIcon,
-  CheckCircleIcon
+  CheckCircleIcon,
 } from "@heroicons/react/24/outline";
-import { formatDistanceToNow } from "date-fns";
+// Removed date-fns dependency - using native date formatting
 import { useState } from "react";
 
 const UserRecommendations = ({ recommendations, onUserAction }) => {
@@ -36,7 +36,8 @@ const UserRecommendations = ({ recommendations, onUserAction }) => {
   };
 
   const getInteractionLabel = (score) => {
-    if (score >= 10) return { label: "Strong Connection", color: "text-success" };
+    if (score >= 10)
+      return { label: "Strong Connection", color: "text-success" };
     if (score >= 5) return { label: "Good Match", color: "text-primary" };
     if (score >= 2) return { label: "Some Connection", color: "text-warning" };
     return { label: "Potential Connection", color: "text-base-content/70" };
@@ -53,12 +54,15 @@ const UserRecommendations = ({ recommendations, onUserAction }) => {
     return (
       <div className="bg-base-100 rounded-lg border border-base-300 p-8 text-center">
         <SparklesIcon className="w-16 h-16 mx-auto text-base-content/30 mb-4" />
-        <h3 className="text-lg font-medium text-base-content mb-2">No recommendations yet</h3>
+        <h3 className="text-lg font-medium text-base-content mb-2">
+          No recommendations yet
+        </h3>
         <p className="text-base-content/70 mb-4">
-          Start following users and engaging with content to get personalized recommendations.
+          Start following users and engaging with content to get personalized
+          recommendations.
         </p>
         <button
-          onClick={() => window.location.href = "/search"}
+          onClick={() => (window.location.href = "/search")}
           className="btn btn-primary"
         >
           Explore Users
@@ -88,7 +92,9 @@ const UserRecommendations = ({ recommendations, onUserAction }) => {
                     <UserIcon className="w-6 h-6 text-primary" />
                   </div>
                   {/* Activity Indicator */}
-                  <div className={`absolute -bottom-1 -right-1 w-4 h-4 ${activityInfo.color} rounded-full border-2 border-base-100`}></div>
+                  <div
+                    className={`absolute -bottom-1 -right-1 w-4 h-4 ${activityInfo.color} rounded-full border-2 border-base-100`}
+                  ></div>
                 </div>
 
                 <div className="flex-1">
@@ -110,7 +116,9 @@ const UserRecommendations = ({ recommendations, onUserAction }) => {
               <div className="flex flex-col items-end">
                 <div className="flex items-center space-x-1 text-sm">
                   <SparklesIcon className="w-4 h-4 text-warning" />
-                  <span className="font-medium">{user.interactionScore || 0}</span>
+                  <span className="font-medium">
+                    {user.interactionScore || 0}
+                  </span>
                 </div>
                 <span className="text-xs text-base-content/50">Score</span>
               </div>
@@ -121,7 +129,9 @@ const UserRecommendations = ({ recommendations, onUserAction }) => {
               <div className="mb-4">
                 <div className="flex items-center space-x-1 mb-2">
                   <TagIcon className="w-4 h-4 text-base-content/50" />
-                  <span className="text-sm text-base-content/70">Shared Interests</span>
+                  <span className="text-sm text-base-content/70">
+                    Shared Interests
+                  </span>
                 </div>
                 <div className="flex flex-wrap gap-1">
                   {user.sharedTopics.slice(0, 3).map((topic, topicIndex) => (
@@ -144,11 +154,15 @@ const UserRecommendations = ({ recommendations, onUserAction }) => {
             {/* Interaction Stats */}
             <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
               <div className="text-center p-2 bg-base-200 rounded">
-                <div className="font-semibold text-base-content">{user.topicCount || 0}</div>
+                <div className="font-semibold text-base-content">
+                  {user.topicCount || 0}
+                </div>
                 <div className="text-xs text-base-content/70">Topics</div>
               </div>
               <div className="text-center p-2 bg-base-200 rounded">
-                <div className="font-semibold text-base-content">{user.interactionScore || 0}</div>
+                <div className="font-semibold text-base-content">
+                  {user.interactionScore || 0}
+                </div>
                 <div className="text-xs text-base-content/70">Interactions</div>
               </div>
             </div>
@@ -159,9 +173,11 @@ const UserRecommendations = ({ recommendations, onUserAction }) => {
                 <div className="flex items-center space-x-1">
                   <CheckCircleIcon className="w-4 h-4 text-primary" />
                   <span className="text-xs text-primary font-medium">
-                    {index === 0 ? "Top Recommendation" :
-                     index === 1 ? "Highly Recommended" :
-                     "Good Match"}
+                    {index === 0
+                      ? "Top Recommendation"
+                      : index === 1
+                        ? "Highly Recommended"
+                        : "Good Match"}
                   </span>
                 </div>
               </div>
@@ -189,9 +205,7 @@ const UserRecommendations = ({ recommendations, onUserAction }) => {
               <button
                 onClick={() => handleFollow(user.pubkey)}
                 className={`btn btn-sm ${
-                  isFollowed
-                    ? "btn-success"
-                    : "btn-primary"
+                  isFollowed ? "btn-success" : "btn-primary"
                 }`}
               >
                 {isFollowed ? (
