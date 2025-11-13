@@ -624,7 +624,7 @@ export default function ThreadDetailPage() {
         {/* Enhanced Profile Modal */}
         {showProfileModal && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="glass-morphism rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden animate-fade-in">
+            <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden animate-fade-in shadow-2xl">
               <UserProfile
                 pubkey={showProfileModal}
                 onClose={() => setShowProfileModal(null)}
