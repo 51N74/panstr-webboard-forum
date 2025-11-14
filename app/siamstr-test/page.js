@@ -10,6 +10,9 @@ export default function SiamstrTestPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sortBy, setSortBy] = useState("latest");
+  const [expandedNotes, setExpandedNotes] = useState({});
+  const [replies, setReplies] = useState({});
+  const [loadingReplies, setLoadingReplies] = useState({});
   const { getEvents } = useNostr();
 
   useEffect(() => {
@@ -67,6 +70,52 @@ export default function SiamstrTestPage() {
   const formatTime = (timestamp) => {
     const date = new Date(timestamp * 1000);
     return date.toLocaleString();
+  };
+
+  const fetchRepliesForNote = async (noteId) => {
+    if (replies[noteId] || loadingReplies[noteId]) {
+      return; // Already fetched or currently fetching
+    }
+
+    setLoadingReplies((prev) => ({ ...prev, [noteId]: true }));
+
+    try {
+      const pool = await initializePool();
+
+      // Query for replies (kind 1) that reference this note
+      const filters = {
+        kinds: [1], // Text notes
+        "#e": [noteId], // Events that reply to this note
+        limit: 50,
+      };
+
+      console.log(`Fetching replies for note ${noteId.substring(0, 8)}...`);
+      const replyEvents = await queryEvents(pool, undefined, filters);
+
+      // Sort replies by timestamp (oldest first)
+      replyEvents.sort((a, b) => a.created_at - b.created_at);
+
+      console.log(
+        `Found ${replyEvents.length} replies for note ${noteId.substring(0, 8)}`,
+      );
+      setReplies((prev) => ({ ...prev, [noteId]: replyEvents }));
+    } catch (err) {
+      console.error(`Error fetching replies for note ${noteId}:`, err);
+      setError(`Failed to fetch replies. Please try again.`);
+    } finally {
+      setLoadingReplies((prev) => ({ ...prev, [noteId]: false }));
+    }
+  };
+
+  const toggleReplies = (noteId) => {
+    if (expandedNotes[noteId]) {
+      setExpandedNotes((prev) => ({ ...prev, [noteId]: false }));
+    } else {
+      setExpandedNotes((prev) => ({ ...prev, [noteId]: true }));
+      if (!replies[noteId]) {
+        fetchRepliesForNote(noteId);
+      }
+    }
   };
 
   return (
@@ -232,10 +281,78 @@ export default function SiamstrTestPage() {
                     </span>
                   </div>
                   <div className="flex items-center space-x-4">
+                    <button
+                      className="btn btn-xs btn-outline"
+                      onClick={() => toggleReplies(note.id)}
+                    >
+                      {expandedNotes[note.id] ? "Hide Replies" : "Show Replies"}
+                      {replies[note.id] && ` (${replies[note.id].length})`}
+                    </button>
                     <span>📝 {note.content.length} chars</span>
                     <span>🏷️ {note.tags?.length || 0} tags</span>
                   </div>
                 </div>
+
+                {/* Replies Section */}
+                {expandedNotes[note.id] && (
+                  <div className="mt-4 pt-4 border-t border-base-300">
+                    <h4 className="font-semibold mb-3 text-sm">Replies</h4>
+                    {loadingReplies[note.id] ? (
+                      <div className="flex justify-center py-4">
+                        <div className="loading loading-spinner loading-sm"></div>
+                      </div>
+                    ) : replies[note.id] && replies[note.id].length > 0 ? (
+                      <div className="space-y-3 pl-4 border-l-2 border-base-300">
+                        {replies[note.id].map((reply) => (
+                          <div
+                            key={reply.id}
+                            className="bg-base-200 rounded p-3"
+                          >
+                            {/* Reply Header */}
+                            <div className="flex items-center space-x-2 mb-2">
+                              <div className="avatar placeholder">
+                                <div className="bg-neutral text-neutral-content rounded-full w-6 h-6">
+                                  <span className="text-xs">👤</span>
+                                </div>
+                              </div>
+                              <div className="flex-1">
+                                <span className="font-medium text-sm">
+                                  {formatPubkey(reply.pubkey, "short")}
+                                </span>
+                                <span className="text-xs text-base-content/60 ml-2">
+                                  {formatTime(reply.created_at)}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Reply Content */}
+                            <div
+                              className="text-sm mb-2"
+                              dangerouslySetInnerHTML={{
+                                __html: formatContent(reply.content),
+                              }}
+                            />
+
+                            {/* Reply Footer */}
+                            <div className="flex justify-between text-xs text-base-content/60">
+                              <span className="font-mono">
+                                ID: {reply.id.substring(0, 8)}...
+                              </span>
+                              <div className="flex space-x-3">
+                                <span>📝 {reply.content.length} chars</span>
+                                <span>🏷️ {reply.tags?.length || 0} tags</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-4 text-sm text-base-content/60">
+                        No replies found for this note.
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
           </div>
