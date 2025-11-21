@@ -271,9 +271,27 @@ export default function RoomPage({ roomId }) {
             </div>
             <Link
               href={`/room/${roomId}/new`}
-              className="modern-button-primary bg-white text-gray-900 hover:bg-gray-50 hover:scale-105 shadow-xl hover:shadow-2xl px-8"
+              aria-label="Create a new thread"
+              className="inline-flex items-center gap-3 bg-white text-gray-900 hover:bg-gray-50 active:scale-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white/60 shadow-lg px-5 py-2 rounded-full font-semibold text-sm transition-transform"
             >
-              ✨ Create New Thread
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+                className="flex-shrink-0"
+              >
+                <path
+                  d="M12 5v14M5 12h14"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              <span className="leading-none">Create Thread</span>
             </Link>
           </div>
         </div>
@@ -349,9 +367,27 @@ export default function RoomPage({ roomId }) {
             </p>
             <Link
               href={`/room/${roomId}/new`}
-              className="modern-button-primary px-8 py-3"
+              aria-label="Create the first thread in this room"
+              className="inline-flex items-center gap-2 bg-white text-gray-900 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary shadow-md px-4 py-2 rounded-md font-medium transition"
             >
-              🚀 Create First Thread
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+                className="flex-shrink-0"
+              >
+                <path
+                  d="M12 5v14M5 12h14"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              <span>Create First Thread</span>
             </Link>
           </div>
         ) : (
