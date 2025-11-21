@@ -43,9 +43,27 @@
     ::-webkit-scrollbar-thumb:hover {
         @apply bg-gray-400;
     }
+
+    /* Custom scrollbar for dropdowns */
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        @apply bg-transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        @apply bg-gray-300/50 rounded-full;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        @apply bg-gray-400/70;
+    }
 }
 
 @layer components {
+
     /* Enhanced Nostr-specific component styles */
     .npub-badge {
         @apply font-mono text-xs bg-gradient-to-r from-gray-100 to-gray-200 px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm;
@@ -113,7 +131,7 @@
 
     /* Modern glass morphism effects */
     .glass-morphism {
-        @apply bg-white/20 backdrop-blur-lg border border-white/30 shadow-xl;
+        @apply bg-white/95 backdrop-blur-lg border border-white/30 shadow-xl;
     }
 
     .glass-card {
@@ -159,6 +177,7 @@
 }
 
 @layer utilities {
+
     /* Enhanced gradients for rooms */
     .gradient-blue-planet {
         @apply bg-gradient-to-br from-blue-600 via-cyan-600 to-teal-600;
@@ -260,10 +279,12 @@
 
 /* Animation keyframes */
 @keyframes float {
+
     0%,
     100% {
         transform: translateY(0px);
     }
+
     50% {
         transform: translateY(-10px);
     }
@@ -273,6 +294,7 @@
     from {
         box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
     }
+
     to {
         box-shadow:
             0 0 20px rgba(59, 130, 246, 0.8),
@@ -285,6 +307,7 @@
         opacity: 0;
         transform: translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -295,6 +318,7 @@
     from {
         opacity: 0;
     }
+
     to {
         opacity: 1;
     }
@@ -331,6 +355,7 @@
     0% {
         background-position: -200% 0;
     }
+
     100% {
         background-position: 200% 0;
     }

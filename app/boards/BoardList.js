@@ -122,7 +122,7 @@ export default function BoardList() {
           </p>
 
           {/* Enhanced Quick Access */}
-          <div className="flex justify-center mt-8 space-x-6">
+          {/* <div className="flex justify-center mt-8 space-x-6">
             <Link
               href="/siamstr-test"
               className="modern-button-secondary group"
@@ -132,7 +132,7 @@ export default function BoardList() {
                 →
               </span>
             </Link>
-          </div>
+          </div> */}
         </div>
 
         {/* Enhanced Categories */}
@@ -149,11 +149,10 @@ export default function BoardList() {
               >
                 {/* Enhanced Category Header */}
                 <div
-                  className={`p-8 cursor-pointer transition-all duration-300 relative overflow-hidden ${
-                    isExpanded
-                      ? "bg-gradient-to-br " + category.gradient + " text-white"
-                      : "bg-gradient-to-r from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200"
-                  }`}
+                  className={`p-8 cursor-pointer transition-all duration-300 relative overflow-hidden ${isExpanded
+                    ? "bg-gradient-to-br " + category.gradient + " text-white"
+                    : "bg-gradient-to-r from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200"
+                    }`}
                   onClick={() => toggleCategory(category.id)}
                 >
                   {/* Background decoration */}
@@ -191,20 +190,18 @@ export default function BoardList() {
                     </div>
                     <div className="flex items-center space-x-3">
                       <div
-                        className={`px-4 py-2 rounded-full text-sm font-medium backdrop-blur-sm ${
-                          isExpanded
-                            ? "bg-white/20 text-white"
-                            : "bg-gray-200/80 text-gray-700"
-                        }`}
+                        className={`px-4 py-2 rounded-full text-sm font-medium backdrop-blur-sm ${isExpanded
+                          ? "bg-white/20 text-white"
+                          : "bg-gray-200/80 text-gray-700"
+                          }`}
                       >
                         {roomCount} rooms
                       </div>
                       <div
-                        className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 ${
-                          isExpanded
-                            ? "bg-white/20 text-white"
-                            : "bg-gray-200 text-gray-600"
-                        }`}
+                        className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 ${isExpanded
+                          ? "bg-white/20 text-white"
+                          : "bg-gray-200 text-gray-600"
+                          }`}
                       >
                         {isExpanded ? (
                           <svg
@@ -349,7 +346,7 @@ export default function BoardList() {
         )}
 
         {/* Enhanced Quick Stats */}
-        {!loading && (
+        {/* {!loading && (
           <div className="mt-16 p-8 glass-morphism rounded-2xl animate-fade-in">
             <h3 className="text-2xl font-bold text-center mb-8 gradient-text">
               📊 Forum Statistics
@@ -400,7 +397,7 @@ export default function BoardList() {
               </div>
             </div>
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );

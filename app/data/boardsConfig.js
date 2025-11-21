@@ -1,9 +1,60 @@
 export const BOARD_CATEGORIES = [
   {
+    id: 'lifestyle',
+    name: 'Lifestyle',
+    description: 'General lifestyle and community discussions',
+    order: 1,
+    icon: '🌟',
+    color: 'pink',
+    gradient: 'from-pink-500 to-rose-600',
+    rooms: [
+      {
+        id: 'foodie-thailand',
+        name: 'Foodie Thailand',
+        description: 'Food, restaurants, and culinary experiences in Thailand',
+        icon: '🍜',
+        category: 'lifestyle',
+        order: 1,
+        color: 'yellow',
+        gradient: 'from-yellow-500 to-amber-600'
+      },
+      {
+        id: 'travel-diaries',
+        name: 'Travel Diaries',
+        description: 'Travel stories, tips, and destination recommendations',
+        icon: '✈️',
+        category: 'lifestyle',
+        order: 2,
+        color: 'sky',
+        gradient: 'from-sky-500 to-blue-600'
+      },
+      {
+        id: 'chill-chat',
+        name: 'Chill & Chat',
+        description: 'General chat and casual conversations',
+        icon: '💬',
+        category: 'lifestyle',
+        order: 3,
+        color: 'purple',
+        gradient: 'from-purple-500 to-indigo-600'
+      },
+      {
+        id: 'pet-lovers',
+        name: 'Pet Lovers',
+        description: 'Pets, animal care, and pet owner community',
+        icon: '🐾',
+        category: 'lifestyle',
+        order: 4,
+        color: 'emerald',
+        gradient: 'from-emerald-500 to-teal-600'
+      }
+    ]
+  },
+  {
     id: 'tech-nostr',
     name: 'Tech & Nostr',
     description: 'Technology and Nostr protocol discussions',
-    order: 1,
+    order: 2,
     icon: '💻',
     color: 'blue',
     gradient: 'from-blue-500 to-purple-600',
@@ -60,57 +111,7 @@ export const BOARD_CATEGORIES = [
       }
     ]
   },
-  {
-    id: 'lifestyle',
-    name: 'Lifestyle',
-    description: 'General lifestyle and community discussions',
-    order: 2,
-    icon: '🌟',
-    color: 'pink',
-    gradient: 'from-pink-500 to-rose-600',
-    rooms: [
-      {
-        id: 'foodie-thailand',
-        name: 'Foodie Thailand',
-        description: 'Food, restaurants, and culinary experiences in Thailand',
-        icon: '🍜',
-        category: 'lifestyle',
-        order: 1,
-        color: 'yellow',
-        gradient: 'from-yellow-500 to-amber-600'
-      },
-      {
-        id: 'travel-diaries',
-        name: 'Travel Diaries',
-        description: 'Travel stories, tips, and destination recommendations',
-        icon: '✈️',
-        category: 'lifestyle',
-        order: 2,
-        color: 'sky',
-        gradient: 'from-sky-500 to-blue-600'
-      },
-      {
-        id: 'chill-chat',
-        name: 'Chill & Chat',
-        description: 'General chat and casual conversations',
-        icon: '💬',
-        category: 'lifestyle',
-        order: 3,
-        color: 'purple',
-        gradient: 'from-purple-500 to-indigo-600'
-      },
-      {
-        id: 'pet-lovers',
-        name: 'Pet Lovers',
-        description: 'Pets, animal care, and pet owner community',
-        icon: '🐾',
-        category: 'lifestyle',
-        order: 4,
-        color: 'emerald',
-        gradient: 'from-emerald-500 to-teal-600'
-      }
-    ]
-  },
+
   {
     id: 'nostr-special',
     name: 'Nostr Special',

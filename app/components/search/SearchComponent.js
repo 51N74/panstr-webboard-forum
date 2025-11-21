@@ -429,7 +429,24 @@ const SearchComponent = ({
   if (compact) {
     return (
       <div className="relative" ref={searchRef}>
-        <div className="form-control">
+        <div className="relative group">
+          {/* Search Icon */}
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <svg
+              className="h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors duration-300"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          </div>
+
           <input
             ref={inputRef}
             type="text"
@@ -442,68 +459,86 @@ const SearchComponent = ({
                 setShowSuggestions(true);
               }
             }}
-            className="input input-bordered w-full input-sm"
+            className="w-64 pl-11 pr-10 py-2.5 rounded-xl border-2 border-gray-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-100 transition-all duration-300 bg-white/90 backdrop-blur-sm text-sm font-medium placeholder:text-gray-400 hover:border-gray-300 shadow-sm focus:shadow-md"
           />
+
           {loading && (
-            <div className="absolute right-2 top-2.5">
-              <div className="loading loading-spinner loading-xs"></div>
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+              <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
             </div>
           )}
         </div>
 
-        {/* Suggestions dropdown */}
+        {/* Enhanced Suggestions dropdown */}
         {showSuggestions && (
-          <div className="absolute top-full left-0 right-0 mt-1 bg-base-100 border border-base-300 rounded-lg shadow-lg z-50 max-h-80 overflow-y-auto">
+          <div className="absolute top-full left-0 right-0 mt-3 glass-morphism rounded-2xl shadow-2xl z-50 max-h-96 overflow-hidden border-2 border-white/40 animate-fade-in">
             {query.trim().length >= 2 && suggestions.length > 0 && (
-              <div className="p-2">
-                <p className="text-xs text-base-content/50 px-2 py-1">
+              <div className="p-3 border-b border-gray-200/50">
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider px-3 py-2">
                   Suggestions
                 </p>
-                {suggestions.map((suggestion, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleSuggestionClick(suggestion)}
-                    className="w-full text-left px-2 py-1.5 hover:bg-base-200 rounded text-sm"
-                  >
-                    {highlightText(suggestion, query)}
-                  </button>
-                ))}
+                <div className="space-y-1">
+                  {suggestions.map((suggestion, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleSuggestionClick(suggestion)}
+                      className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-300 text-sm text-gray-700 hover:text-blue-600 font-medium group border border-transparent hover:border-blue-200/50"
+                    >
+                      <svg
+                        className="w-4 h-4 inline mr-2 text-gray-400 group-hover:text-blue-500 transition-colors"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                        />
+                      </svg>
+                      {highlightText(suggestion, query)}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 
             {recentSearches.length > 0 && query.trim().length < 2 && (
-              <div className="p-2">
-                <div className="flex justify-between items-center px-2 py-1">
-                  <p className="text-xs text-base-content/50">Recent</p>
+              <div className="p-3">
+                <div className="flex justify-between items-center px-3 py-2">
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Recent</p>
                   <button
                     onClick={clearRecentSearches}
-                    className="text-xs text-error hover:underline"
+                    className="text-xs text-red-500 hover:text-red-600 transition-colors font-semibold"
                   >
                     Clear
                   </button>
                 </div>
-                {recentSearches.slice(0, 5).map((search, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleRecentSearchClick(search)}
-                    className="w-full text-left px-2 py-1.5 hover:bg-base-200 rounded text-sm"
-                  >
-                    <svg
-                      className="w-3 h-3 inline mr-2 text-base-content/30"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                <div className="space-y-1">
+                  {recentSearches.slice(0, 5).map((search, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleRecentSearchClick(search)}
+                      className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-all duration-300 text-sm text-gray-700 group"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    {search}
-                  </button>
-                ))}
+                      <svg
+                        className="w-4 h-4 inline mr-2 text-gray-400 group-hover:text-gray-600 transition-colors"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      {search}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </div>
