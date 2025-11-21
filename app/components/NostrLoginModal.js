@@ -2,11 +2,11 @@
 
 import React, { useState } from "react";
 import { useNostrAuth } from "../context/NostrAuthContext";
-import { formatPubkey, privateKeyToHex } from "../lib/nostrClient";
-import * as nip19 from "nostr-tools/nip19";
+import { formatPubkey, privateKeyToHex, nip19Encode } from "../lib/nostrClient";
 
 export default function NostrLoginModal({ isOpen, onClose }) {
-  const { loginWithExtension, loginWithPrivateKey, generateNewKey, isLoading } = useNostrAuth();
+  const { loginWithExtension, loginWithPrivateKey, generateNewKey, isLoading } =
+    useNostrAuth();
   const [privateKeyInput, setPrivateKeyInput] = useState("");
   const [showPrivateKey, setShowPrivateKey] = useState(false);
   const [generatedKey, setGeneratedKey] = useState(null);
@@ -43,12 +43,15 @@ export default function NostrLoginModal({ isOpen, onClose }) {
       setError("");
       const { user, privateKey } = await generateNewKey();
 
-      // Convert to nsec for display
-      const nsec = nip19.nsecEncode(privateKey);
+      // Convert to nsec for display using proper NIP-19 encoding
+      const nsec = nip19Encode.nsec(privateKey);
+      // Also get hex version for backup purposes
+      const privateKeyHex = privateKeyToHex(privateKey);
       setGeneratedKey({
         nsec,
+        hex: privateKeyHex,
         npub: user.npub,
-        privateKey: privateKey
+        privateKey: privateKey,
       });
     } catch (err) {
       setError(err.message);
@@ -79,8 +82,18 @@ export default function NostrLoginModal({ isOpen, onClose }) {
             onClick={closeModal}
             className="text-gray-400 hover:text-gray-600"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -96,8 +109,18 @@ export default function NostrLoginModal({ isOpen, onClose }) {
             {/* Browser Extension Option */}
             <div className="border rounded-lg p-4">
               <h3 className="font-semibold mb-2 flex items-center">
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg
+                  className="w-5 h-5 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
                 Browser Extension
               </h3>
@@ -116,8 +139,18 @@ export default function NostrLoginModal({ isOpen, onClose }) {
             {/* Private Key Option */}
             <div className="border rounded-lg p-4">
               <h3 className="font-semibold mb-2 flex items-center">
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                <svg
+                  className="w-5 h-5 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+                  />
                 </svg>
                 Private Key
               </h3>
@@ -154,8 +187,18 @@ export default function NostrLoginModal({ isOpen, onClose }) {
             {/* Generate New Key Option */}
             <div className="border rounded-lg p-4">
               <h3 className="font-semibold mb-2 flex items-center">
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                <svg
+                  className="w-5 h-5 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
                 </svg>
                 Create New Identity
               </h3>
@@ -175,9 +218,12 @@ export default function NostrLoginModal({ isOpen, onClose }) {
           /* Generated Key Display */
           <div className="space-y-4">
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <h3 className="font-semibold text-green-800 mb-2">New Identity Created!</h3>
+              <h3 className="font-semibold text-green-800 mb-2">
+                New Identity Created!
+              </h3>
               <p className="text-sm text-green-700 mb-4">
-                Save your private key securely. This is your only way to access your account.
+                Save your private key securely. This is your only way to access
+                your account.
               </p>
             </div>
 
@@ -222,10 +268,31 @@ export default function NostrLoginModal({ isOpen, onClose }) {
                 </div>
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-orange-700 mb-1">
+                  Private Key (hex) - Alternative backup format
+                </label>
+                <div className="flex">
+                  <input
+                    type="text"
+                    value={generatedKey.hex}
+                    readOnly
+                    className="flex-1 px-3 py-2 border rounded-l-lg bg-orange-50 font-mono text-sm"
+                  />
+                  <button
+                    onClick={() => copyToClipboard(generatedKey.hex)}
+                    className="px-3 py-2 bg-orange-200 border rounded-r-lg hover:bg-orange-300"
+                  >
+                    Copy
+                  </button>
+                </div>
+              </div>
+
               <div className="bg-yellow-50 border border-yellow-200 rounded p-3">
                 <p className="text-xs text-yellow-800">
-                  <strong>Important:</strong> Store your private key in a secure location.
-                  If you lose it, you will lose access to your account permanently.
+                  <strong>Important:</strong> Store your private key in a secure
+                  location. If you lose it, you will lose access to your account
+                  permanently.
                 </p>
               </div>
             </div>

@@ -1,6 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import {
   generatePrivateKey,
   getPublicKey,
@@ -8,6 +14,7 @@ import {
   getBrowserExtensionPubkey,
   formatPubkey,
   getUserProfile,
+  nip19Decode,
 } from "../lib/nostrClient";
 
 const NostrAuthContext = createContext();
@@ -25,6 +32,23 @@ export function NostrAuthProvider({ children }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [authMethod, setAuthMethod] = useState(null); // 'extension' | 'privatekey' | null
+
+  // Convert Uint8Array to hex string for localStorage storage
+  const uint8ArrayToHex = (uint8Array) => {
+    return Array.from(uint8Array)
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+  };
+
+  // Convert hex string back to Uint8Array
+  const hexToUint8Array = (hex) => {
+    if (hex instanceof Uint8Array) return hex;
+    const result = new Uint8Array(32);
+    for (let i = 0; i < 32; i++) {
+      result[i] = parseInt(hex.substr(i * 2, 2), 16);
+    }
+    return result;
+  };
 
   // Check for existing auth on mount
   useEffect(() => {
@@ -50,7 +74,7 @@ export function NostrAuthProvider({ children }) {
             about: profile.about || "",
             nip05: profile.nip05 || null,
             lud16: profile.lud16 || null,
-            authMethod: "extension"
+            authMethod: "extension",
           });
           setAuthMethod("extension");
           return;
@@ -58,9 +82,11 @@ export function NostrAuthProvider({ children }) {
       }
 
       // Check for stored private key
-      const storedPrivKey = localStorage.getItem("nostr_private_key");
-      if (storedPrivKey) {
-        const pubkey = getPublicKey(storedPrivKey);
+      const storedHexKey = localStorage.getItem("nostr_private_key");
+      if (storedHexKey) {
+        // Convert hex string back to Uint8Array for getPublicKey
+        const privateKeyBytes = hexToUint8Array(storedHexKey);
+        const pubkey = getPublicKey(privateKeyBytes);
         const profile = await getUserProfile(pubkey);
         setUser({
           pubkey,
@@ -71,7 +97,7 @@ export function NostrAuthProvider({ children }) {
           about: profile.about || "",
           nip05: profile.nip05 || null,
           lud16: profile.lud16 || null,
-          authMethod: "privatekey"
+          authMethod: "privatekey",
         });
         setAuthMethod("privatekey");
         return;
@@ -108,7 +134,7 @@ export function NostrAuthProvider({ children }) {
         about: profile.about || "",
         nip05: profile.nip05 || null,
         lud16: profile.lud16 || null,
-        authMethod: "extension"
+        authMethod: "extension",
       };
 
       setUser(user);
@@ -127,28 +153,39 @@ export function NostrAuthProvider({ children }) {
       setIsLoading(true);
       setError(null);
 
-      let privKey = privateKey;
+      let privKeyBytes = privateKey;
 
       // Handle nsec format
       if (privateKey.startsWith("nsec")) {
         try {
-          const { type, data } = require("nostr-tools/nip19").decode(privateKey);
+          const { type, data } = nip19Decode(privateKey);
           if (type === "nsec") {
-            privKey = data;
+            privKeyBytes = data; // nsec decode returns Uint8Array
           } else {
             throw new Error("Invalid nsec format");
           }
         } catch (decodeErr) {
           throw new Error("Failed to decode nsec key");
         }
+      } else if (typeof privateKey === "string") {
+        // Handle hex string input
+        if (!/^[0-9a-fA-F]{64}$/.test(privateKey)) {
+          throw new Error("Private key must be 64-character hex string");
+        }
+        privKeyBytes = hexToUint8Array(privateKey);
+      } else if (!(privateKey instanceof Uint8Array)) {
+        throw new Error("Invalid private key format");
       }
 
       // Validate private key
       try {
-        const pubkey = getPublicKey(privKey);
+        const pubkey = getPublicKey(privKeyBytes);
 
-        // Store private key (encrypted in production)
-        localStorage.setItem("nostr_private_key", privKey);
+        // Store as hex string in localStorage
+        localStorage.setItem(
+          "nostr_private_key",
+          uint8ArrayToHex(privKeyBytes),
+        );
 
         const profile = await getUserProfile(pubkey);
         const user = {
@@ -160,7 +197,7 @@ export function NostrAuthProvider({ children }) {
           about: profile.about || "",
           nip05: profile.nip05 || null,
           lud16: profile.lud16 || null,
-          authMethod: "privatekey"
+          authMethod: "privatekey",
         };
 
         setUser(user);
@@ -182,11 +219,12 @@ export function NostrAuthProvider({ children }) {
       setIsLoading(true);
       setError(null);
 
-      const newPrivateKey = generatePrivateKey();
-      const pubkey = getPublicKey(newPrivateKey);
+      const newPrivateKeyBytes = generatePrivateKey(); // This returns Uint8Array
+      const pubkey = getPublicKey(newPrivateKeyBytes);
 
-      // Store the new key
-      localStorage.setItem("nostr_private_key", newPrivateKey);
+      // Store the key as hex string
+      const hexKey = uint8ArrayToHex(newPrivateKeyBytes);
+      localStorage.setItem("nostr_private_key", hexKey);
 
       const user = {
         pubkey,
@@ -197,12 +235,12 @@ export function NostrAuthProvider({ children }) {
         about: "New Nostr user",
         nip05: null,
         lud16: null,
-        authMethod: "privatekey"
+        authMethod: "privatekey",
       };
 
       setUser(user);
       setAuthMethod("privatekey");
-      return { user, privateKey: newPrivateKey };
+      return { user, privateKey: newPrivateKeyBytes };
     } catch (err) {
       setError(err.message);
       throw err;
@@ -219,26 +257,29 @@ export function NostrAuthProvider({ children }) {
     setError(null);
   }, []);
 
-  const updateProfile = useCallback(async (profileData) => {
-    if (!user) {
-      throw new Error("No authenticated user");
-    }
+  const updateProfile = useCallback(
+    async (profileData) => {
+      if (!user) {
+        throw new Error("No authenticated user");
+      }
 
-    try {
-      // This would publish a kind 0 metadata event
-      // For now, just update local state
-      const updatedUser = {
-        ...user,
-        ...profileData,
-      };
+      try {
+        // This would publish a kind 0 metadata event
+        // For now, just update local state
+        const updatedUser = {
+          ...user,
+          ...profileData,
+        };
 
-      setUser(updatedUser);
-      return updatedUser;
-    } catch (err) {
-      setError(err.message);
-      throw err;
-    }
-  }, [user]);
+        setUser(updatedUser);
+        return updatedUser;
+      } catch (err) {
+        setError(err.message);
+        throw err;
+      }
+    },
+    [user],
+  );
 
   const value = {
     user,
