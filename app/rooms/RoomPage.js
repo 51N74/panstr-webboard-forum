@@ -37,16 +37,15 @@ export default function RoomPage({ roomId }) {
       // Try multiple filter approaches to handle potential relay differences
       let events = [];
 
-      // Approach 1: Standard filter format
+      // Approach 1: Standard filter format (using 't' tag for room)
       try {
         const standardFilters = {
           kinds: [30023], // Long-form posts
-          "#t": ["forum"],
-          "#board": [roomId],
+          "#t": [roomId], // Filter by room ID using 't' tag
           limit: 100,
         };
         events = await getEvents(standardFilters);
-        console.log(`Standard filter found ${events.length} events`);
+        console.log(`Standard filter (t tag) found ${events.length} events`);
       } catch (err) {
         console.log("Standard filter failed:", err);
       }

@@ -449,6 +449,22 @@ export function createAuthEvent(
 }
 
 /**
+ * Create NIP-25 reaction event
+ */
+export function createReactionEvent(targetEvent, content = "+") {
+  return {
+    kind: 7,
+    content,
+    tags: [
+      ["e", targetEvent.id],
+      ["p", targetEvent.pubkey],
+      ["k", String(targetEvent.kind)],
+    ],
+    created_at: Math.floor(Date.now() / 1000),
+  };
+}
+
+/**
  * Authenticate with relay using NIP-42
  */
 export async function authenticateWithRelay(
@@ -877,7 +893,7 @@ export function liveSubscribe(pool, relayUrls, filters, onEvent, options = {}) {
         // rare case where subscribe returns an unsubscribe function
         try {
           sub();
-        } catch (e) {}
+        } catch (e) { }
       }
     } catch (err) {
       // ignore unsubscribe errors
@@ -885,7 +901,7 @@ export function liveSubscribe(pool, relayUrls, filters, onEvent, options = {}) {
       if (heartbeat) {
         try {
           clearInterval(heartbeat);
-        } catch (e) {}
+        } catch (e) { }
       }
       _activeSubscriptions.delete(subId);
     }
@@ -1118,7 +1134,7 @@ export function parseThread(event) {
   try {
     // Validate event structure
     if (!event || !event.tags || !Array.isArray(event.tags)) {
-      throw new Error("Invalid event structure for thread parsing");
+      return { root: null, reply: null, mentions: [], profiles: [], depth: 0 };
     }
 
     // Use official NIP-10 parsing
@@ -1128,85 +1144,36 @@ export function parseThread(event) {
     const parsed = {
       root: refs.root
         ? {
-            id: refs.root.id,
-            relay: refs.root.relay || null,
-            marker: refs.root.marker || "root",
-          }
+          id: refs.root.id,
+          relay: refs.root.relay || null,
+          marker: refs.root.marker || "root",
+        }
         : null,
       reply: refs.reply
         ? {
-            id: refs.reply.id,
-            relay: refs.reply.relay || null,
-            marker: refs.reply.marker || "reply",
-          }
+          id: refs.reply.id,
+          relay: refs.reply.relay || null,
+          marker: refs.reply.marker || "reply",
+        }
         : null,
       mentions: refs.mentions.map((mention) => ({
         id: mention.id,
         relay: mention.relay || null,
         marker: mention.marker || "mention",
-        pubkey: mention.pubkey || null,
-      })),
-      profiles: refs.profiles.map((profile) => ({
-        pubkey: profile.pubkey,
-        relay: profile.relay || null,
-      })),
-    };
-
-    // Calculate thread depth
-    parsed.depth = calculateThreadDepth(event);
-
-    return parsed;
-  } catch (error) {
-    console.warn(
-      "Failed to parse thread with NIP-10, falling back to enhanced custom parser:",
-      error,
-    );
-
-    // Enhanced fallback implementation with all marker types
-    const eTags = event.tags.filter((tag) => tag[0] === "e");
-    const pTags = event.tags.filter((tag) => tag[0] === "p");
-
-    const root =
-      eTags.find((tag) => tag[3] === "root") || eTags.find((tag) => !tag[3]);
-    const reply = eTags.find((tag) => tag[3] === "reply");
-    const mentions = eTags.filter(
-      (tag) =>
-        tag[3] === "mention" || (!tag[3] && tag !== root && tag !== reply),
-    );
-
-    const profiles = pTags.map((tag) => ({
-      pubkey: tag[1],
-      relay: tag[2] || null,
-    }));
-
-    const parsed = {
-      root: root
-        ? {
-            id: root[1],
-            relay: root[2] || null,
-            marker: root[3] || "root",
-          }
-        : null,
-      reply: reply
-        ? {
-            id: reply[1],
-            relay: reply[2] || null,
-            marker: reply[3] || "reply",
-          }
-        : null,
-      mentions: mentions.map((mention) => ({
-        id: mention[1],
-        relay: mention[2] || null,
-        marker: mention[3] || "mention",
         pubkey: null,
       })),
-      profiles: profiles,
+      profiles: [],
       depth: calculateThreadDepth(event),
     };
 
     return parsed;
+  } catch (error) {
+    console.warn("Error parsing thread:", error);
+    return { root: null, reply: null, mentions: [], profiles: [], depth: 0 };
   }
 }
+
+
 
 /**
  * Calculate thread depth based on reply markers and event structure
@@ -1247,13 +1214,19 @@ export function optimizeThreadStructure(events) {
     events.forEach((event) => {
       const parsed = parseThread(event);
       const eventData = eventMap.get(event.id);
+      let hasParent = false;
 
       if (parsed.root && eventMap.has(parsed.root.id)) {
         eventMap.get(parsed.root.id).replies.push(eventData);
+        hasParent = true;
       }
 
       if (parsed.reply && eventMap.has(parsed.reply.id)) {
-        eventMap.get(parsed.reply.id).replies.push(eventData);
+        // Avoid adding twice if root and reply point to same event (rare but possible)
+        if (!parsed.root || parsed.root.id !== parsed.reply.id) {
+          eventMap.get(parsed.reply.id).replies.push(eventData);
+          hasParent = true;
+        }
       }
 
       parsed.mentions.forEach((mention) => {
@@ -1262,8 +1235,8 @@ export function optimizeThreadStructure(events) {
         }
       });
 
-      // If this is a root event, add to threads
-      if (!parsed.root && !parsed.reply) {
+      // If this is a root event OR its parent is not in the current set, add to threads
+      if (!hasParent) {
         threads.push(eventData);
       }
     });
@@ -1289,7 +1262,9 @@ export function createReplyEvent(
 
   // Add root event tag
   if (thread.root) {
-    tags.push(["e", thread.root, "", "root"]);
+    tags.push(["e", thread.root.id, "", "root"]);
+  } else {
+    tags.push(["e", originalEvent.id, "", "root"]);
   }
 
   // Add reply to tag
@@ -2026,7 +2001,7 @@ export async function getRelayStatistics(relayUrls = DEFAULT_RELAYS) {
         scoredRelays
           .filter((r) => r.connected && r.latency)
           .reduce((sum, r) => sum + r.latency, 0) /
-          scoredRelays.filter((r) => r.connected).length || 0,
+        scoredRelays.filter((r) => r.connected).length || 0,
       supportedKinds: [
         ...new Set(scoredRelays.flatMap((r) => r.supportedKinds)),
       ],
@@ -3139,6 +3114,7 @@ export async function publishThread(
     ["board", board],
     ["t", "forum"],
     ["t", "webboard"],
+    ["t", board], // Add board as a hashtag for better relay filtering
     ["published_at", String(published_at)],
   ];
 

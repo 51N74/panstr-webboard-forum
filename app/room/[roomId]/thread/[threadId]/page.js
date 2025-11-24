@@ -15,11 +15,12 @@ import {
   publishToPool,
   getEvents,
   parseThread,
-  optimizeThreadStructure,
 } from "../../../../lib/nostrClient";
 import EnhancedThreadView from "../../../../components/enhanced/threading/EnhancedThreadView";
 import db from "../../../../lib/storage/indexedDB";
 import UserProfile from "../../../../components/profiles/UserProfile";
+import ReactionButton from "../../../../components/enhanced/reactions/ReactionButton";
+import ZapButton from "../../../../components/enhanced/zaps/ZapButton";
 
 export default function ThreadDetailPage() {
   const router = useRouter();
@@ -82,15 +83,11 @@ export default function ThreadDetailPage() {
         limit: 50,
       });
 
-      // Filter and organize replies
-      const threadReplies = replyEvents.filter((event) => {
-        const parsed = parseThread(event);
-        return parsed.root?.id === threadId || parsed.reply?.id === threadId;
-      });
+      // Use all fetched reply events
+      const threadReplies = replyEvents;
 
       // Optimize thread structure for display
-      const optimizedReplies = optimizeThreadStructure(threadReplies);
-      setReplies(optimizedReplies);
+      setReplies(threadReplies);
       setReplyCount(threadReplies.length);
     } catch (err) {
       console.error("Error fetching thread data:", err);
@@ -100,13 +97,15 @@ export default function ThreadDetailPage() {
     }
   };
 
-  const handleReply = async (parentEvent) => {
+  const handleReply = async (parentEvent, content = null) => {
     if (!user) {
       setError("Please connect your Nostr account to reply");
       return;
     }
 
-    if (!replyContent.trim()) {
+    const finalContent = content || replyContent;
+
+    if (!finalContent.trim()) {
       setError("Please enter a reply");
       return;
     }
@@ -133,7 +132,7 @@ export default function ThreadDetailPage() {
       // Create reply event
       const replyEvent = createReplyEvent(
         parentEvent,
-        replyContent,
+        finalContent,
         privateKeyBytes,
         roomId,
       );
@@ -512,9 +511,8 @@ export default function ThreadDetailPage() {
               />
             </div>
 
-            {/* Enhanced Thread Tags */}
             <div className="mt-8 pt-8 border-t border-gray-200/50">
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-3 mb-6">
                 {thread.tags.map((tag, index) => {
                   if (
                     tag[0] &&
@@ -529,6 +527,30 @@ export default function ThreadDetailPage() {
                   }
                   return null;
                 })}
+              </div>
+
+              {/* Main Thread Actions */}
+              <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                <div className="flex items-center gap-6">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-gray-500">Reactions:</span>
+                    <ReactionButton
+                      event={thread}
+                      currentPubkey={user?.pubkey}
+                    />
+                  </div>
+
+                  <div className="h-6 w-px bg-gray-200"></div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-gray-500">Support:</span>
+                    <ZapButton
+                      targetEvent={thread}
+                      recipientPubkey={thread.pubkey}
+                      currentPubkey={user?.pubkey}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
