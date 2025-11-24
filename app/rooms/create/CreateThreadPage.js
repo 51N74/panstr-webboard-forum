@@ -18,315 +18,7 @@ import {
   generateThreadId,
 } from "../../lib/nostrClient";
 
-/**
- * Lightweight contentEditable Rich Text Editor
- * - Supports basic toolbar actions (headings, bold/italic/underline, lists, align, quote, code, link)
- * - Drag & drop and file picker for images
- * - Inserts a base64 preview immediately and exposes upload-id so parent can replace src after upload
- *
- * Props:
- *  - value (HTML string)
- *  - onChange (html) => void
- *  - disabled (bool)
- *  - onUpload (file, uploadId) => void  // parent will handle upload and call editorRef.replaceImageSrc(uploadId, url)
- *
- * Exposes via ref:
- *  - replaceImageSrc(uploadId, url)
- */
-const RichTextEditor = forwardRef(function RichTextEditor(
-  { value, onChange, disabled, onUpload },
-  ref,
-) {
-  const editorDiv = useRef(null);
-  const fileInput = useRef(null);
-  const [dragOver, setDragOver] = useState(false);
-
-  // Keep editor content in sync with controlled value
-  useEffect(() => {
-    if (editorDiv.current && value !== editorDiv.current.innerHTML) {
-      editorDiv.current.innerHTML = value || "";
-    }
-  }, [value]);
-
-  // Expose a replaceImageSrc method so parent can swap preview -> uploaded URL
-  useImperativeHandle(ref, () => ({
-    replaceImageSrc(uploadId, newUrl) {
-      if (!editorDiv.current) return;
-      const img = editorDiv.current.querySelector(
-        `img[data-upload-id="${uploadId}"]`,
-      );
-      if (img) {
-        img.src = newUrl;
-        // remove the attribute as upload is complete
-        img.removeAttribute("data-upload-id");
-      }
-    },
-  }));
-
-  const triggerChange = () => {
-    if (!editorDiv.current) return;
-    onChange && onChange(editorDiv.current.innerHTML);
-  };
-
-  const exec = (command, value = null) => {
-    if (disabled) return;
-    document.execCommand(command, false, value);
-    triggerChange();
-  };
-
-  const setHeading = (level) => {
-    if (disabled) return;
-    document.execCommand("formatBlock", false, `h${level}`);
-    triggerChange();
-  };
-
-  const insertLink = () => {
-    if (disabled) return;
-    const url = prompt("Enter a URL:", "https://");
-    if (url) {
-      document.execCommand("createLink", false, url);
-      triggerChange();
-    }
-  };
-
-  const insertInlineCode = () => {
-    if (disabled) return;
-    const sel = window.getSelection().toString() || "code";
-    document.execCommand("insertHTML", false, `<code>${sel}</code>`);
-    triggerChange();
-  };
-
-  const insertCodeBlock = () => {
-    if (disabled) return;
-    const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0) return;
-    const range = selection.getRangeAt(0);
-    const pre = document.createElement("pre");
-    pre.textContent = range.toString();
-    range.deleteContents();
-    range.insertNode(pre);
-    triggerChange();
-  };
-
-  const insertImageAtCursor = (src, uploadId = null, caption = "") => {
-    if (!editorDiv.current) return;
-    const img = document.createElement("img");
-    img.src = src;
-    img.alt = caption || "image";
-    img.className = "max-w-full rounded-md my-2";
-    if (uploadId) img.setAttribute("data-upload-id", uploadId);
-
-    const figure = document.createElement("figure");
-    figure.className = "my-4";
-    figure.appendChild(img);
-
-    if (caption !== false) {
-      const figcap = document.createElement("figcaption");
-      figcap.contentEditable = "true";
-      figcap.className = "text-xs text-gray-500 mt-1";
-      figcap.innerText = caption || "";
-      figure.appendChild(figcap);
-    }
-
-    const sel = window.getSelection();
-    if (!sel || sel.rangeCount === 0) {
-      editorDiv.current.appendChild(figure);
-    } else {
-      const range = sel.getRangeAt(0);
-      range.deleteContents();
-      range.insertNode(figure);
-      // Move caret after the figure
-      range.setStartAfter(figure);
-      range.setEndAfter(figure);
-      sel.removeAllRanges();
-      sel.addRange(range);
-    }
-
-    triggerChange();
-  };
-
-  const handleFiles = async (files) => {
-    const imageFiles = files.filter((f) => f.type.startsWith("image/"));
-    for (const file of imageFiles) {
-      // create a unique upload id
-      const uploadId = Math.random().toString(36).slice(2);
-      // create base64 preview and insert immediately
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        insertImageAtCursor(e.target.result, uploadId);
-        // notify parent to upload in background
-        onUpload && onUpload(file, uploadId);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const onDrop = async (e) => {
-    e.preventDefault();
-    setDragOver(false);
-    const files = Array.from(e.dataTransfer?.files || []);
-    await handleFiles(files);
-  };
-
-  const onPaste = (e) => {
-    // allow paste then sync content
-    setTimeout(triggerChange, 0);
-  };
-
-  const handleFileInput = async (e) => {
-    const files = Array.from(e.target.files || []);
-    await handleFiles(files);
-    e.target.value = null;
-  };
-
-  return (
-    <div>
-      <div className="mb-2 flex flex-wrap gap-2">
-        <div className="inline-flex items-center rounded-md bg-base-100 border p-1">
-          <button
-            type="button"
-            onClick={() => setHeading(1)}
-            className="px-2 py-1 text-sm hover:bg-base-200 rounded"
-          >
-            H1
-          </button>
-          <button
-            type="button"
-            onClick={() => setHeading(2)}
-            className="px-2 py-1 text-sm hover:bg-base-200 rounded"
-          >
-            H2
-          </button>
-          <button
-            type="button"
-            onClick={() => setHeading(3)}
-            className="px-2 py-1 text-sm hover:bg-base-200 rounded"
-          >
-            H3
-          </button>
-          <span className="w-px bg-base-200 mx-1 h-6"></span>
-          <button
-            type="button"
-            onClick={() => exec("bold")}
-            className="px-2 py-1 font-bold"
-          >
-            B
-          </button>
-          <button
-            type="button"
-            onClick={() => exec("italic")}
-            className="px-2 py-1 italic"
-          >
-            I
-          </button>
-          <button
-            type="button"
-            onClick={() => exec("underline")}
-            className="px-2 py-1 underline"
-          >
-            U
-          </button>
-          <span className="w-px bg-base-200 mx-1 h-6"></span>
-          <button
-            type="button"
-            onClick={() => exec("insertUnorderedList")}
-            className="px-2 py-1"
-          >
-            • List
-          </button>
-          <button
-            type="button"
-            onClick={() => exec("insertOrderedList")}
-            className="px-2 py-1"
-          >
-            1. List
-          </button>
-          <span className="w-px bg-base-200 mx-1 h-6"></span>
-          <button
-            type="button"
-            onClick={() => exec("justifyLeft")}
-            className="px-2 py-1"
-          >
-            Left
-          </button>
-          <button
-            type="button"
-            onClick={() => exec("justifyCenter")}
-            className="px-2 py-1"
-          >
-            Center
-          </button>
-          <button
-            type="button"
-            onClick={() => exec("justifyFull")}
-            className="px-2 py-1"
-          >
-            Justify
-          </button>
-          <span className="w-px bg-base-200 mx-1 h-6"></span>
-          <button
-            type="button"
-            onClick={() => exec("formatBlock", "blockquote")}
-            className="px-2 py-1"
-          >
-            ❝ Quote
-          </button>
-          <button
-            type="button"
-            onClick={insertInlineCode}
-            className="px-2 py-1"
-          >
-            `code`
-          </button>
-          <button type="button" onClick={insertCodeBlock} className="px-2 py-1">
-            Code Block
-          </button>
-          <button type="button" onClick={insertLink} className="px-2 py-1">
-            🔗 Link
-          </button>
-        </div>
-
-        <div className="inline-flex items-center">
-          <input
-            ref={fileInput}
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={handleFileInput}
-            className="hidden"
-            id="rte-file-input"
-          />
-          <label
-            htmlFor="rte-file-input"
-            className="btn btn-sm btn-outline cursor-pointer"
-          >
-            📁 Add Image
-          </label>
-        </div>
-      </div>
-
-      <div
-        onDragOver={(e) => {
-          e.preventDefault();
-          setDragOver(true);
-        }}
-        onDragLeave={() => setDragOver(false)}
-        onDrop={onDrop}
-        className={`min-h-[180px] p-4 border rounded-lg bg-white ${dragOver ? "border-primary/80 bg-base-100" : "border-base-200"}`}
-      >
-        <div
-          ref={editorDiv}
-          className="prose max-w-none focus:outline-none"
-          contentEditable={!disabled}
-          onInput={triggerChange}
-          onPaste={onPaste}
-          suppressContentEditableWarning={true}
-          style={{ minHeight: 160 }}
-        />
-      </div>
-    </div>
-  );
-});
+import RichTextEditor from "../../components/RichTextEditor";
 
 /* =============================
    CreateThreadPage (page)
@@ -571,10 +263,10 @@ export default function CreateThreadPage({ roomId }) {
 
   if (!room) {
     return (
-      <div className="min-h-screen bg-base-200 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Room Not Found</h2>
-          <Link href="/" className="btn btn-primary">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center p-8 bg-white rounded-2xl shadow-xl border border-gray-100">
+          <h2 className="text-2xl font-bold mb-4 text-gray-800">Room Not Found</h2>
+          <Link href="/" className="modern-button-primary inline-block">
             Back to Forums
           </Link>
         </div>
@@ -585,30 +277,33 @@ export default function CreateThreadPage({ roomId }) {
   const plainLength = getPlainLength(content);
 
   return (
-    <div className="min-h-screen bg-base-200">
-      <div className={`bg-gradient-to-r ${room.gradient} text-white p-8`}>
-        <div className="container mx-auto">
-          <nav className="flex items-center space-x-2 text-sm mb-4 opacity-90">
-            <Link href="/" className="hover:underline">
+    <div className="min-h-screen bg-gray-50 pb-12">
+      {/* Header Section */}
+      <div className={`bg-gradient-to-r ${room.gradient} text-white py-12 shadow-lg`}>
+        <div className="container mx-auto px-4">
+          <nav className="flex items-center space-x-2 text-sm mb-6 opacity-90 font-medium">
+            <Link href="/" className="hover:text-white/80 transition-colors">
               Home
             </Link>
-            <span>›</span>
-            <Link href={`/category/${category.id}`} className="hover:underline">
+            <span className="opacity-60">›</span>
+            <Link href={`/category/${category.id}`} className="hover:text-white/80 transition-colors">
               {category.name}
             </Link>
-            <span>›</span>
-            <Link href={`/room/${roomId}`} className="hover:underline">
+            <span className="opacity-60">›</span>
+            <Link href={`/room/${roomId}`} className="hover:text-white/80 transition-colors">
               {room.name}
             </Link>
-            <span>›</span>
-            <span>Create Thread</span>
+            <span className="opacity-60">›</span>
+            <span className="text-white">Create Thread</span>
           </nav>
 
-          <div className="flex items-center space-x-4">
-            <span className="text-4xl">{room.icon}</span>
+          <div className="flex items-center space-x-6">
+            <div className="bg-white/20 backdrop-blur-md p-4 rounded-2xl shadow-inner border border-white/10">
+              <span className="text-5xl">{room.icon}</span>
+            </div>
             <div>
-              <h1 className="text-3xl font-bold">Create New Thread</h1>
-              <p className="text-white/90">
+              <h1 className="text-4xl font-bold mb-2 text-shadow">Create New Thread</h1>
+              <p className="text-lg text-white/90 font-medium">
                 Share your thoughts with the {room.name} community
               </p>
             </div>
@@ -616,232 +311,260 @@ export default function CreateThreadPage({ roomId }) {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="container mx-auto px-4 -mt-8 relative z-10 max-w-5xl">
+        {/* Status Messages */}
         {error && (
-          <div className="alert alert-error mb-6">
-            <svg
-              className="w-6 h-6 shrink-0 stroke-current"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <span>{error}</span>
+          <div className="mb-6 animate-fade-in">
+            <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg shadow-sm flex items-start">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-red-700 font-medium">{error}</p>
+              </div>
+            </div>
           </div>
         )}
 
         {success && (
-          <div className="alert alert-success mb-6">
-            <svg
-              className="w-6 h-6 shrink-0 stroke-current"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <span>Thread published successfully! Redirecting...</span>
+          <div className="mb-6 animate-fade-in">
+            <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded-r-lg shadow-sm flex items-start">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-green-700 font-medium">Thread published successfully! Redirecting...</p>
+              </div>
+            </div>
           </div>
         )}
 
         {!user && (
-          <div className="alert alert-warning mb-6">
-            <svg
-              className="w-6 h-6 shrink-0 stroke-current"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
-              />
-            </svg>
-            <span>
-              You need to connect your Nostr account to create threads.
-            </span>
-            <div className="flex-1" />
-            <Link href="/" className="btn btn-sm btn-warning">
-              Connect Account
-            </Link>
+          <div className="mb-6 animate-fade-in">
+            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg shadow-sm flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-yellow-700 font-medium">
+                    You need to connect your Nostr account to create threads.
+                  </p>
+                </div>
+              </div>
+              <Link href="/" className="ml-4 px-4 py-2 bg-yellow-100 text-yellow-800 text-sm font-medium rounded-md hover:bg-yellow-200 transition-colors">
+                Connect Account
+              </Link>
+            </div>
           </div>
         )}
 
-        <div className="bg-base-100 rounded-lg shadow-sm">
-          <div className="p-6 border-b border-base-300">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <span className="text-2xl">{room.icon}</span>
-                <div>
-                  <h2 className="text-lg font-semibold">{room.name}</h2>
-                  <p className="text-sm text-base-content/70">New Thread</p>
-                </div>
+        {/* Main Form Card */}
+        <div className="modern-card bg-white overflow-hidden">
+          <div className="p-6 border-b border-gray-100 bg-gray-50/30 flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-xl shadow-sm border border-gray-200">
+                {room.icon}
               </div>
-              <button
-                onClick={() => setPreviewMode((p) => !p)}
-                className={`btn btn-sm ${previewMode ? "btn-primary" : "btn-outline"}`}
-              >
-                {previewMode ? "Edit" : "Preview"}
-              </button>
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">Compose Thread</h2>
+                <p className="text-xs text-gray-500 font-medium">Posting to {room.name}</p>
+              </div>
             </div>
+            <button
+              onClick={() => setPreviewMode((p) => !p)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${previewMode
+                ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
+                : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900 shadow-sm"
+                }`}
+            >
+              {previewMode ? "Edit Mode" : "Preview Mode"}
+            </button>
           </div>
 
           {!previewMode ? (
-            <div className="p-6 space-y-6">
-              <div>
-                <label className="block text-sm font-medium mb-2">
+            <div className="p-8 space-y-8">
+              {/* Title Input */}
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700 ml-1">
                   Thread Title <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Enter an engaging title for your thread..."
-                  className="w-full px-4 py-3 border border-base-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                  maxLength={200}
-                  disabled={!user}
-                />
-                <div className="mt-1 text-xs text-base-content/60 text-right">
-                  {title.length}/200
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Enter an engaging title..."
+                    className="modern-input w-full text-lg font-medium placeholder:font-normal"
+                    maxLength={200}
+                    disabled={!user}
+                  />
+                  <div className={`absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium px-2 py-1 rounded-md ${title.length > 180 ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-500"
+                    }`}>
+                    {title.length}/200
+                  </div>
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Content <span className="text-red-500">*</span>
-                </label>
+              {/* Content Editor */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between ml-1">
+                  <label className="block text-sm font-semibold text-gray-700">
+                    Content <span className="text-red-500">*</span>
+                  </label>
+                  <span className="text-xs text-gray-400 font-medium">
+                    {plainLength} characters
+                  </span>
+                </div>
 
-                <div className="mb-3 border-dashed border-2 border-base-300 rounded-lg p-3 bg-base-100">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="text-xs text-base-content/70">
-                      Rich text editor — use the toolbar to format. Drag & drop
-                      images or click to upload.
-                    </div>
-                    <div className="text-xs text-base-content/60">
-                      {plainLength} characters
-                    </div>
+                <RichTextEditor
+                  ref={editorApiRef}
+                  value={content}
+                  onChange={setContent}
+                  disabled={!user}
+                  onUpload={handleUploadFromEditor}
+                />
+
+                <div className="flex items-center justify-between mt-2 px-1">
+                  <div className="text-xs text-gray-400">
+                    Supported: JPG, PNG, GIF, WebP
                   </div>
-
-                  <RichTextEditor
-                    ref={editorApiRef}
-                    value={content}
-                    onChange={setContent}
-                    disabled={!user}
-                    onUpload={handleUploadFromEditor}
-                  />
-
-                  <div className="mt-3 flex items-center space-x-3">
-                    <div className="text-xs text-base-content/60">
-                      Supported: JPG, PNG, GIF, WebP
-                    </div>
-                    {uploading && (
-                      <div className="text-sm text-base-content/70">
-                        Uploading image...
-                      </div>
-                    )}
-                  </div>
-
-                  {images.length > 0 && (
-                    <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      {images.map((img) => (
-                        <div
-                          key={img.id}
-                          className="border rounded p-2 bg-white"
-                        >
-                          <img
-                            src={img.previewUrl}
-                            alt="preview"
-                            className="w-full h-24 object-cover rounded"
-                          />
-                          <div className="mt-2">
-                            {img.uploading ? (
-                              <div className="text-xs text-base-content/60">
-                                Uploading: {img.progress}%
-                              </div>
-                            ) : (
-                              <div className="text-xs text-base-content/70">
-                                Uploaded
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))}
+                  {uploading && (
+                    <div className="flex items-center space-x-2 text-xs text-blue-600 font-medium animate-pulse">
+                      <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" />
+                      <span>Uploading image...</span>
                     </div>
                   )}
                 </div>
+
+                {/* Image Previews */}
+                {images.length > 0 && (
+                  <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-4">
+                    {images.map((img) => (
+                      <div
+                        key={img.id}
+                        className="group relative border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-all duration-200"
+                      >
+                        <div className="aspect-square relative">
+                          <img
+                            src={img.previewUrl}
+                            alt="preview"
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-200" />
+                        </div>
+                        <div className="p-2 bg-white border-t border-gray-100">
+                          {img.uploading ? (
+                            <div className="w-full bg-gray-100 rounded-full h-1.5 mb-1 overflow-hidden">
+                              <div
+                                className="bg-blue-500 h-1.5 rounded-full transition-all duration-300"
+                                style={{ width: `${img.progress}%` }}
+                              />
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-center text-green-600 text-xs font-medium">
+                              <svg className="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                              Uploaded
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              <div className="flex items-center justify-between pt-6 border-t border-base-300">
-                <Link href={`/room/${roomId}`} className="btn btn-outline">
+              {/* Action Buttons */}
+              <div className="flex items-center justify-end space-x-4 pt-6 border-t border-gray-100">
+                <Link
+                  href={`/room/${roomId}`}
+                  className="px-6 py-2.5 rounded-xl font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 border border-transparent hover:border-gray-200 transition-all duration-200 active:scale-95"
+                >
                   Cancel
                 </Link>
                 <button
                   onClick={handlePublish}
-                  disabled={
-                    isPublishing || !user || !title.trim() || plainLength === 0
-                  }
-                  className="btn btn-primary"
+                  disabled={isPublishing || !user || !title.trim() || plainLength === 0}
+                  className={`
+                    relative overflow-hidden px-8 py-2.5 rounded-xl font-bold text-white shadow-lg shadow-blue-500/30 
+                    transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-xl hover:shadow-blue-500/40 active:translate-y-0 active:scale-95
+                    bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500
+                    disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:transform-none
+                    min-w-[160px] flex items-center justify-center group
+                  `}
                 >
+                  <div className="absolute inset-0 bg-white/20 group-hover:translate-x-full transition-transform duration-700 ease-in-out -skew-x-12 -translate-x-full" />
                   {isPublishing ? (
-                    <div className="flex items-center space-x-2">
-                      <div className="loading loading-spinner loading-sm" />
-                      <span>Publishing...</span>
-                    </div>
+                    <>
+                      <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span className="relative z-10">Publishing...</span>
+                    </>
                   ) : (
-                    "Publish Thread"
+                    <span className="relative z-10">Publish Thread</span>
                   )}
                 </button>
               </div>
             </div>
           ) : (
-            <div className="p-6">
-              <div className="prose max-w-none">
-                {title && <h1 className="text-3xl font-bold mb-4">{title}</h1>}
+            <div className="p-8 bg-gray-50/30 min-h-[400px]">
+              <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+                {title && <h1 className="text-3xl font-bold mb-6 text-gray-900">{title}</h1>}
                 {content ? (
                   <div
+                    className="prose prose-lg max-w-none"
                     dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
                   />
                 ) : (
-                  <div className="text-center py-12 text-base-content/50">
-                    <div className="text-lg mb-2">No content yet</div>
-                    <div className="text-sm">
-                      Add a title and content to see the preview
-                    </div>
+                  <div className="flex flex-col items-center justify-center py-16 text-gray-400">
+                    <svg className="w-16 h-16 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <div className="text-lg font-medium mb-1">No content yet</div>
+                    <div className="text-sm">Add a title and content to see the preview</div>
                   </div>
                 )}
               </div>
 
-              <div className="flex justify-end space-x-3 mt-6 pt-6 border-t border-base-300">
+              <div className="flex justify-center space-x-4 mt-8">
                 <button
                   onClick={() => setPreviewMode(false)}
-                  className="btn btn-outline"
+                  className="px-6 py-2.5 rounded-xl font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 border border-transparent hover:border-gray-200 transition-all duration-200 active:scale-95"
                 >
                   Back to Edit
                 </button>
                 <button
                   onClick={handlePublish}
-                  disabled={
-                    isPublishing || !user || !title.trim() || plainLength === 0
-                  }
-                  className="btn btn-primary"
+                  disabled={isPublishing || !user || !title.trim() || plainLength === 0}
+                  className={`
+                    relative overflow-hidden px-8 py-2.5 rounded-xl font-bold text-white shadow-lg shadow-blue-500/30 
+                    transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-xl hover:shadow-blue-500/40 active:translate-y-0 active:scale-95
+                    bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500
+                    disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:transform-none
+                    min-w-[160px] flex items-center justify-center group
+                  `}
                 >
+                  <div className="absolute inset-0 bg-white/20 group-hover:translate-x-full transition-transform duration-700 ease-in-out -skew-x-12 -translate-x-full" />
                   {isPublishing ? (
-                    <div className="flex items-center space-x-2">
-                      <div className="loading loading-spinner loading-sm" />
-                      <span>Publishing...</span>
-                    </div>
+                    <>
+                      <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span className="relative z-10">Publishing...</span>
+                    </>
                   ) : (
-                    "Publish Thread"
+                    <span className="relative z-10">Publish Thread</span>
                   )}
                 </button>
               </div>
@@ -849,18 +572,42 @@ export default function CreateThreadPage({ roomId }) {
           )}
         </div>
 
-        <div className="mt-6 bg-base-100 rounded-lg p-6">
-          <h3 className="font-semibold mb-3 flex items-center">
-            <span className="text-xl mr-2">💡</span> Tips for Great Threads
+        {/* Tips Section */}
+        <div className="mt-8 modern-card bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-100 p-6">
+          <h3 className="font-bold text-gray-900 mb-4 flex items-center">
+            <span className="text-2xl mr-3">💡</span>
+            <span className="text-lg">Tips for Great Threads</span>
           </h3>
-          <ul className="space-y-2 text-sm text-base-content/70">
-            <li>• Use a clear and descriptive title</li>
-            <li>• Break your content into paragraphs for readability</li>
-            <li>• Use formatting tools to structure your post</li>
-            <li>• Add images to illustrate your point</li>
-            <li>• Be respectful and constructive</li>
-            <li>• Check your content before publishing</li>
-          </ul>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <ul className="space-y-3 text-sm text-gray-700">
+              <li className="flex items-start">
+                <span className="text-blue-500 mr-2">•</span>
+                Use a clear, descriptive title that catches attention
+              </li>
+              <li className="flex items-start">
+                <span className="text-blue-500 mr-2">•</span>
+                Break your content into short paragraphs for readability
+              </li>
+              <li className="flex items-start">
+                <span className="text-blue-500 mr-2">•</span>
+                Use formatting tools (bold, lists) to structure your post
+              </li>
+            </ul>
+            <ul className="space-y-3 text-sm text-gray-700">
+              <li className="flex items-start">
+                <span className="text-blue-500 mr-2">•</span>
+                Add images to illustrate your point and increase engagement
+              </li>
+              <li className="flex items-start">
+                <span className="text-blue-500 mr-2">•</span>
+                Be respectful and constructive in your discussions
+              </li>
+              <li className="flex items-start">
+                <span className="text-blue-500 mr-2">•</span>
+                Check your content in Preview Mode before publishing
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>

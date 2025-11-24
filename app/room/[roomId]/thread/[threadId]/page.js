@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { useNostrAuth } from "../../../../context/NostrAuthContext";
@@ -21,6 +21,7 @@ import db from "../../../../lib/storage/indexedDB";
 import UserProfile from "../../../../components/profiles/UserProfile";
 import ReactionButton from "../../../../components/enhanced/reactions/ReactionButton";
 import ZapButton from "../../../../components/enhanced/zaps/ZapButton";
+import RichTextEditor from "../../../../components/RichTextEditor";
 
 export default function ThreadDetailPage() {
   const router = useRouter();
@@ -40,6 +41,9 @@ export default function ThreadDetailPage() {
   const [replyCount, setReplyCount] = useState(0);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(null);
+  const editorApiRef = useRef(null);
+  const [images, setImages] = useState([]);
+  const [uploading, setUploading] = useState(false);
 
   const room = getRoomById(roomId);
   const category = getCategoryByRoomId(roomId);
@@ -97,6 +101,97 @@ export default function ThreadDetailPage() {
     }
   };
 
+  // Upload helper with progress reporting; expects server endpoint /api/uploads/images
+  const uploadImage = (file, onProgress) =>
+    new Promise((resolve) => {
+      const xhr = new XMLHttpRequest();
+      const form = new FormData();
+      form.append("image", file);
+      xhr.open("POST", "/api/uploads/images");
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const res = JSON.parse(xhr.responseText);
+            if (res && res.url) {
+              resolve({ url: res.url });
+              return;
+            }
+          } catch (e) {
+            // parse error -> fallback
+          }
+        }
+        resolve({ url: URL.createObjectURL(file) });
+      };
+      xhr.onerror = () => {
+        resolve({ url: URL.createObjectURL(file) });
+      };
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable && onProgress) {
+          onProgress(Math.round((e.loaded / e.total) * 100));
+        }
+      };
+      xhr.send(form);
+    });
+
+  const handleUploadFromEditor = async (file, uploadId) => {
+    const id = Math.random().toString(36).slice(2);
+    const previewUrl = URL.createObjectURL(file);
+    setImages((prev) => [
+      ...prev,
+      {
+        id,
+        file,
+        previewUrl,
+        uploading: true,
+        progress: 0,
+        url: null,
+        uploadId,
+      },
+    ]);
+    setUploading(true);
+
+    const result = await uploadImage(file, (p) => {
+      setImages((prev) =>
+        prev.map((it) =>
+          it.uploadId === uploadId ? { ...it, progress: p } : it,
+        ),
+      );
+    });
+
+    setImages((prev) =>
+      prev.map((it) =>
+        it.uploadId === uploadId
+          ? { ...it, uploading: false, progress: 100, url: result.url }
+          : it,
+      ),
+    );
+
+    try {
+      if (
+        editorApiRef.current &&
+        typeof editorApiRef.current.replaceImageSrc === "function"
+      ) {
+        editorApiRef.current.replaceImageSrc(uploadId, result.url);
+      } else {
+        setReplyContent((prev) =>
+          prev.replace(
+            new RegExp(`src=["']data:[^"']+["']`),
+            `src="${result.url}"`,
+          ),
+        );
+      }
+    } catch (e) {
+      console.error("Failed to replace preview with uploaded image url:", e);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const hasValidContent = (content) => {
+    const plainText = content.replace(/<[^>]+>/g, "").trim();
+    return plainText.length > 0 || content.includes("<img");
+  };
+
   const handleReply = async (parentEvent, content = null) => {
     if (!user) {
       setError("Please connect your Nostr account to reply");
@@ -105,7 +200,7 @@ export default function ThreadDetailPage() {
 
     const finalContent = content || replyContent;
 
-    if (!finalContent.trim()) {
+    if (!hasValidContent(finalContent)) {
       setError("Please enter a reply");
       return;
     }
@@ -563,18 +658,30 @@ export default function ThreadDetailPage() {
               <h3 className="text-2xl font-bold gradient-text mb-6">
                 💬 Post a Reply
               </h3>
-              <textarea
-                value={replyContent}
-                onChange={(e) => setReplyContent(e.target.value)}
-                placeholder="Share your thoughts on this discussion..."
-                rows={5}
-                className="modern-input w-full resize-none focus-ring-green"
-                disabled={isSubmittingReply}
-              />
+              <div className="mb-4">
+                <RichTextEditor
+                  ref={editorApiRef}
+                  value={replyContent}
+                  onChange={setReplyContent}
+                  disabled={isSubmittingReply}
+                  onUpload={handleUploadFromEditor}
+                />
+              </div>
+              <div className="flex items-center justify-between mt-2 px-1">
+                <div className="text-xs text-gray-400">
+                  Supported: JPG, PNG, GIF, WebP
+                </div>
+                {uploading && (
+                  <div className="flex items-center space-x-2 text-xs text-blue-600 font-medium animate-pulse">
+                    <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" />
+                    <span>Uploading image...</span>
+                  </div>
+                )}
+              </div>
               <div className="flex justify-end mt-6">
                 <button
                   onClick={() => handleReply(thread)}
-                  disabled={isSubmittingReply || !replyContent.trim()}
+                  disabled={isSubmittingReply || !hasValidContent(replyContent)}
                   className="modern-button-primary px-8 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSubmittingReply ? (

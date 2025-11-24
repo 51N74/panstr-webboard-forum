@@ -17,6 +17,7 @@ import {
 import db from "../../../lib/storage/indexedDB";
 import ReactionButton from "../reactions/ReactionButton";
 import ZapButton from "../zaps/ZapButton";
+import RichTextEditor from "../../RichTextEditor";
 
 const EnhancedThreadView = ({ events, onReply, currentPubkey, threadId }) => {
   const [expandedThreads, setExpandedThreads] = useState(new Set());
@@ -28,6 +29,9 @@ const EnhancedThreadView = ({ events, onReply, currentPubkey, threadId }) => {
   const [replyContent, setReplyContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const loadingRef = useRef(false);
+  const editorApiRef = useRef(null);
+  const [images, setImages] = useState([]);
+  const [uploading, setUploading] = useState(false);
 
   // Optimize thread structure and sort chronologically (Oldest first)
   const optimizedThreads = useMemo(() => {
@@ -178,8 +182,99 @@ const EnhancedThreadView = ({ events, onReply, currentPubkey, threadId }) => {
     });
   };
 
+  // Upload helper with progress reporting; expects server endpoint /api/uploads/images
+  const uploadImage = (file, onProgress) =>
+    new Promise((resolve) => {
+      const xhr = new XMLHttpRequest();
+      const form = new FormData();
+      form.append("image", file);
+      xhr.open("POST", "/api/uploads/images");
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const res = JSON.parse(xhr.responseText);
+            if (res && res.url) {
+              resolve({ url: res.url });
+              return;
+            }
+          } catch (e) {
+            // parse error -> fallback
+          }
+        }
+        resolve({ url: URL.createObjectURL(file) });
+      };
+      xhr.onerror = () => {
+        resolve({ url: URL.createObjectURL(file) });
+      };
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable && onProgress) {
+          onProgress(Math.round((e.loaded / e.total) * 100));
+        }
+      };
+      xhr.send(form);
+    });
+
+  const handleUploadFromEditor = async (file, uploadId) => {
+    const id = Math.random().toString(36).slice(2);
+    const previewUrl = URL.createObjectURL(file);
+    setImages((prev) => [
+      ...prev,
+      {
+        id,
+        file,
+        previewUrl,
+        uploading: true,
+        progress: 0,
+        url: null,
+        uploadId,
+      },
+    ]);
+    setUploading(true);
+
+    const result = await uploadImage(file, (p) => {
+      setImages((prev) =>
+        prev.map((it) =>
+          it.uploadId === uploadId ? { ...it, progress: p } : it,
+        ),
+      );
+    });
+
+    setImages((prev) =>
+      prev.map((it) =>
+        it.uploadId === uploadId
+          ? { ...it, uploading: false, progress: 100, url: result.url }
+          : it,
+      ),
+    );
+
+    try {
+      if (
+        editorApiRef.current &&
+        typeof editorApiRef.current.replaceImageSrc === "function"
+      ) {
+        editorApiRef.current.replaceImageSrc(uploadId, result.url);
+      } else {
+        setReplyContent((prev) =>
+          prev.replace(
+            new RegExp(`src=["']data:[^"']+["']`),
+            `src="${result.url}"`,
+          ),
+        );
+      }
+    } catch (e) {
+      console.error("Failed to replace preview with uploaded image url:", e);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const hasValidContent = (content) => {
+    const plainText = content.replace(/<[^>]+>/g, "").trim();
+    return plainText.length > 0 || content.includes("<img");
+  };
+
   const handleInlineReplySubmit = async (event) => {
-    if (!replyContent.trim()) return;
+    if (!hasValidContent(replyContent)) return;
 
     setIsSubmitting(true);
     try {
@@ -334,6 +429,7 @@ const EnhancedThreadView = ({ events, onReply, currentPubkey, threadId }) => {
                   onClick={() => {
                     if (replyingTo === event.id) {
                       setReplyingTo(null);
+                      setReplyContent("");
                     } else {
                       setReplyingTo(event.id);
                       setReplyContent("");
@@ -366,37 +462,50 @@ const EnhancedThreadView = ({ events, onReply, currentPubkey, threadId }) => {
           {/* Inline Reply Form */}
           {isReplying && (
             <div className="mt-4 pt-4 border-t border-gray-100 animate-fade-in">
-              <div className="flex space-x-3">
-                <div className="flex-1">
-                  <textarea
-                    value={replyContent}
-                    onChange={(e) => setReplyContent(e.target.value)}
-                    placeholder="เขียนความคิดเห็นของคุณ..."
-                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[100px] resize-y"
-                    autoFocus
-                  />
-                  <div className="flex justify-end mt-2 space-x-2">
-                    <button
-                      onClick={() => setReplyingTo(null)}
-                      className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-sm font-medium transition-colors"
-                    >
-                      ยกเลิก
-                    </button>
-                    <button
-                      onClick={() => handleInlineReplySubmit(event)}
-                      disabled={isSubmitting || !replyContent.trim()}
-                      className="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <div className="loading loading-spinner loading-xs"></div>
-                          <span>กำลังส่ง...</span>
-                        </>
-                      ) : (
-                        <span>ส่งความคิดเห็น</span>
-                      )}
-                    </button>
+              <div className="space-y-4">
+                <RichTextEditor
+                  ref={editorApiRef}
+                  value={replyContent}
+                  onChange={setReplyContent}
+                  disabled={isSubmitting}
+                  onUpload={handleUploadFromEditor}
+                  placeholder="เขียนความคิดเห็นของคุณ..."
+                />
+                <div className="flex items-center justify-between mt-2 px-1">
+                  <div className="text-xs text-gray-400">
+                    Supported: JPG, PNG, GIF, WebP
                   </div>
+                  {uploading && (
+                    <div className="flex items-center space-x-2 text-xs text-blue-600 font-medium animate-pulse">
+                      <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" />
+                      <span>Uploading image...</span>
+                    </div>
+                  )}
+                </div>
+                <div className="flex justify-end space-x-2">
+                  <button
+                    onClick={() => {
+                      setReplyingTo(null);
+                      setReplyContent("");
+                    }}
+                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    ยกเลิก
+                  </button>
+                  <button
+                    onClick={() => handleInlineReplySubmit(event)}
+                    disabled={isSubmitting || !hasValidContent(replyContent)}
+                    className="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <div className="loading loading-spinner loading-xs"></div>
+                        <span>กำลังส่ง...</span>
+                      </>
+                    ) : (
+                      <span>ส่งความคิดเห็น</span>
+                    )}
+                  </button>
                 </div>
               </div>
             </div>
