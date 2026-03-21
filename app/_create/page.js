@@ -104,11 +104,11 @@ export default function CreatePost() {
       {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
+          <div className="flex items-center justify-between h-14 sm:h-16">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <Link href="/" className="text-gray-600 hover:text-gray-900">
                 <svg
-                  className="w-6 h-6"
+                  className="w-5 h-5 sm:w-6 sm:h-6"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -121,16 +121,16 @@ export default function CreatePost() {
                   />
                 </svg>
               </Link>
-              <Link href="/" className="flex items-center space-x-2">
-                <div className="w-6 h-6 bg-gradient-to-br from-blue-600 to-purple-600 rounded"></div>
-                <span className="font-bold text-gray-900">Panstr</span>
+              <Link href="/" className="flex items-center space-x-1.5 sm:space-x-2">
+                <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-br from-blue-600 to-purple-600 rounded"></div>
+                <span className="font-bold text-gray-900 text-sm sm:text-base">Panstr</span>
               </Link>
-              <span className="text-sm text-gray-500">/ สร้างกระทู้</span>
+              <span className="text-xs sm:text-sm text-gray-500 truncate">/ สร้างกระทู้</span>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1.5 sm:space-x-2">
               <button
                 onClick={() => setPreviewMode(!previewMode)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
                   previewMode
                     ? "bg-blue-100 text-blue-700"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -144,13 +144,13 @@ export default function CreatePost() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-4xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-8">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="p-6 border-b border-gray-200">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+          <div className="p-4 sm:p-6 border-b border-gray-200">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1 sm:mb-2">
               สร้างกระทู้ใหม่
             </h1>
-            <p className="text-gray-600">แชร์เรื่องราวของคุณกับชุมชน Nostr</p>
+            <p className="text-sm sm:text-base text-gray-600">แชร์เรื่องราวของคุณกับชุมชน Nostr</p>
           </div>
 
           {!previewMode ? (

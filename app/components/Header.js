@@ -19,6 +19,7 @@ export default function Header() {
   const { user, isLoading, logout } = useNostrAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [relayCount, setRelayCount] = useState(0);
   const dropdownRef = useRef(null);
 
@@ -105,46 +106,41 @@ export default function Header() {
 
   return (
     <header className="bg-white/95 backdrop-blur-xl border-b border-gray-200/60 sticky top-0 z-50 shadow-lg">
-      <div className="container mx-auto px-6">
-        <div className="flex items-center justify-between h-20">
+      <div className="container mx-auto px-4 sm:px-6">
+        <div className="flex items-center justify-between h-16 sm:h-20">
           {/* Logo and Brand */}
-          <div className="flex items-center space-x-6">
+          <div className="flex items-center space-x-3 sm:space-x-6">
             <Link
               href="/"
-              className="flex items-center space-x-3 hover:opacity-90 transition-all duration-300 group"
+              className="flex items-center space-x-2 sm:space-x-3 hover:opacity-90 transition-all duration-300 group"
             >
               <div className="relative">
-                <span className="text-4xl group-hover:scale-110 transition-transform duration-300 inline-block">🌏</span>
+                <span className="text-3xl sm:text-4xl group-hover:scale-110 transition-transform duration-300 inline-block">🌏</span>
                 <div className="absolute inset-0 bg-blue-400/20 blur-xl rounded-full group-hover:bg-blue-500/30 transition-all duration-300"></div>
               </div>
-              <div className="flex flex-col">
-                <span className="text-2xl font-bold gradient-text tracking-tight">
+              <div className="flex flex-col min-w-0">
+                <span className="text-lg sm:text-2xl font-bold gradient-text tracking-tight truncate">
                   Panstr Forum
                 </span>
-                <span className="text-xs text-gray-500 font-medium">Decentralized Discussions</span>
+                <span className="text-[10px] sm:text-xs text-gray-500 font-medium hidden xs:block">Decentralized Discussions</span>
               </div>
             </Link>
           </div>
 
-          {/* Mobile Search */}
-          <div className="md:hidden flex-1 mx-4">
-            <SearchComponent compact={true} />
-          </div>
-
-          {/* Navigation */}
-          <nav className="hidden md:flex items-center space-x-10">
+          {/* Desktop Navigation */}
+          <nav className="hidden lg:flex items-center space-x-8 xl:space-x-10">
             <Link
               href="/"
-              className="text-gray-700 hover:text-blue-600 transition-all duration-300 font-semibold relative group text-base"
+              className="text-gray-700 hover:text-blue-600 transition-all duration-300 font-semibold relative group text-sm xl:text-base"
             >
               <span className="relative z-10">Forums</span>
               <span className="absolute -bottom-2 left-0 w-0 h-1 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300 rounded-full"></span>
             </Link>
             <div className="relative group">
-              <button className="text-gray-700 hover:text-blue-600 transition-all duration-300 font-semibold flex items-center space-x-2 group text-base">
+              <button className="text-gray-700 hover:text-blue-600 transition-all duration-300 font-semibold flex items-center space-x-2 group text-sm xl:text-base">
                 <span className="relative z-10">Rooms</span>
                 <svg
-                  className="w-5 h-5 transform group-hover:rotate-180 transition-transform duration-300"
+                  className="w-4 h-4 sm:w-5 sm:h-5 transform group-hover:rotate-180 transition-transform duration-300"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -225,71 +221,66 @@ export default function Header() {
           </nav>
 
           {/* Right Section */}
-          <div className="flex items-center space-x-5">
-            {/* Enhanced Search */}
-            <div className="hidden md:block">
-              <div className="relative group/search">
-                <SearchComponent compact={true} />
-              </div>
-            </div>
-
-            {/* Enhanced Relay Status */}
-            <div className="hidden sm:flex items-center space-x-2.5 text-sm px-4 py-2 rounded-full bg-gradient-to-r from-gray-100/90 to-gray-50/90 backdrop-blur-sm border border-gray-200/50 shadow-sm hover:shadow-md transition-all duration-300">
+          <div className="flex items-center space-x-3 sm:space-x-5">
+            {/* Enhanced Relay Status - Hidden on mobile */}
+            <div className="hidden lg:flex items-center space-x-2.5 text-sm px-3 xl:px-4 py-1.5 xl:py-2 rounded-full bg-gradient-to-r from-gray-100/90 to-gray-50/90 backdrop-blur-sm border border-gray-200/50 shadow-sm hover:shadow-md transition-all duration-300">
               <div className="relative">
                 <div
-                  className={`w-2.5 h-2.5 rounded-full ${relayCount > 0 ? "bg-green-500 animate-pulse" : "bg-red-500"}`}
+                  className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full ${relayCount > 0 ? "bg-green-500 animate-pulse" : "bg-red-500"}`}
                 ></div>
                 {relayCount > 0 && (
                   <div className="absolute inset-0 bg-green-400 rounded-full animate-ping opacity-75"></div>
                 )}
               </div>
-              <span className="text-gray-700 font-semibold">
-                {relayCount} {relayCount === 1 ? 'relay' : 'relays'}
+              <span className="text-gray-700 font-semibold text-xs sm:text-sm">
+                {relayCount} <span className="hidden xl:inline">{relayCount === 1 ? 'relay' : 'relays'}</span>
               </span>
             </div>
 
-            {/* Notifications */}
-            {user && <Notifications compact={true} />}
+            {/* Notifications - Hidden on small mobile */}
+            {user && <div className="hidden sm:block"><Notifications compact={true} /></div>}
 
             {/* User Menu */}
             {user ? (
-              <div className="relative" ref={dropdownRef}>
-                <button
-                  onClick={() =>
-                    setIsProfileDropdownOpen(!isProfileDropdownOpen)
-                  }
-                  className="flex items-center space-x-3 p-2.5 rounded-2xl hover:bg-gradient-to-br hover:from-blue-50 hover:to-purple-50 transition-all duration-300 group border-2 border-transparent hover:border-blue-200/50"
-                >
-                  {user.picture ? (
-                    <img
-                      src={user.picture}
-                      alt={user.name || "User"}
-                      className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-200 group-hover:ring-blue-400 transition-all duration-300 shadow-md"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 text-white rounded-full flex items-center justify-center font-bold text-base shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
-                      {user.name?.[0]?.toUpperCase() ||
-                        user.npub?.substring(0, 2).toUpperCase()}
-                    </div>
-                  )}
-                  <svg
-                    className="w-5 h-5 text-gray-500 group-hover:text-blue-600 transform group-hover:rotate-180 transition-all duration-300"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+              <>
+                {/* Desktop User Menu */}
+                <div className="hidden sm:block relative" ref={dropdownRef}>
+                  <button
+                    onClick={() =>
+                      setIsProfileDropdownOpen(!isProfileDropdownOpen)
+                    }
+                    className="flex items-center space-x-2 sm:space-x-3 p-2 rounded-xl sm:rounded-2xl hover:bg-gradient-to-br hover:from-blue-50 hover:to-purple-50 transition-all duration-300 group border-2 border-transparent hover:border-blue-200/50"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2.5}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </button>
+                    {user.picture ? (
+                      <img
+                        src={user.picture}
+                        alt={user.name || "User"}
+                        className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover ring-2 ring-gray-200 group-hover:ring-blue-400 transition-all duration-300 shadow-md"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-purple-600 text-white rounded-full flex items-center justify-center font-bold text-xs sm:text-base shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
+                        {user.name?.[0]?.toUpperCase() ||
+                          user.npub?.substring(0, 2).toUpperCase()}
+                      </div>
+                    )}
+                    <svg
+                      className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 group-hover:text-blue-600 transform group-hover:rotate-180 transition-all duration-300 hidden sm:block"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2.5}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </button>
 
-                {/* Profile Dropdown */}
-                {isProfileDropdownOpen && (
-                  <div className="absolute top-full right-0 mt-4 w-80 glass-morphism rounded-3xl shadow-2xl p-6 z-50 animate-fade-in border-2 border-white/40">
+                  {/* Profile Dropdown */}
+                  {isProfileDropdownOpen && (
+                    <div className="absolute top-full right-0 mt-4 w-80 glass-morphism rounded-3xl shadow-2xl p-6 z-50 animate-fade-in border-2 border-white/40 max-h-[80vh] overflow-y-auto custom-scrollbar">
                     <div className="flex items-center space-x-4 pb-5 border-b border-gray-200/50 mb-4">
                       {user.picture ? (
                         <img
@@ -378,15 +369,195 @@ export default function Header() {
                   </div>
                 )}
               </div>
-            ) : (
+
+              {/* Mobile User Menu Button */}
               <button
-                onClick={() => setShowLoginModal(true)}
-                className="modern-button-primary text-sm px-6 py-3 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="sm:hidden flex items-center justify-center w-10 h-10 rounded-xl hover:bg-gray-100 transition-colors"
+                aria-label="Toggle menu"
               >
-                🔗 Connect Nostr
+                {isMobileMenuOpen ? (
+                  <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                ) : (
+                  <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                )}
+              </button>
+            </>
+            ) : (
+              <>
+                {/* Mobile Login Button */}
+                <button
+                  onClick={() => setShowLoginModal(true)}
+                  className="sm:hidden modern-button-primary text-xs px-4 py-2 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                >
+                  🔗 Connect
+                </button>
+                {/* Desktop Login Button */}
+                <button
+                  onClick={() => setShowLoginModal(true)}
+                  className="hidden sm:block modern-button-primary text-sm px-6 py-3 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
+                >
+                  🔗 Connect Nostr
+                </button>
+              </>
+            )}
+
+            {/* Mobile Menu Button (for non-authenticated users, show menu anyway) */}
+            {!user && (
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="sm:hidden flex items-center justify-center w-10 h-10 rounded-xl hover:bg-gray-100 transition-colors"
+                aria-label="Toggle menu"
+              >
+                {isMobileMenuOpen ? (
+                  <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                ) : (
+                  <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                )}
               </button>
             )}
           </div>
+
+          {/* Mobile Menu */}
+          {isMobileMenuOpen && (
+            <div className="sm:hidden bg-white/95 backdrop-blur-lg border-t border-gray-200/60 rounded-b-2xl shadow-lg mb-4">
+              <div className="px-4 py-6 space-y-4">
+                {/* Search */}
+                <div className="pb-4 border-b border-gray-200/50">
+                  <SearchComponent compact={true} />
+                </div>
+
+                {/* Navigation Links */}
+                <nav className="space-y-2">
+                  <Link
+                    href="/"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block px-4 py-3 rounded-xl text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 hover:text-blue-600 font-semibold transition-all duration-300"
+                  >
+                    🏠 Forums
+                  </Link>
+                  <Link
+                    href="/search"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block px-4 py-3 rounded-xl text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 hover:text-blue-600 font-semibold transition-all duration-300"
+                  >
+                    🔍 Search
+                  </Link>
+                  <Link
+                    href="/rooms"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block px-4 py-3 rounded-xl text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 hover:text-blue-600 font-semibold transition-all duration-300"
+                  >
+                    🏛️ Browse Rooms
+                  </Link>
+                </nav>
+
+                {/* Relay Status */}
+                <div className="pt-4 border-t border-gray-200/50">
+                  <div className="flex items-center space-x-2 text-sm px-4 py-2 rounded-lg bg-gray-50">
+                    <div className="relative">
+                      <div className={`w-2.5 h-2.5 rounded-full ${relayCount > 0 ? "bg-green-500 animate-pulse" : "bg-red-500"}`}></div>
+                      {relayCount > 0 && (
+                        <div className="absolute inset-0 bg-green-400 rounded-full animate-ping opacity-75"></div>
+                      )}
+                    </div>
+                    <span className="text-gray-700 font-semibold">
+                      {relayCount} {relayCount === 1 ? 'relay' : 'relays'} connected
+                    </span>
+                  </div>
+                </div>
+
+                {/* User-specific links */}
+                {user && (
+                  <>
+                    <div className="pt-4 border-t border-gray-200/50">
+                      <div className="flex items-center space-x-3 px-4 mb-3">
+                        {user.picture ? (
+                          <img
+                            src={user.picture}
+                            alt={user.name || "User"}
+                            className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-200"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                            {user.name?.[0]?.toUpperCase() || user.npub?.substring(0, 2).toUpperCase()}
+                          </div>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <div className="font-semibold text-gray-900 truncate text-sm">
+                            {user.display_name || user.name || "Anonymous"}
+                          </div>
+                          <div className="text-xs text-gray-500 font-mono truncate">
+                            {user.npub?.substring(0, 12)}...
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <Link
+                          href="/profile"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          className="block px-4 py-3 rounded-xl text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 hover:text-blue-600 font-semibold transition-all duration-300"
+                        >
+                          👤 My Profile
+                        </Link>
+                        <Link
+                          href="/services"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          className="block px-4 py-3 rounded-xl text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 hover:text-blue-600 font-semibold transition-all duration-300"
+                        >
+                          🏪 Service Marketplace
+                        </Link>
+                        <Link
+                          href="/communities"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          className="block px-4 py-3 rounded-xl text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 hover:text-blue-600 font-semibold transition-all duration-300"
+                        >
+                          🏛️ Communities
+                        </Link>
+                        <Link
+                          href="/wiki"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          className="block px-4 py-3 rounded-xl text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 hover:text-blue-600 font-semibold transition-all duration-300"
+                        >
+                          📚 Wiki System
+                        </Link>
+                        <Link
+                          href="/settings"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          className="block px-4 py-3 rounded-xl text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 hover:text-blue-600 font-semibold transition-all duration-300"
+                        >
+                          ⚙️ Settings
+                        </Link>
+                        <button
+                          onClick={() => {
+                            logout();
+                            setIsMobileMenuOpen(false);
+                          }}
+                          className="block w-full text-left px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 font-semibold transition-all duration-300"
+                        >
+                          🚪 Logout
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Mobile Notifications */}
+                    <div className="pt-4 border-t border-gray-200/50">
+                      <Notifications compact={true} />
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

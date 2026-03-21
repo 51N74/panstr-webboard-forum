@@ -243,39 +243,39 @@ export default function RoomPage({ roomId }) {
           <div className="absolute -left-32 -bottom-32 w-96 h-96 rounded-full bg-white/20 animate-pulse-slow"></div>
         </div>
 
-        <div className="relative container mx-auto px-4 py-12">
+        <div className="relative container mx-auto px-4 py-8 sm:py-12">
           {/* Enhanced Breadcrumb */}
-          <nav className="flex items-center space-x-2 text-sm mb-6 opacity-90">
-            <Link href="/" className="hover:text-white/80 transition-colors">
+          <nav className="flex items-center space-x-2 text-xs sm:text-sm mb-4 sm:mb-6 opacity-90 overflow-x-auto">
+            <Link href="/" className="hover:text-white/80 transition-colors whitespace-nowrap">
               Home
             </Link>
-            <span className="opacity-60">›</span>
+            <span className="opacity-60 flex-shrink-0">›</span>
             <Link
               href={`/category/${category.id}`}
-              className="hover:text-white/80 transition-colors"
+              className="hover:text-white/80 transition-colors whitespace-nowrap"
             >
               {category.name}
             </Link>
-            <span className="opacity-60">›</span>
-            <span className="font-medium">{room.name}</span>
+            <span className="opacity-60 flex-shrink-0">›</span>
+            <span className="font-medium truncate">{room.name}</span>
           </nav>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-6">
-              <span className="text-6xl animate-float">{room.icon}</span>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center space-x-4 sm:space-x-6">
+              <span className="text-5xl sm:text-6xl animate-float">{room.icon}</span>
               <div>
-                <h1 className="text-4xl font-bold mb-2">{room.name}</h1>
-                <p className="text-white/90 text-lg">{room.description}</p>
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 sm:mb-2">{room.name}</h1>
+                <p className="text-white/90 text-sm sm:text-base md:text-lg line-clamp-2">{room.description}</p>
               </div>
             </div>
             <Link
               href={`/room/${roomId}/new`}
               aria-label="Create a new thread"
-              className="inline-flex items-center gap-3 bg-white text-gray-900 hover:bg-gray-50 active:scale-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white/60 shadow-lg px-5 py-2 rounded-full font-semibold text-sm transition-transform"
+              className="inline-flex items-center gap-2 sm:gap-3 bg-white text-gray-900 hover:bg-gray-50 active:scale-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white/60 shadow-lg px-4 sm:px-5 py-2 sm:py-2.5 rounded-full font-semibold text-xs sm:text-sm transition-transform whitespace-nowrap"
             >
               <svg
-                width="18"
-                height="18"
+                width="16"
+                height="16"
                 viewBox="0 0 24 24"
                 fill="none"
                 aria-hidden="true"
@@ -296,16 +296,16 @@ export default function RoomPage({ roomId }) {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-6 sm:py-8">
         {/* Enhanced Filters and Controls */}
-        <div className="flex flex-wrap items-center justify-between mb-8 gap-6">
-          <div className="flex items-center space-x-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 sm:mb-8 gap-4">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-6">
             <div className="modern-input-wrapper">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
                 Sort by:
               </label>
               <select
-                className="modern-input pr-10"
+                className="modern-input pr-10 text-xs sm:text-sm py-2"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
               >
@@ -316,11 +316,11 @@ export default function RoomPage({ roomId }) {
             </div>
 
             <div className="modern-input-wrapper">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
                 Filter:
               </label>
               <select
-                className="modern-input pr-10"
+                className="modern-input pr-10 text-xs sm:text-sm py-2"
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
               >
@@ -332,11 +332,11 @@ export default function RoomPage({ roomId }) {
           </div>
 
           <div className="flex items-center space-x-4">
-            <div className="stat-card px-6 py-3">
-              <div className="text-2xl font-bold text-blue-600">
+            <div className="stat-card px-4 sm:px-6 py-2 sm:py-3">
+              <div className="text-xl sm:text-2xl font-bold text-blue-600">
                 {threads.length}
               </div>
-              <div className="text-sm text-gray-600">
+              <div className="text-xs sm:text-sm text-gray-600">
                 thread{threads.length !== 1 ? "s" : ""}
               </div>
             </div>

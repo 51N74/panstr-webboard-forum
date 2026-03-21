@@ -7,6 +7,7 @@ import React, {
     useImperativeHandle,
     forwardRef,
 } from "react";
+import { uploadFileNip96 } from "../lib/nostrClient";
 
 const Icons = {
     H1: () => (
@@ -95,19 +96,17 @@ const Icons = {
  * Lightweight contentEditable Rich Text Editor
  * - Supports basic toolbar actions (headings, bold/italic/underline, lists, align, quote, code, link)
  * - Drag & drop and file picker for images
- * - Inserts a base64 preview immediately and exposes upload-id so parent can replace src after upload
+ * - Inserts a base64 preview immediately and uses NIP-96 Standard Upload
  *
  * Props:
  *  - value (HTML string)
  *  - onChange (html) => void
  *  - disabled (bool)
- *  - onUpload (file, uploadId) => void  // parent will handle upload and call editorRef.replaceImageSrc(uploadId, url)
- *
- * Exposes via ref:
- *  - replaceImageSrc(uploadId, url)
+ *  - onUpload (file, uploadId, url) => void
+ *  - onUploadError (error, uploadId) => void
  */
 const RichTextEditor = forwardRef(function RichTextEditor(
-    { value, onChange, disabled, onUpload },
+    { value, onChange, disabled, onUpload, onUploadError },
     ref,
 ) {
     const editorDiv = useRef(null);
@@ -223,12 +222,46 @@ const RichTextEditor = forwardRef(function RichTextEditor(
         for (const file of imageFiles) {
             // create a unique upload id
             const uploadId = Math.random().toString(36).slice(2);
-            // create base64 preview and insert immediately
+            
+            // 1. Insert local preview immediately
             const reader = new FileReader();
-            reader.onload = (e) => {
+            reader.onload = async (e) => {
                 insertImageAtCursor(e.target.result, uploadId);
-                // notify parent to upload in background
-                onUpload && onUpload(file, uploadId);
+                
+                try {
+                    // 2. Use NIP-96 Standard Upload
+                    const result = await uploadFileNip96(file);
+                    
+                    if (result && result.url) {
+                        // 3. Replace preview with final URL
+                        if (editorDiv.current) {
+                            const img = editorDiv.current.querySelector(
+                                `img[data-upload-id="${uploadId}"]`,
+                            );
+                            if (img) {
+                                img.src = result.url;
+                                img.removeAttribute("data-upload-id");
+                            }
+                        }
+                        // 4. Notify parent
+                        onUpload && onUpload(file, uploadId, result.url);
+                    }
+                } catch (error) {
+                    console.error("Standardized upload failed:", error);
+                    // Remove preview on error
+                    if (editorDiv.current) {
+                        const figure = editorDiv.current.querySelector(
+                            `figure:has(img[data-upload-id="${uploadId}"])`
+                        );
+                        if (figure) figure.remove();
+                    }
+                    // Notify parent
+                    if (onUploadError) {
+                        onUploadError(error, uploadId);
+                    } else {
+                        alert("Failed to upload image: " + error.message);
+                    }
+                }
             };
             reader.readAsDataURL(file);
         }
@@ -269,7 +302,7 @@ const RichTextEditor = forwardRef(function RichTextEditor(
     const Divider = () => <div className="w-px h-6 bg-gray-200 mx-1" />;
 
     return (
-        <div className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm transition-all duration-200 focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500">
+        <div className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm transition-all duration-200 focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 relative">
             <div className="bg-gray-50/50 border-b border-gray-200 p-2 flex flex-wrap gap-1 items-center">
                 <ToolbarButton onClick={() => setHeading(1)} label="Heading 1" icon={<Icons.H1 />} />
                 <ToolbarButton onClick={() => setHeading(2)} label="Heading 2" icon={<Icons.H2 />} />

@@ -15,18 +15,48 @@ import {
   publishToPool,
   getEvents,
   parseThread,
+  markdownToHtml,
+  htmlToMarkdown,
+  nip19Decode,
 } from "../../../../lib/nostrClient";
 import EnhancedThreadView from "../../../../components/enhanced/threading/EnhancedThreadView";
-import db from "../../../../lib/storage/indexedDB";
+import db, { liveZapsForEvent } from "../../../../lib/storage/indexedDB";
 import UserProfile from "../../../../components/profiles/UserProfile";
 import ReactionButton from "../../../../components/enhanced/reactions/ReactionButton";
 import ZapButton from "../../../../components/enhanced/zaps/ZapButton";
+import ZapReceiptList from "../../../../components/enhanced/zaps/ZapReceiptList";
 import RichTextEditor from "../../../../components/RichTextEditor";
 
 export default function ThreadDetailPage() {
   const router = useRouter();
   const params = useParams();
-  const { roomId, threadId } = params;
+  let { roomId, threadId } = params;
+
+  // Handle NIP-19 encoded identifiers
+  if (threadId.startsWith("n") || threadId.startsWith("note")) {
+    try {
+      const decoded = nip19Decode(threadId);
+      if (decoded.type === "nevent") {
+        threadId = decoded.data.id;
+      } else if (decoded.type === "note") {
+        threadId = decoded.data;
+      }
+    } catch (e) {
+      console.warn("Failed to decode NIP-19 threadId:", e);
+    }
+  }
+
+  if (roomId.startsWith("n")) {
+    try {
+      const decoded = nip19Decode(roomId);
+      if (decoded.type === "naddr") {
+        roomId = decoded.data.identifier;
+      }
+    } catch (e) {
+      console.warn("Failed to decode NIP-19 roomId:", e);
+    }
+  }
+
   const { user } = useNostrAuth();
   const { getProfile } = useNostr();
 
@@ -39,6 +69,7 @@ export default function ThreadDetailPage() {
   const [success, setSuccess] = useState("");
   const [viewCount, setViewCount] = useState(0);
   const [replyCount, setReplyCount] = useState(0);
+  const [zapReceipts, setZapReceipts] = useState([]);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(null);
   const editorApiRef = useRef(null);
@@ -54,6 +85,17 @@ export default function ThreadDetailPage() {
       return;
     }
     fetchThreadData();
+
+    // Subscribe to live zaps
+    const zapSub = liveZapsForEvent(threadId).subscribe((zaps) => {
+      setZapReceipts(zaps || []);
+    });
+
+    return () => {
+      if (zapSub && typeof zapSub.unsubscribe === 'function') {
+        zapSub.unsubscribe();
+      }
+    };
   }, [roomId, threadId]);
 
   const fetchThreadData = async () => {
@@ -101,47 +143,13 @@ export default function ThreadDetailPage() {
     }
   };
 
-  // Upload helper with progress reporting; expects server endpoint /api/uploads/images
-  const uploadImage = (file, onProgress) =>
-    new Promise((resolve) => {
-      const xhr = new XMLHttpRequest();
-      const form = new FormData();
-      form.append("image", file);
-      xhr.open("POST", "/api/uploads/images");
-      xhr.onload = () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          try {
-            const res = JSON.parse(xhr.responseText);
-            if (res && res.url) {
-              resolve({ url: res.url });
-              return;
-            }
-          } catch (e) {
-            // parse error -> fallback
-          }
-        }
-        resolve({ url: URL.createObjectURL(file) });
-      };
-      xhr.onerror = () => {
-        resolve({ url: URL.createObjectURL(file) });
-      };
-      xhr.upload.onprogress = (e) => {
-        if (e.lengthComputable && onProgress) {
-          onProgress(Math.round((e.loaded / e.total) * 100));
-        }
-      };
-      xhr.send(form);
-    });
-
   const handleUploadFromEditor = async (file, uploadId) => {
     const id = Math.random().toString(36).slice(2);
-    const previewUrl = URL.createObjectURL(file);
     setImages((prev) => [
       ...prev,
       {
         id,
         file,
-        previewUrl,
         uploading: true,
         progress: 0,
         url: null,
@@ -150,38 +158,23 @@ export default function ThreadDetailPage() {
     ]);
     setUploading(true);
 
-    const result = await uploadImage(file, (p) => {
+    try {
+      const result = await uploadFileNip96(file);
+      
       setImages((prev) =>
         prev.map((it) =>
-          it.uploadId === uploadId ? { ...it, progress: p } : it,
+          it.uploadId === uploadId
+            ? { ...it, uploading: false, progress: 100, url: result.url }
+            : it,
         ),
       );
-    });
 
-    setImages((prev) =>
-      prev.map((it) =>
-        it.uploadId === uploadId
-          ? { ...it, uploading: false, progress: 100, url: result.url }
-          : it,
-      ),
-    );
-
-    try {
-      if (
-        editorApiRef.current &&
-        typeof editorApiRef.current.replaceImageSrc === "function"
-      ) {
+      if (editorApiRef.current) {
         editorApiRef.current.replaceImageSrc(uploadId, result.url);
-      } else {
-        setReplyContent((prev) =>
-          prev.replace(
-            new RegExp(`src=["']data:[^"']+["']`),
-            `src="${result.url}"`,
-          ),
-        );
       }
-    } catch (e) {
-      console.error("Failed to replace preview with uploaded image url:", e);
+    } catch (err) {
+      console.error("Upload failed:", err);
+      alert("Upload failed: " + err.message);
     } finally {
       setUploading(false);
     }
@@ -198,9 +191,11 @@ export default function ThreadDetailPage() {
       return;
     }
 
-    const finalContent = content || replyContent;
+    // Convert HTML from editor to Markdown for Nostr NIP-23 compatibility
+    const htmlContent = content || replyContent;
+    const markdownContent = htmlToMarkdown(htmlContent);
 
-    if (!hasValidContent(finalContent)) {
+    if (!hasValidContent(markdownContent)) {
       setError("Please enter a reply");
       return;
     }
@@ -224,10 +219,10 @@ export default function ThreadDetailPage() {
         privateKeyBytes[i] = parseInt(storedHexKey.substr(i * 2, 2), 16);
       }
 
-      // Create reply event
+      // Create reply event with Markdown content
       const replyEvent = createReplyEvent(
         parentEvent,
-        finalContent,
+        markdownContent,
         privateKeyBytes,
         roomId,
       );
@@ -271,70 +266,6 @@ export default function ThreadDetailPage() {
   const getThreadTitle = (threadEvent) => {
     const titleTag = threadEvent.tags.find((tag) => tag[0] === "title");
     return titleTag ? titleTag[1] : "Untitled Thread";
-  };
-
-  const formatContent = (content) => {
-    // Enhanced markdown rendering with modern styling
-    return (
-      content
-        // Headers with better styling
-        .replace(
-          /^### (.*$)/gim,
-          '<h3 class="text-xl font-semibold mb-3 text-gray-800">$1</h3>',
-        )
-        .replace(
-          /^## (.*$)/gim,
-          '<h2 class="text-2xl font-bold mb-4 gradient-text">$1</h2>',
-        )
-        .replace(
-          /^# (.*$)/gim,
-          '<h1 class="text-3xl font-bold mb-6 gradient-text">$1</h1>',
-        )
-        // Bold and italic
-        .replace(
-          /\*\*(.+?)\*\*/g,
-          '<strong class="font-bold text-gray-900">$1</strong>',
-        )
-        .replace(/\*(.+?)\*/g, '<em class="italic text-gray-700">$1</em>')
-        // Images with modern styling
-        .replace(
-          /!\[([^\]]*)\]\(([^)]*)\)/g,
-          '<img src="$2" alt="$1" class="max-w-full h-auto rounded-xl shadow-lg my-6 hover:shadow-xl transition-shadow duration-300" />',
-        )
-        // Links with modern styling
-        .replace(
-          /\[([^\]]*)\]\(([^)]*)\)/g,
-          '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline decoration-2 hover:decoration-blue-400 transition-all duration-200 font-medium">$1</a>',
-        )
-        // Code blocks with enhanced styling
-        .replace(
-          /```(\w+)?\n([\s\S]*?)```/g,
-          '<div class="my-6"><pre class="bg-gradient-to-br from-gray-900 to-gray-800 text-gray-100 p-6 rounded-xl overflow-x-auto shadow-lg border border-gray-700"><code class="text-sm font-mono leading-relaxed">$2</code></pre></div>',
-        )
-        // Inline code with modern styling
-        .replace(
-          /`([^`]+)`/g,
-          '<code class="bg-gradient-to-r from-gray-100 to-gray-200 px-3 py-1.5 rounded-lg text-sm font-mono text-gray-800 border border-gray-300 shadow-sm">$1</code>',
-        )
-        // Blockquotes with modern styling
-        .replace(
-          /^> (.+)$/gm,
-          '<blockquote class="border-l-4 border-blue-500 pl-6 py-3 my-4 bg-gradient-to-r from-blue-50 to-transparent rounded-r-lg italic text-gray-700">$1</blockquote>',
-        )
-        // Lists with modern styling
-        .replace(/^\* (.+)$/gm, '<li class="mb-2 text-gray-700">$1</li>')
-        .replace(
-          /(<li.*<\/li>)/s,
-          '<ul class="list-disc list-inside space-y-2 mb-6 pl-4">$1</ul>',
-        )
-        // Horizontal rule
-        .replace(/^---$/gm, '<hr class="border-gray-300 my-8 border-t-2" />')
-        // Line breaks and paragraphs
-        .replace(/\n\n/g, '</p><p class="mb-6 text-gray-700 leading-relaxed">')
-        .replace(/^\n/, '<p class="mb-6 text-gray-700 leading-relaxed">')
-        .replace(/\n$/, "</p>")
-        .replace(/\n/g, "<br />")
-    );
   };
 
   if (!room) {
@@ -403,43 +334,43 @@ export default function ThreadDetailPage() {
           <div className="absolute -left-32 -bottom-32 w-96 h-96 rounded-full bg-white/20 animate-pulse-slow"></div>
         </div>
 
-        <div className="relative container mx-auto px-4 py-12">
+        <div className="relative container mx-auto px-4 py-6 sm:py-12">
           {/* Enhanced Breadcrumb */}
-          <nav className="flex items-center space-x-2 text-sm mb-6 opacity-90">
-            <Link href="/" className="hover:text-white/80 transition-colors">
+          <nav className="flex items-center space-x-1.5 sm:space-x-2 text-xs sm:text-sm mb-4 sm:mb-6 opacity-90 overflow-x-auto pb-2">
+            <Link href="/" className="hover:text-white/80 transition-colors whitespace-nowrap">
               🏠 Home
             </Link>
-            <span className="opacity-60">›</span>
+            <span className="opacity-60 flex-shrink-0">›</span>
             <Link
               href={`/category/${category.id}`}
-              className="hover:text-white/80 transition-colors"
+              className="hover:text-white/80 transition-colors whitespace-nowrap"
             >
               {category.name}
             </Link>
-            <span className="opacity-60">›</span>
+            <span className="opacity-60 flex-shrink-0">›</span>
             <Link
               href={`/room/${roomId}`}
-              className="hover:text-white/80 transition-colors"
+              className="hover:text-white/80 transition-colors whitespace-nowrap"
             >
               {room.icon} {room.name}
             </Link>
-            <span className="opacity-60">›</span>
-            <span className="font-medium">{getThreadTitle(thread)}</span>
+            <span className="opacity-60 flex-shrink-0">›</span>
+            <span className="font-medium truncate">{getThreadTitle(thread)}</span>
           </nav>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-6">
-              <span className="text-6xl animate-float">{room.icon}</span>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center space-x-3 sm:space-x-6">
+              <span className="text-4xl sm:text-5xl md:text-6xl animate-float">{room.icon}</span>
               <div>
-                <h1 className="text-4xl font-bold mb-2">{room.name}</h1>
-                <p className="text-white/90 text-lg">{room.description}</p>
+                <h1 className="text-xl sm:text-3xl md:text-4xl font-bold mb-1 sm:mb-2">{room.name}</h1>
+                <p className="text-white/90 text-xs sm:text-sm md:text-lg">{room.description}</p>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 max-w-4xl">
         {/* Enhanced Error/Success Messages */}
         {error && (
           <div className="glass-morphism border-2 border-red-300 bg-red-50/90 text-red-800 p-6 rounded-xl mb-8 animate-slide-up">
@@ -601,7 +532,7 @@ export default function ThreadDetailPage() {
               <div
                 className="animate-fade-in"
                 dangerouslySetInnerHTML={{
-                  __html: formatContent(thread.content),
+                  __html: markdownToHtml(thread.content),
                 }}
               />
             </div>
@@ -647,6 +578,9 @@ export default function ThreadDetailPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Zap Receipts List */}
+              <ZapReceiptList eventId={threadId} zaps={zapReceipts} />
             </div>
           </div>
         </div>

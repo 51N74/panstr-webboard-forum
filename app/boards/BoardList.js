@@ -106,16 +106,16 @@ export default function BoardList() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8">
         {/* Enhanced Header */}
-        <div className="text-center mb-16 animate-fade-in">
-          <div className="mb-8">
-            <span className="text-6xl animate-float inline-block">🌏</span>
+        <div className="text-center mb-10 sm:mb-16 animate-fade-in">
+          <div className="mb-6 sm:mb-8">
+            <span className="text-5xl sm:text-6xl animate-float inline-block">🌏</span>
           </div>
-          <h1 className="text-5xl font-bold mb-6">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 px-2">
             <span className="gradient-text">Welcome to Panstr Forum</span>
           </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed mb-8">
+          <p className="text-base sm:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed mb-6 sm:mb-8 px-4">
             Discover conversations across technology, lifestyle, and Nostr
             ecosystem. Join rooms that match your interests and connect with the
             community.
@@ -149,7 +149,7 @@ export default function BoardList() {
               >
                 {/* Enhanced Category Header */}
                 <div
-                  className={`p-8 cursor-pointer transition-all duration-300 relative overflow-hidden ${isExpanded
+                  className={`p-4 sm:p-8 cursor-pointer transition-all duration-300 relative overflow-hidden ${isExpanded
                     ? "bg-gradient-to-br " + category.gradient + " text-white"
                     : "bg-gradient-to-r from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200"
                     }`}
@@ -158,28 +158,28 @@ export default function BoardList() {
                   {/* Background decoration */}
                   <div className="absolute inset-0 opacity-10">
                     <div
-                      className={`absolute -right-10 -top-10 w-40 h-40 rounded-full bg-white/30 ${isExpanded ? "animate-pulse" : ""}`}
+                      className={`absolute -right-10 -top-10 w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-white/30 ${isExpanded ? "animate-pulse" : ""}`}
                     ></div>
                     <div
-                      className={`absolute -left-10 -bottom-10 w-32 h-32 rounded-full bg-white/20 ${isExpanded ? "animate-pulse-slow" : ""}`}
+                      className={`absolute -left-10 -bottom-10 w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-white/20 ${isExpanded ? "animate-pulse-slow" : ""}`}
                     ></div>
                   </div>
 
                   <div className="relative flex items-center justify-between">
-                    <div className="flex items-center space-x-6">
+                    <div className="flex items-center space-x-3 sm:space-x-6">
                       <span
-                        className={`text-5xl ${isExpanded ? "animate-bounce" : "group-hover:animate-pulse"} transition-transform duration-300`}
+                        className={`text-4xl sm:text-5xl ${isExpanded ? "animate-bounce" : "group-hover:animate-pulse"} transition-transform duration-300`}
                       >
                         {category.icon}
                       </span>
                       <div>
                         <h2
-                          className={`text-3xl font-bold mb-2 ${isExpanded ? "text-white" : "text-gray-800"}`}
+                          className={`text-xl sm:text-2xl md:text-3xl font-bold mb-1 sm:mb-2 ${isExpanded ? "text-white" : "text-gray-800"}`}
                         >
                           {category.name}
                         </h2>
                         <p
-                          className={`text-base ${isExpanded ? "text-white/90" : "text-gray-600"}`}
+                          className={`text-xs sm:text-base ${isExpanded ? "text-white/90" : "text-gray-600"}`}
                         >
                           {category.description} •{" "}
                           <span className="font-semibold">
@@ -188,9 +188,9 @@ export default function BoardList() {
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-2 sm:space-x-3">
                       <div
-                        className={`px-4 py-2 rounded-full text-sm font-medium backdrop-blur-sm ${isExpanded
+                        className={`px-2 sm:px-4 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-medium backdrop-blur-sm ${isExpanded
                           ? "bg-white/20 text-white"
                           : "bg-gray-200/80 text-gray-700"
                           }`}
@@ -239,8 +239,8 @@ export default function BoardList() {
 
                 {/* Enhanced Rooms */}
                 {isExpanded && (
-                  <div className="p-8 pt-0">
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  <div className="p-4 sm:p-8 pt-0">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                       {category.rooms.map((room, roomIndex) => {
                         const stats = roomStats[room.id] || {
                           threadCount: 0,
@@ -252,34 +252,34 @@ export default function BoardList() {
                           <Link
                             key={room.id}
                             href={`/room/${room.id}`}
-                            className={`modern-card modern-card-hover p-6 border border-gray-200/50 hover:border-blue-300/50 group/card`}
+                            className={`modern-card modern-card-hover p-4 sm:p-6 border border-gray-200/50 hover:border-blue-300/50 group/card`}
                             style={{
                               animationDelay: `${index * 100 + roomIndex * 50}ms`,
                             }}
                           >
-                            <div className="flex items-start justify-between mb-4">
-                              <span className="text-3xl group-hover/card:scale-110 transition-transform duration-300 group-hover/card:animate-bounce">
+                            <div className="flex items-start justify-between mb-3 sm:mb-4">
+                              <span className="text-2xl sm:text-3xl group-hover/card:scale-110 transition-transform duration-300 group-hover/card:animate-bounce">
                                 {room.icon}
                               </span>
                               {hasNewPosts && (
-                                <span className="modern-badge-success animate-pulse">
+                                <span className="modern-badge-success animate-pulse text-xs sm:text-sm">
                                   ✨ New
                                 </span>
                               )}
                             </div>
 
-                            <h3 className="font-bold text-xl text-gray-800 mb-3 group-hover/card:text-blue-600 transition-colors">
+                            <h3 className="font-bold text-lg sm:text-xl text-gray-800 mb-2 sm:mb-3 group-hover/card:text-blue-600 transition-colors">
                               {room.name}
                             </h3>
 
-                            <p className="text-gray-600 mb-6 line-clamp-3 leading-relaxed">
+                            <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6 line-clamp-3 leading-relaxed">
                               {room.description}
                             </p>
 
-                            <div className="flex items-center justify-between text-sm text-gray-500">
-                              <div className="flex items-center space-x-2">
+                            <div className="flex items-center justify-between text-xs sm:text-sm text-gray-500">
+                              <div className="flex items-center space-x-1.5 sm:space-x-2">
                                 <svg
-                                  className="w-5 h-5 text-gray-400 group-hover/card:text-blue-500 transition-colors"
+                                  className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover/card:text-blue-500 transition-colors"
                                   fill="none"
                                   stroke="currentColor"
                                   viewBox="0 0 24 24"
@@ -292,12 +292,12 @@ export default function BoardList() {
                                   />
                                 </svg>
                                 <span className="font-medium">
-                                  {stats.threadCount} threads
+                                  {stats.threadCount} <span className="hidden sm:inline">threads</span>
                                 </span>
                               </div>
                               <div className="flex items-center space-x-1 text-gray-400">
                                 <svg
-                                  className="w-4 h-4"
+                                  className="w-3 h-3 sm:w-4 sm:h-4"
                                   fill="none"
                                   stroke="currentColor"
                                   viewBox="0 0 24 24"
@@ -309,7 +309,7 @@ export default function BoardList() {
                                     d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 018 8z"
                                   />
                                 </svg>
-                                <span className="text-xs">
+                                <span className="text-[10px] sm:text-xs">
                                   {formatTimeAgo(stats.latestActivity)}
                                 </span>
                               </div>

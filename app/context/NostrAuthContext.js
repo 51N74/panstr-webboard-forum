@@ -119,9 +119,15 @@ export function NostrAuthProvider({ children }) {
       setIsLoading(true);
       setError(null);
 
+      // Make sure it's initialized
+      const available = await initializeBrowserExtension();
+      if (!available) {
+        throw new Error("Nostr browser extension (NIP-07) not found. Please install one like Alby or Nos2x and ensure it is unlocked.");
+      }
+
       const pubkey = await getBrowserExtensionPubkey();
       if (!pubkey) {
-        throw new Error("Browser extension not available or not connected");
+        throw new Error("Could not retrieve public key from extension. Make sure it is unlocked.");
       }
 
       const profile = await getUserProfile(pubkey);

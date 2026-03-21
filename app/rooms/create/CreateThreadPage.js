@@ -16,6 +16,7 @@ import {
   publishThread,
   initializeBrowserExtension,
   generateThreadId,
+  htmlToMarkdown,
 } from "../../lib/nostrClient";
 
 import RichTextEditor from "../../components/RichTextEditor";
@@ -233,6 +234,7 @@ export default function CreateThreadPage({ roomId }) {
       }
 
       const safeContent = sanitizeHtml(content);
+      const markdownContent = htmlToMarkdown(safeContent);
 
       const signedEvent = await publishThread(
         pool,
@@ -242,7 +244,7 @@ export default function CreateThreadPage({ roomId }) {
           threadId,
           title,
           board: roomId,
-          content: safeContent,
+          content: markdownContent,
           published_at: Math.floor(Date.now() / 1000),
         },
       );

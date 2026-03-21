@@ -5,6 +5,7 @@ import Footer from "./components/Footer.js";
 import Header from "./components/Header.js";
 import { NostrAuthProvider } from "./context/NostrAuthContext";
 import { NostrProvider } from "./context/NostrContext";
+import { NostrListsProvider } from "./context/NostrListsContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,11 +20,13 @@ export default function RootLayout({ children }) {
       <body className={inter.className}>
         <NostrAuthProvider>
           <NostrProvider>
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100">
-              <Header />
-              <main className="flex-1">{children}</main>
-              <Footer />
-            </div>
+            <NostrListsProvider>
+              <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100">
+                <Header />
+                <main className="flex-1">{children}</main>
+                <Footer />
+              </div>
+            </NostrListsProvider>
           </NostrProvider>
         </NostrAuthProvider>
       </body>

@@ -106,28 +106,53 @@ function getRandomBytes(length) {
 
 // Re-export core functions for use in other modules
 /**
- * NIP-49: Private Key Encryption (Simplified Demo Version)
+ * NIP-49: Private Key Encryption (Standard Web Crypto Implementation)
  */
 export async function encryptPrivateKey(privateKeyHex, password, options = {}) {
   try {
     const { name = "" } = options;
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const iv = crypto.getRandomValues(new Uint8Array(12));
 
-    // Simple XOR encryption for demo (NOT SECURE - use proper crypto in production)
-    const passwordBytes = new TextEncoder().encode(
-      password.padEnd(32, "0").slice(0, 32),
+    // Import password as a base key
+    const encoder = new TextEncoder();
+    const baseKey = await crypto.subtle.importKey(
+      "raw",
+      encoder.encode(password),
+      "PBKDF2",
+      false,
+      ["deriveKey"]
     );
-    const keyBytes = hexToBytes(privateKeyHex);
-    const encrypted = keyBytes.map(
-      (byte, i) => byte ^ passwordBytes[i % passwordBytes.length],
+
+    // Derive the encryption key
+    const aesKey = await crypto.subtle.deriveKey(
+      {
+        name: "PBKDF2",
+        salt,
+        iterations: 100000,
+        hash: "SHA-256",
+      },
+      baseKey,
+      { name: "AES-GCM", length: 256 },
+      false,
+      ["encrypt"]
+    );
+
+    // Encrypt the key
+    const privateKeyBytes = hexToBytes(privateKeyHex);
+    const encryptedContent = await crypto.subtle.encrypt(
+      { name: "AES-GCM", iv },
+      aesKey,
+      privateKeyBytes
     );
 
     const encryptedKeyData = {
       version: "2",
-      key: bytesToHex(new Uint8Array(encrypted)),
+      key: bytesToHex(new Uint8Array(encryptedContent)),
+      salt: bytesToHex(salt),
+      iv: bytesToHex(iv),
       name: name || "",
-      url: "",
-      method: "xor", // Demo only
-      tags: [],
+      method: "aes-256-gcm",
       timestamp: Math.floor(Date.now() / 1000),
     };
 
@@ -135,11 +160,11 @@ export async function encryptPrivateKey(privateKeyHex, password, options = {}) {
     const encoded = Buffer.from(payload).toString("base64");
 
     return {
-      encrypted: bytesToHex(new Uint8Array(encrypted)),
+      encrypted: encryptedKeyData.key,
       encoded,
       metadata: {
         version: "2",
-        method: "xor",
+        method: "aes-256-gcm",
         timestamp: encryptedKeyData.timestamp,
       },
     };
@@ -150,7 +175,7 @@ export async function encryptPrivateKey(privateKeyHex, password, options = {}) {
 }
 
 /**
- * NIP-49: Decrypt private key (Simplified Demo Version)
+ * NIP-49: Decrypt private key (Standard Web Crypto Implementation)
  */
 export async function decryptPrivateKey(encryptedData, password) {
   try {
@@ -163,23 +188,55 @@ export async function decryptPrivateKey(encryptedData, password) {
       encryptedKeyData = encryptedData;
     }
 
-    const { key } = encryptedKeyData;
+    const { key, salt, iv, method } = encryptedKeyData;
 
-    // Simple XOR decryption for demo (NOT SECURE - use proper crypto in production)
-    const passwordBytes = new TextEncoder().encode(
-      password.padEnd(32, "0").slice(0, 32),
-    );
-    const encrypted = hexToBytes(key);
-    const decrypted = encrypted.map(
-      (byte, i) => byte ^ passwordBytes[i % passwordBytes.length],
+    if (method !== "aes-256-gcm") {
+      // Handle legacy XOR for backward compatibility if needed, otherwise throw error
+      if (method === "xor") {
+        const passwordBytes = new TextEncoder().encode(password.padEnd(32, "0").slice(0, 32));
+        const encrypted = hexToBytes(key);
+        const decrypted = encrypted.map((byte, i) => byte ^ passwordBytes[i % passwordBytes.length]);
+        return bytesToHex(new Uint8Array(decrypted));
+      }
+      throw new Error(`Unsupported encryption method: ${method}`);
+    }
+
+    const saltBytes = hexToBytes(salt);
+    const ivBytes = hexToBytes(iv);
+    const keyBytes = hexToBytes(key);
+
+    const encoder = new TextEncoder();
+    const baseKey = await crypto.subtle.importKey(
+      "raw",
+      encoder.encode(password),
+      "PBKDF2",
+      false,
+      ["deriveKey"]
     );
 
-    return bytesToHex(new Uint8Array(decrypted));
+    const aesKey = await crypto.subtle.deriveKey(
+      {
+        name: "PBKDF2",
+        salt: saltBytes,
+        iterations: 100000,
+        hash: "SHA-256",
+      },
+      baseKey,
+      { name: "AES-GCM", length: 256 },
+      false,
+      ["decrypt"]
+    );
+
+    const decryptedContent = await crypto.subtle.decrypt(
+      { name: "AES-GCM", iv: ivBytes },
+      aesKey,
+      keyBytes
+    );
+
+    return bytesToHex(new Uint8Array(decryptedContent));
   } catch (error) {
     console.error("Error decrypting private key:", error);
-    throw new Error(
-      "Failed to decrypt private key - invalid password or corrupted data",
-    );
+    throw new Error("Failed to decrypt private key - invalid password or corrupted data");
   }
 }
 
@@ -969,24 +1026,53 @@ export async function getEvent(pool, relayUrls, eventId) {
 }
 
 /**
- * Initialize browser extension signer
+ * Initialize browser extension signer (NIP-07)
  */
 export async function initializeBrowserExtension() {
-  if (typeof window === "undefined" || !window.nostr) {
+  if (typeof window === "undefined") {
     return false;
   }
 
-  try {
-    const pubkey = await window.nostr.getPublicKey();
-    if (pubkey) {
-      browserExtensionSigner = window.nostr;
-      return true;
+  // If window.nostr is already available
+  if (window.nostr) {
+    try {
+      // Test if it's unlocked and accessible
+      const pubkey = await window.nostr.getPublicKey();
+      if (pubkey) {
+        browserExtensionSigner = window.nostr;
+        return true;
+      }
+    } catch (error) {
+      console.warn("Browser extension found but could not get public key (possibly locked):", error);
+      // We don't return false here yet because the user might unlock it later
     }
-    return false;
-  } catch (error) {
-    console.error("Failed to initialize browser extension:", error);
-    return false;
   }
+
+  // Fallback: wait for the extension to inject window.nostr if it's slow
+  return new Promise((resolve) => {
+    let checkCount = 0;
+    const maxChecks = 10;
+    const interval = setInterval(async () => {
+      checkCount++;
+      if (window.nostr) {
+        clearInterval(interval);
+        try {
+          const pubkey = await window.nostr.getPublicKey();
+          if (pubkey) {
+            browserExtensionSigner = window.nostr;
+            resolve(true);
+            return;
+          }
+        } catch (e) {
+          // Still locked or errored
+        }
+        resolve(false);
+      } else if (checkCount >= maxChecks) {
+        clearInterval(interval);
+        resolve(false);
+      }
+    }, 500);
+  });
 }
 
 /**
@@ -1023,6 +1109,263 @@ import * as nip19 from "nostr-tools/nip19";
 import { queryProfile } from "nostr-tools/nip05";
 // Import NIP-10 functions from proper module
 import * as nip10 from "nostr-tools/nip10";
+
+import TurndownService from "turndown";
+import MarkdownIt from "markdown-it";
+
+const turndownService = new TurndownService({
+  headingStyle: "atx",
+  codeBlockStyle: "fenced",
+});
+
+const md = new MarkdownIt({
+  html: true,
+  linkify: true,
+  typographer: true,
+});
+
+/**
+ * Convert HTML to Markdown (for publishing NIP-23 events)
+ */
+export function htmlToMarkdown(html) {
+  if (!html) return "";
+  return turndownService.turndown(html);
+}
+
+/**
+ * Convert Markdown to HTML (for viewing NIP-23 events)
+ */
+export function markdownToHtml(markdown) {
+  if (!markdown) return "";
+  return md.render(markdown);
+}
+
+/**
+ * NIP-51: Create/Update Mute List (Kind 10000)
+ */
+export function createMuteListEvent(pTags = [], eTags = [], tTags = [], words = []) {
+  const tags = [
+    ...pTags.map(p => ["p", p]),
+    ...eTags.map(e => ["e", e]),
+    ...tTags.map(t => ["t", t]),
+    ...words.map(w => ["word", w]),
+  ];
+
+  return {
+    kind: 10000,
+    content: "",
+    created_at: Math.floor(Date.now() / 1000),
+    tags,
+  };
+}
+
+/**
+ * NIP-51: Create/Update Bookmark List (Kind 10003)
+ */
+export function createBookmarkListEvent(eTags = [], aTags = []) {
+  const tags = [
+    ...eTags.map(e => ["e", e]),
+    ...aTags.map(a => ["a", a]),
+  ];
+
+  return {
+    kind: 10003,
+    content: "",
+    created_at: Math.floor(Date.now() / 1000),
+    tags,
+  };
+}
+
+/**
+ * NIP-98: HTTP Authentication Header
+ */
+export async function getNip98Header(url, method, payloadHash = null) {
+  const event = {
+    kind: 27235,
+    created_at: Math.floor(Date.now() / 1000),
+    content: "",
+    tags: [
+      ["u", url],
+      ["method", method],
+    ],
+  };
+
+  if (payloadHash) {
+    event.tags.push(["payload", payloadHash]);
+  }
+
+  let signedEvent;
+  if (browserExtensionSigner) {
+    signedEvent = await browserExtensionSigner.signEvent(event);
+  } else {
+    const storedHexKey = localStorage.getItem("nostr_private_key");
+    if (!storedHexKey) throw new Error("No private key found for auth");
+    const privateKeyBytes = hexToUint8Array(storedHexKey);
+    signedEvent = finalizeEvent(event, privateKeyBytes);
+  }
+
+  const base64 = Buffer.from(JSON.stringify(signedEvent)).toString("base64");
+  return `Nostr ${base64}`;
+}
+
+/**
+ * NIP-96: Standardized HTTP File Upload
+ */
+export async function uploadFileNip96(file, serverUrl = "https://void.cat") {
+  try {
+    // 1. Fetch server info
+    const serverInfoUrl = new URL("/.well-known/nostr/nip96.json", serverUrl).toString();
+    const serverInfoRes = await fetch(serverInfoUrl);
+    const serverInfo = await serverInfoRes.json();
+    const apiUrl = serverInfo.api_url;
+
+    // 2. Prepare auth header
+    const authHeader = await getNip98Header(apiUrl, "POST");
+
+    // 3. Perform upload
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("caption", file.name);
+
+    const uploadRes = await fetch(apiUrl, {
+      method: "POST",
+      headers: {
+        "Authorization": authHeader
+      },
+      body: formData
+    });
+
+    const result = await uploadRes.json();
+    
+    if (result.status === "success") {
+      // Use NIP-94 info if available, else fallback to result.url
+      const nip94 = result.nip94_event;
+      const url = nip94?.tags.find(t => t[0] === 'url')?.[1] || result.url;
+      return { url, nip94 };
+    } else {
+      throw new Error(result.message || "Upload failed");
+    }
+  } catch (error) {
+    console.error("NIP-96 Upload Error:", error);
+    // Fallback to simpler method if server doesn't support NIP-96
+    throw error;
+  }
+}
+
+/**
+ * Fetch LNURL-pay info for a Lightning Address or LNURL
+ */
+export async function getLnurlPayInfo(identifier) {
+  try {
+    let url;
+    if (identifier.includes('@')) {
+      const [name, domain] = identifier.split('@');
+      url = `https://${domain}/.well-known/lnurlp/${name}`;
+    } else {
+      // Assume it's already a URL or encoded LNURL
+      url = identifier;
+    }
+
+    const res = await fetch(url);
+    return await res.json();
+  } catch (error) {
+    console.error("Error fetching LNURL-pay info:", error);
+    return null;
+  }
+}
+
+/**
+ * Fetch Zap Invoice from a Lightning Address
+ */
+export async function fetchZapInvoice(lnurlPayInfo, amountSats, zapRequestEvent) {
+  try {
+    const amountMillisats = amountSats * 1000;
+    const zapRequestStr = encodeURIComponent(JSON.stringify(zapRequestEvent));
+    
+    const callbackUrl = new URL(lnurlPayInfo.callback);
+    callbackUrl.searchParams.append("amount", amountMillisats.toString());
+    callbackUrl.searchParams.append("nostr", zapRequestStr);
+
+    const res = await fetch(callbackUrl.toString());
+    const data = await res.json();
+    return data.pr; // BOLT11 invoice
+  } catch (error) {
+    console.error("Error fetching zap invoice:", error);
+    return null;
+  }
+}
+
+/**
+ * NIP-57: Create Zap Request (Ephemeral Event Kind 9734)
+ */
+export async function createZapRequestEvent(recipientPubkey, eventId, amountSats, relays, message = "") {
+  const event = {
+    kind: 9734,
+    content: message,
+    created_at: Math.floor(Date.now() / 1000),
+    tags: [
+      ["p", recipientPubkey],
+      ["relays", ...relays],
+      ["amount", (amountSats * 1000).toString()]
+    ]
+  };
+
+  if (eventId) {
+    event.tags.push(["e", eventId]);
+  }
+
+  // Sign event
+  if (browserExtensionSigner) {
+    return await browserExtensionSigner.signEvent(event);
+  } else {
+    const storedHexKey = localStorage.getItem("nostr_private_key");
+    if (!storedHexKey) throw new Error("No private key for zap");
+    return finalizeEvent(event, hexToUint8Array(storedHexKey));
+  }
+}
+
+/**
+ * NIP-89: Publish App Handler (Kind 31990)
+ */
+export async function publishAppHandler() {
+  try {
+    const pool = await initializePool();
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://panstr.vercel.app';
+    
+    const event = {
+      kind: 31990,
+      created_at: Math.floor(Date.now() / 1000),
+      content: JSON.stringify({
+        name: "Panstr Webboard",
+        about: "A fully decentralized forum and webboard platform built on Nostr.",
+        picture: `${baseUrl}/favicon.ico`,
+        website: baseUrl
+      }),
+      tags: [
+        ["d", "panstr-webboard"],
+        ["k", "30023"], // Long-form content (Threads)
+        ["k", "34550"], // Communities
+        ["web", `${baseUrl}/room/communities/thread/<bech32>`, "nevent"],
+        ["web", `${baseUrl}/room/communities/thread/<bech32>`, "note"],
+        ["web", `${baseUrl}/room/<bech32>`, "naddr"]
+      ]
+    };
+
+    let signedEvent;
+    if (browserExtensionSigner) {
+      signedEvent = await browserExtensionSigner.signEvent(event);
+    } else {
+      const storedHexKey = localStorage.getItem("nostr_private_key");
+      if (!storedHexKey) throw new Error("No private key for app handler");
+      signedEvent = finalizeEvent(event, hexToUint8Array(storedHexKey));
+    }
+
+    return await publishToPool(pool, undefined, undefined, "", signedEvent);
+  } catch (error) {
+    console.error("Error publishing app handler:", error);
+    throw error;
+  }
+}
 
 const nip19Encode = {
   nsec: (bytes) => {
@@ -1109,12 +1452,21 @@ export async function getUserProfile(pubkey) {
     }
 
     const metadata = JSON.parse(metadataEvent.content);
+    
+    // Verify NIP-05 if present
+    let nip05Verified = false;
+    if (metadata.nip05) {
+      nip05Verified = await verifyNIP05(metadata.nip05, pubkey);
+    }
+
     return {
+      pubkey,
       name: metadata.name || "Anonymous",
       display_name: metadata.display_name || metadata.name || "Anonymous",
       picture: metadata.picture || `https://robohash.org/${pubkey}.png`,
       about: metadata.about || "",
       nip05: metadata.nip05 || null,
+      nip05Verified,
       lud16: metadata.lud16 || null,
     };
   } catch (error) {
