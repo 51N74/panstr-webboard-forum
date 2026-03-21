@@ -3,21 +3,36 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { OFFICIAL_ROOMS } from "../components/Header";
+import { OFFICIAL_ROOMS, getRoomTags } from "../data/boardsConfig";
 import {
   initializePool,
   publishThread,
   initializeBrowserExtension,
   generateThreadId,
 } from "../lib/nostrClient";
+import { formatTagsForEvent, validateTagsForRoom } from "../lib/tags/tagManager";
 
 export default function CreatePost() {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [selectedRoom, setSelectedRoom] = useState(OFFICIAL_ROOMS[0]);
+  const [selectedTags, setSelectedTags] = useState([]);
+  const [tagInput, setTagInput] = useState("");
   const [isPublishing, setIsPublishing] = useState(false);
   const [previewMode, setPreviewMode] = useState(false);
+  const [roomTags, setRoomTags] = useState([]);
+
+  // Load room-specific tags when room changes
+  useEffect(() => {
+    if (selectedRoom?.tag) {
+      const roomId = selectedRoom.tag.replace(/^#/, '').toLowerCase();
+      const tags = getRoomTags(roomId);
+      setRoomTags(tags);
+      setSelectedTags([]); // Reset tags when room changes
+      setTagInput("");
+    }
+  }, [selectedRoom]);
 
   const handlePublish = async () => {
     // Basic client-side validation
@@ -28,6 +43,15 @@ export default function CreatePost() {
     if (title.length > 200) {
       alert("ชื่อกระทู้ต้องไม่เกิน 200 ตัวอักษร");
       return;
+    }
+
+    // Validate tags for the selected room
+    if (selectedTags.length > 0) {
+      const validation = validateTagsForRoom(selectedTags, selectedRoom.tag.replace(/^#/, '').toLowerCase());
+      if (!validation.isValid) {
+        alert(`Invalid tags for this room: ${validation.invalidTags.join(', ')}. Please select only tags from the available list.`);
+        return;
+      }
     }
 
     setIsPublishing(true);
@@ -61,6 +85,9 @@ export default function CreatePost() {
       // Generate deterministic thread id (d-tag). Use title-based slug + short hash.
       const threadId = generateThreadId(title);
 
+      // Format tags for Nostr event
+      const tags = formatTagsForEvent(selectedTags);
+
       // Publish the thread as kind:30023 with required tags
       const signedEvent = await publishThread(pool, undefined, privKey, {
         threadId,
@@ -68,6 +95,7 @@ export default function CreatePost() {
         board,
         content,
         published_at: Math.floor(Date.now() / 1000),
+        tags, // Include room-specific tags
       });
 
       if (signedEvent && signedEvent.id) {
@@ -231,6 +259,74 @@ export default function CreatePost() {
                   </div>
                 </div>
               </div>
+
+              {/* Room-Specific Tags */}
+              {roomTags.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Tags (Optional)
+                    <span className="text-gray-500 font-normal ml-2">- Select up to 5 tags for this room</span>
+                  </label>
+                  
+                  {/* Available tags for this room */}
+                  <div className="mb-3">
+                    <p className="text-xs text-gray-600 mb-2">Available tags for {selectedRoom.name}:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {roomTags.map((tag) => {
+                        const isSelected = selectedTags.includes(tag);
+                        const isDisabled = !isSelected && selectedTags.length >= 5;
+                        return (
+                          <button
+                            key={tag}
+                            type="button"
+                            onClick={() => {
+                              if (isSelected) {
+                                setSelectedTags(selectedTags.filter(t => t !== tag));
+                              } else if (!isDisabled) {
+                                setSelectedTags([...selectedTags, tag]);
+                              }
+                            }}
+                            disabled={isDisabled}
+                            className={`px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all duration-200 ${
+                              isSelected
+                                ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md'
+                                : isDisabled
+                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            }`}
+                          >
+                            {tag.replace(/-/g, ' ')}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Selected tags display */}
+                  {selectedTags.length > 0 && (
+                    <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <span className="text-xs font-medium text-blue-700">Selected:</span>
+                      <div className="flex flex-wrap gap-1">
+                        {selectedTags.map((tag) => (
+                          <span
+                            key={tag}
+                            className="inline-flex items-center gap-1 px-2 py-1 bg-blue-200 text-blue-800 rounded-full text-xs font-medium"
+                          >
+                            {tag.replace(/-/g, ' ')}
+                            <button
+                              type="button"
+                              onClick={() => setSelectedTags(selectedTags.filter(t => t !== tag))}
+                              className="hover:text-blue-900"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Actions */}
               <div className="flex items-center justify-between pt-6 border-t border-gray-200">

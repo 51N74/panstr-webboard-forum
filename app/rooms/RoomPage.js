@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getRoomById, getCategoryByRoomId } from "../data/boardsConfig";
+import { getRoomById, getCategoryByRoomId, getRoomTags } from "../data/boardsConfig";
 import { useNostr } from "../context/NostrContext";
 import Link from "next/link";
 import ThreadCard from "../components/ThreadCard";
+import { getDisplayTagsForRoom, getTagStatsForRoom } from "../lib/tags/tagManager";
 
 export default function RoomPage({ roomId }) {
   const router = useRouter();
@@ -14,11 +15,19 @@ export default function RoomPage({ roomId }) {
   const [mounted, setMounted] = useState(false);
   const [sortBy, setSortBy] = useState("latest");
   const [filter, setFilter] = useState("all");
+  const [selectedTag, setSelectedTag] = useState(null);
+  const [roomTags, setRoomTags] = useState([]);
+  const [tagStats, setTagStats] = useState([]);
   const { getEvents } = useNostr();
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    // Load room-specific tags on mount
+    if (roomId) {
+      const tags = getRoomTags(roomId);
+      setRoomTags(tags);
+    }
+  }, [roomId]);
 
   const room = getRoomById(roomId);
   const category = getCategoryByRoomId(roomId);
@@ -29,7 +38,7 @@ export default function RoomPage({ roomId }) {
       return;
     }
     fetchThreads();
-  }, [roomId, sortBy, filter, mounted]);
+  }, [roomId, sortBy, filter, selectedTag, mounted]);
 
   const fetchThreads = async () => {
     setLoading(true);
@@ -174,6 +183,17 @@ export default function RoomPage({ roomId }) {
           (event) =>
             !event.tags.some((tag) => tag[0] === "locked" && tag[1] === "true"),
         );
+      }
+
+      // Filter by selected tag (room-specific tag filtering)
+      if (selectedTag) {
+        events = events.filter((event) => {
+          const eventTags = event.tags || [];
+          return eventTags.some(
+            (tag) => tag[0] === "t" && tag[1]?.toLowerCase() === selectedTag.toLowerCase()
+          );
+        });
+        console.log(`Filtered by tag "${selectedTag}": ${events.length} events`);
       }
 
       // Apply sorting
@@ -329,6 +349,27 @@ export default function RoomPage({ roomId }) {
                 <option value="unlocked">🔓 Unlocked</option>
               </select>
             </div>
+
+            {/* Room-Specific Tag Filter */}
+            {roomTags.length > 0 && (
+              <div className="modern-input-wrapper">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
+                  Tags:
+                </label>
+                <select
+                  className="modern-input pr-10 text-xs sm:text-sm py-2 max-w-[200px] sm:max-w-none"
+                  value={selectedTag || ""}
+                  onChange={(e) => setSelectedTag(e.target.value || null)}
+                >
+                  <option value="">All Tags</option>
+                  {roomTags.map((tag) => (
+                    <option key={tag} value={tag}>
+                      {tag.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center space-x-4">
@@ -342,6 +383,40 @@ export default function RoomPage({ roomId }) {
             </div>
           </div>
         </div>
+
+        {/* Room-Specific Tags Display */}
+        {roomTags.length > 0 && (
+          <div className="mb-6 sm:mb-8">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-xs sm:text-sm font-medium text-gray-600">🏷️ Room Tags:</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setSelectedTag(null)}
+                className={`px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all duration-200 ${
+                  selectedTag === null
+                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                All
+              </button>
+              {roomTags.map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => setSelectedTag(tag)}
+                  className={`px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all duration-200 ${
+                    selectedTag === tag
+                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+                >
+                  {tag.replace(/-/g, ' ')}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Enhanced Loading State */}
         {loading ? (

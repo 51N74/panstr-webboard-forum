@@ -166,6 +166,14 @@ export default function ThreadCard({ thread, roomId }) {
     return "Untitled Thread";
   };
 
+  const getThreadTags = () => {
+    // Extract 't' tags (topic tags) from the thread
+    if (!thread.tags || thread.tags.length === 0) return [];
+    return thread.tags
+      .filter((tag) => tag[0] === "t" && tag[1])
+      .map((tag) => tag[1]);
+  };
+
   const getContentPreview = () => {
     const content = thread.content || "";
     const lines = content.split("\n").filter((line) => line.trim());
@@ -321,6 +329,25 @@ export default function ThreadCard({ thread, roomId }) {
         <h3 className="font-bold text-xl text-gray-900 mb-3 group-hover/thread:text-blue-600 transition-colors line-clamp-2 leading-tight">
           {title}
         </h3>
+
+        {/* Thread Tags */}
+        {getThreadTags().length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-3">
+            {getThreadTags().slice(0, 5).map((tag, idx) => (
+              <span
+                key={idx}
+                className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors"
+              >
+                #{tag.replace(/-/g, ' ')}
+              </span>
+            ))}
+            {getThreadTags().length > 5 && (
+              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                +{getThreadTags().length - 5} more
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Enhanced Content Preview */}
         <p className="text-gray-600 mb-6 line-clamp-3 leading-relaxed">
