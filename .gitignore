@@ -1,36 +1,54 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
+# --- Dependencies ---
 /node_modules
 /.pnp
 .pnp.js
 .yarn/install-state.gz
 
-# testing
-/coverage
-
-# next.js
+# --- Next.js & Build Artifacts ---
 /.next/
 /out/
-
-# production
 /build
+/.vercel
+*.tsbuildinfo
+next-env.d.ts
 
-# misc
-.DS_Store
+# --- Environment & Secrets ---
+# Completely ignore all .env files and local secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 *.pem
+*.key
 
-# debug
+# --- Debug & Logs ---
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+*.log
+/coverage
 
-# local env files
-.env*.local
+# --- OS Specific ---
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
 
-# vercel
-.vercel
+# --- Editor & IDE ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+# --- Project Specific Temporaries ---
+# Ignoring the .txt files in the root that appear to be design/draft notes
+*.txt
+# Ignoring the auto-generated test reports
+/test/reports/
+manual-test-report.json
