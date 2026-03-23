@@ -10,7 +10,7 @@ import React, {
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useNostrAuth } from "../../context/NostrAuthContext";
-import { getRoomById, getCategoryByRoomId } from "../../data/boardsConfig";
+import { getRoomById, getCategoryByRoomId, getRoomTags, isTagValidForRoom } from "../../data/boardsConfig";
 import {
   initializePool,
   publishThread,
@@ -41,6 +41,9 @@ export default function CreateThreadPage({ roomId }) {
   // image upload state for thumbnails/progress
   const [images, setImages] = useState([]); // { id, file, previewUrl, uploading, progress, url, uploadId }
   const [uploading, setUploading] = useState(false);
+  
+  // Room-specific tag selection
+  const [selectedTags, setSelectedTags] = useState([]);
 
   const room = getRoomById(roomId);
   const category = getCategoryByRoomId(roomId);
@@ -236,6 +239,19 @@ export default function CreateThreadPage({ roomId }) {
       const safeContent = sanitizeHtml(content);
       const markdownContent = htmlToMarkdown(safeContent);
 
+      // Create room-specific tags for strict isolation
+      const roomTags = [];
+      roomTags.push(['room', roomId]); // MANDATORY: Room identifier
+      roomTags.push(['category', room.category]); // MANDATORY: Category
+      
+      // Add validated user-selected tags
+      if (selectedTags && selectedTags.length > 0) {
+        const validTags = selectedTags.filter(tag => isTagValidForRoom(roomId, tag));
+        validTags.forEach(tag => {
+          roomTags.push(['t', tag]);
+        });
+      }
+
       const signedEvent = await publishThread(
         pool,
         undefined,
@@ -243,14 +259,20 @@ export default function CreateThreadPage({ roomId }) {
         {
           threadId,
           title,
-          board: roomId,
+          roomId, // REQUIRED for room isolation
           content: markdownContent,
+          tags: roomTags, // Use room-specific tags
           published_at: Math.floor(Date.now() / 1000),
         },
       );
 
       if (signedEvent && signedEvent.id) {
         setSuccess(true);
+        console.log('[CreateThread] Thread published with strict room isolation:', {
+          roomId,
+          eventId: signedEvent.id,
+          tags: signedEvent.tags
+        });
         setTimeout(() => router.push(`/room/${roomId}`), 1600);
       } else {
         throw new Error("Failed to publish thread - no event returned");

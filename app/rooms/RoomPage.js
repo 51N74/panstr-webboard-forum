@@ -43,102 +43,46 @@ export default function RoomPage({ roomId }) {
   const fetchThreads = async () => {
     setLoading(true);
     try {
-      // Try multiple filter approaches to handle potential relay differences
-      let events = [];
+      // STRICT ROOM ISOLATION: Use only the room tag filter
+      // Primary filter: ["room", roomId] tag
+      const strictFilters = {
+        kinds: [30023], // Long-form posts
+        "#room": [roomId], // STRICT: Filter by mandatory room tag
+        limit: 100,
+      };
+      
+      let events = await getEvents(strictFilters);
+      console.log(`[RoomIsolation] Strict filter found ${events.length} events for room ${roomId}`);
 
-      // Approach 1: Standard filter format (using 't' tag for room)
-      try {
-        const standardFilters = {
-          kinds: [30023], // Long-form posts
-          "#t": [roomId], // Filter by room ID using 't' tag
-          limit: 100,
-        };
-        events = await getEvents(standardFilters);
-        console.log(`Standard filter (t tag) found ${events.length} events`);
-      } catch (err) {
-        console.log("Standard filter failed:", err);
-      }
-
-      // Fallback 1: String instead of array for board
-      if (events.length === 0) {
-        try {
-          const fallbackFilters1 = {
-            kinds: [30023],
-            "#t": ["forum"],
-            "#board": roomId, // String instead of array
-            limit: 100,
-          };
-          events = await getEvents(fallbackFilters1);
-          console.log(
-            `Fallback 1 (string board) found ${events.length} events`,
-          );
-        } catch (err) {
-          console.log("Fallback 1 failed:", err);
-        }
-      }
-
-      // Fallback 2: No board filter (get all forum threads)
-      if (events.length === 0) {
-        try {
-          const fallbackFilters2 = {
-            kinds: [30023],
-            "#t": ["forum"],
-            limit: 100,
-          };
-          events = await getEvents(fallbackFilters2);
-          console.log(
-            `Fallback 2 (no board filter) found ${events.length} events`,
-          );
-
-          // Filter by board client-side if no board filter works
-          events = events.filter((event) => {
-            const boardTag = event.tags?.find((tag) => tag[0] === "board")?.[1];
-            return (
-              !boardTag || boardTag === roomId || boardTag === "nostr-cafe"
-            ); // Include events without board or matching board
-          });
-          console.log(
-            `After client-side filtering: ${events.length} events for room ${roomId}`,
-          );
-        } catch (err) {
-          console.log("Fallback 2 failed:", err);
-        }
-      }
-
-      // Fallback 3: Tags array format
-      if (events.length === 0) {
-        try {
-          const fallbackFilters3 = {
-            kinds: [30023],
-            tags: [
-              ["t", "forum"],
-              ["board", roomId],
-            ],
-            limit: 100,
-          };
-          events = await getEvents(fallbackFilters3);
-          console.log(`Fallback 3 (tags array) found ${events.length} events`);
-        } catch (err) {
-          console.log("Fallback 3 failed:", err);
-        }
-      }
-
-      // Apply local filters and sort
+      // VALIDATION: Double-check all events belong to this room
       if (events.length > 0) {
-        console.log(`Total events retrieved: ${events.length}`);
-
-        // Filter by board client-side if needed
-        if (roomId) {
-          events = events.filter((event) => {
-            const boardTag = event.tags?.find((tag) => tag[0] === "board")?.[1];
-            return (
-              !boardTag || boardTag === roomId || boardTag === "nostr-cafe"
-            );
+        const { validateEventRoom, filterEventsByRoom } = await import('../lib/rooms/roomIsolation');
+        
+        // Filter out any events that don't pass strict validation
+        const validatedEvents = filterEventsByRoom(events, roomId);
+        
+        console.log(`[RoomIsolation] After validation: ${validatedEvents.length}/${events.length} events kept`);
+        
+        // Log any filtered-out events for debugging
+        if (validatedEvents.length < events.length) {
+          const filteredOut = events.filter(e => !validatedEvents.find(v => v.id === e.id));
+          console.warn(`[RoomIsolation] ${filteredOut.length} events filtered out due to validation failures`);
+          filteredOut.forEach(e => {
+            const validation = validateEventRoom(e, roomId);
+            console.warn(`[RoomIsolation] Event ${e.id.slice(0, 8)}... failed: ${validation.reason}`);
           });
-          console.log(
-            `After board filtering: ${events.length} events for room ${roomId}`,
-          );
         }
+        
+        events = validatedEvents;
+      }
+
+      // Apply tag filter if selected
+      if (selectedTag) {
+        events = events.filter((event) => {
+          const eventTags = event.tags?.filter(tag => tag[0] === 't').map(tag => tag[1]) || [];
+          return eventTags.some(tag => tag.toLowerCase() === selectedTag.toLowerCase());
+        });
+        console.log(`[RoomIsolation] Filtered by tag "${selectedTag}": ${events.length} events`);
       }
 
       // Apply additional filters
@@ -162,55 +106,9 @@ export default function RoomPage({ roomId }) {
           events.sort((a, b) => a.created_at - b.created_at);
           break;
         case "replies":
-          // Sort by reply count (would need additional data)
           events.sort((a, b) => {
-            const aReplies =
-              a.tags.find((tag) => tag[0] === "reply_count")?.[1] || 0;
-            const bReplies =
-              b.tags.find((tag) => tag[0] === "reply_count")?.[1] || 0;
-            return parseInt(bReplies) - parseInt(aReplies);
-          });
-          break;
-      }
-
-      // Apply filters
-      if (filter === "pinned") {
-        events = events.filter((event) =>
-          event.tags.some((tag) => tag[0] === "pinned" && tag[1] === "true"),
-        );
-      } else if (filter === "unlocked") {
-        events = events.filter(
-          (event) =>
-            !event.tags.some((tag) => tag[0] === "locked" && tag[1] === "true"),
-        );
-      }
-
-      // Filter by selected tag (room-specific tag filtering)
-      if (selectedTag) {
-        events = events.filter((event) => {
-          const eventTags = event.tags || [];
-          return eventTags.some(
-            (tag) => tag[0] === "t" && tag[1]?.toLowerCase() === selectedTag.toLowerCase()
-          );
-        });
-        console.log(`Filtered by tag "${selectedTag}": ${events.length} events`);
-      }
-
-      // Apply sorting
-      switch (sortBy) {
-        case "latest":
-          events.sort((a, b) => b.created_at - a.created_at);
-          break;
-        case "oldest":
-          events.sort((a, b) => a.created_at - b.created_at);
-          break;
-        case "replies":
-          // Sort by reply count (would need additional data)
-          events.sort((a, b) => {
-            const aReplies =
-              a.tags.find((tag) => tag[0] === "reply_count")?.[1] || 0;
-            const bReplies =
-              b.tags.find((tag) => tag[0] === "reply_count")?.[1] || 0;
+            const aReplies = a.tags.find((tag) => tag[0] === "reply_count")?.[1] || 0;
+            const bReplies = b.tags.find((tag) => tag[0] === "reply_count")?.[1] || 0;
             return parseInt(bReplies) - parseInt(aReplies);
           });
           break;
@@ -218,7 +116,8 @@ export default function RoomPage({ roomId }) {
 
       setThreads(events);
     } catch (error) {
-      console.error("Error fetching threads:", error);
+      console.error("[RoomIsolation] Error fetching threads:", error);
+      setThreads([]);
     } finally {
       setLoading(false);
     }

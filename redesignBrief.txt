@@ -1,0 +1,1591 @@
+<!-- User Profile - The Curator -->
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>The Curator | Profile</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-tertiary-container": "#4c3f00",
+                        "secondary-container": "#dedcff",
+                        "on-background": "#181933",
+                        "on-surface-variant": "#47464d",
+                        "on-secondary": "#ffffff",
+                        "inverse-surface": "#2d2e49",
+                        "on-tertiary": "#ffffff",
+                        "on-surface": "#181933",
+                        "surface-dim": "#d8d7fa",
+                        "surface-bright": "#fcf8ff",
+                        "error": "#ba1a1a",
+                        "on-tertiary-fixed-variant": "#544600",
+                        "secondary-fixed": "#e1dfff",
+                        "tertiary-fixed-dim": "#e9c400",
+                        "tertiary-fixed": "#ffe16d",
+                        "on-error": "#ffffff",
+                        "on-secondary-container": "#60607e",
+                        "primary-fixed-dim": "#c7c3e2",
+                        "outline-variant": "#c9c5cd",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container": "#eeecff",
+                        "on-error-container": "#93000a",
+                        "secondary": "#5c5c7a",
+                        "secondary-fixed-dim": "#c5c3e6",
+                        "on-primary": "#ffffff",
+                        "primary": "#29273f",
+                        "inverse-on-surface": "#f2efff",
+                        "surface-tint": "#5e5b76",
+                        "outline": "#78767d",
+                        "surface-container-high": "#e8e6ff",
+                        "tertiary": "#705d00",
+                        "on-primary-fixed": "#1a1930",
+                        "surface-variant": "#e1dfff",
+                        "primary-container": "#3f3d56",
+                        "inverse-primary": "#c7c3e2",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed": "#181933",
+                        "on-primary-container": "#aca8c6",
+                        "primary-fixed": "#e3dfff",
+                        "on-secondary-fixed-variant": "#444461",
+                        "surface": "#fcf8ff",
+                        "on-tertiary-fixed": "#221b00",
+                        "tertiary-container": "#c9a900",
+                        "on-primary-fixed-variant": "#46445d",
+                        "surface-container-highest": "#e1dfff",
+                        "background": "#fcf8ff",
+                        "surface-container-low": "#f5f2ff"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface">
+<!-- TopNavBar Implementation -->
+<header class="fixed top-0 w-full z-50 bg-[#fcf8ff]/70 backdrop-blur-xl shadow-[0px_12px_32px_rgba(24,25,51,0.06)]">
+<div class="flex justify-between items-center px-6 py-4 w-full max-w-screen-2xl mx-auto">
+<div class="text-2xl font-black text-[#29273f] tracking-tighter">The Curator</div>
+<nav class="hidden md:flex items-center gap-8">
+<a class="font-['Manrope'] font-bold text-lg tracking-tight text-[#5c5c7a] opacity-80 hover:text-[#29273f] transition-colors duration-300" href="#">Explore</a>
+<a class="font-['Manrope'] font-bold text-lg tracking-tight text-[#5c5c7a] opacity-80 hover:text-[#29273f] transition-colors duration-300" href="#">Communities</a>
+<a class="font-['Manrope'] font-bold text-lg tracking-tight text-[#705d00] border-b-2 border-[#705d00] pb-1" href="#">Global</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="active:scale-95 transition-transform text-[#29273f]">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="active:scale-95 transition-transform text-[#29273f]">
+<span class="material-symbols-outlined" data-icon="post_add">post_add</span>
+</button>
+<div class="w-10 h-10 rounded-xl bg-surface-container overflow-hidden">
+<img alt="User Avatar" data-alt="Close-up portrait of a smiling user" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD7lFrrh1lzrCk_0--3yX3unJjoVMm2Qj0Jo0gsyRY9XpSQjEWSIAy-0nvTLHO9iRwMaDJHA5Fom1y7bnDBVIZNi5e0i5etGM68b10y9JRCvgSKqD-Nlq3rjPmgJW5Fb8J3NnBb9zmP9SnJR63pXKVygRNodDALN4cEHe77oMHjw7K6VSPvz9Paps2r81_4GHgQzTE8U7-WdiJb7jnWbX2TgxJnMFryPGdrPOHHpJx9CGEmdVJlI2iRY7cAZCI6D5sqBvajgUWe0cw"/>
+</div>
+</div>
+</div>
+</header>
+<div class="flex max-w-screen-2xl mx-auto pt-20">
+<!-- SideNavBar Implementation -->
+<aside class="h-screen w-64 hidden lg:flex flex-col sticky top-20 p-6 gap-4 bg-[#f5f2ff]">
+<div class="flex items-center gap-3 mb-6">
+<div class="w-12 h-12 rounded-xl bg-primary-container flex items-center justify-center text-white">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</div>
+<div>
+<h3 class="font-['Manrope'] font-extrabold text-[#29273f] leading-none">Nostr Identity</h3>
+<p class="text-xs text-[#5c5c7a] opacity-60">_@protocol.com</p>
+</div>
+</div>
+<nav class="flex flex-col gap-1">
+<a class="flex items-center gap-3 p-3 text-[#5c5c7a] hover:bg-[#29273f]/5 hover:translate-x-1 transition-all duration-200 rounded-lg">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-['Inter'] font-medium text-sm">Home</span>
+</a>
+<a class="flex items-center gap-3 p-3 text-[#5c5c7a] hover:bg-[#29273f]/5 hover:translate-x-1 transition-all duration-200 rounded-lg">
+<span class="material-symbols-outlined" data-icon="trending_up">trending_up</span>
+<span class="font-['Inter'] font-medium text-sm">Trending</span>
+</a>
+<a class="flex items-center gap-3 p-3 text-[#5c5c7a] hover:bg-[#29273f]/5 hover:translate-x-1 transition-all duration-200 rounded-lg">
+<span class="material-symbols-outlined" data-icon="push_pin">push_pin</span>
+<span class="font-['Inter'] font-medium text-sm">Pinned</span>
+</a>
+<a class="flex items-center gap-3 p-3 text-[#5c5c7a] hover:bg-[#29273f]/5 hover:translate-x-1 transition-all duration-200 rounded-lg">
+<span class="material-symbols-outlined" data-icon="vpn_key">vpn_key</span>
+<span class="font-['Inter'] font-medium text-sm">My Keys</span>
+</a>
+<a class="flex items-center gap-3 p-3 bg-[#29273f] text-white rounded-lg shadow-lg">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-['Inter'] font-medium text-sm">Settings</span>
+</a>
+</nav>
+<button class="mt-8 bg-gradient-to-br from-primary to-primary-container text-white py-3 rounded-md font-bold text-sm tracking-wide shadow-lg active:scale-95 transition-all">
+                Create Post
+            </button>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 px-4 md:px-12 py-8 bg-surface">
+<!-- Profile Header -->
+<section class="relative mb-12">
+<!-- Cover Image Area -->
+<div class="h-48 md:h-64 w-full rounded-2xl bg-surface-container-low overflow-hidden relative">
+<img class="w-full h-full object-cover opacity-80" data-alt="Abstract wavy gradient background in purple and blue" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAnmHdSQ47f6pxIqa6TQk1dAD5LdzABABAQTC4gdFwCynKjCXdxER-1LuAhT6WYZxBMGfL_XndQesTk1N3C1Zvjeov_D83hrpahGCG5CGPUGxUmEj5kddkNI_gSK-JOJnVSRRPV7jNPM1El64r6rPd7Iojhcds--aWzq23laKDe1elF8od24c3MVW8DHUreOv7iINjN_MZx1cimONCaVWObCOaTI3fsyDdDdWhChPbFAXNLgAEsOLUJhw3O-Ql7u-BM6m2l4vfGask"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface/40 to-transparent"></div>
+</div>
+<!-- Avatar & Identity -->
+<div class="absolute -bottom-16 left-8 flex flex-col md:flex-row md:items-end gap-6">
+<div class="w-32 h-32 md:w-40 md:h-40 rounded-xl border-4 border-surface bg-surface-container-lowest shadow-xl overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Profile picture of the digital curator" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBjVwCBKQ21m91L1l0pl7yftRnlTrMJPrenapTZtl39AMg3jhDOxyk0lkW-bJ-7YjeJlwWCQRoMQumGUGbmWgvbSO0dX0uH8I_BHM9kZVFkOlyv9jSG-wAt2RvU7SIS-l1EmNFZfXeGqfn85bnMKRfTQkZu_ixjLq9RrOv0Lic57Tzg2wFGhtysGYUzLo1g3Zyw1jCYyLFCOmNm2K7VeaD83nOeXot1XXz0HOPTuvE4bZwt1HAr0JU4kbiOa8FewpFfBWmCYJ_ymNo"/>
+</div>
+<div class="pb-2">
+<div class="flex items-center gap-2">
+<h1 class="text-3xl font-black text-on-surface tracking-tight">Satoshi Nakamoto</h1>
+<span class="material-symbols-outlined text-tertiary" data-icon="verified" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+<p class="text-secondary font-mono text-sm opacity-70">npub1sh8...x9p2</p>
+</div>
+</div>
+</section>
+<!-- Bio & Stats Grid -->
+<section class="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8">
+<div class="md:col-span-2 space-y-4">
+<div class="flex items-center gap-2 text-tertiary font-bold text-sm bg-tertiary-container/10 px-3 py-1 rounded-full w-fit">
+<span class="material-symbols-outlined text-sm" data-icon="alternate_email">alternate_email</span>
+<span>satoshi@bitcoin.org</span>
+</div>
+<p class="text-on-surface-variant leading-relaxed text-lg font-body">
+                        Exploring the boundaries of decentralized protocols and editorial design. Building a more open web, one event at a time. Architect of the Curated Protocol.
+                    </p>
+<div class="flex gap-6 pt-2">
+<div class="flex flex-col">
+<span class="text-2xl font-black text-on-surface">12.4k</span>
+<span class="text-xs uppercase tracking-widest text-secondary opacity-60">Followers</span>
+</div>
+<div class="flex flex-col">
+<span class="text-2xl font-black text-on-surface">842</span>
+<span class="text-xs uppercase tracking-widest text-secondary opacity-60">Following</span>
+</div>
+<div class="flex flex-col">
+<span class="text-2xl font-black text-on-surface">1.2M</span>
+<span class="text-xs uppercase tracking-widest text-secondary opacity-60">Sats Received</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-low rounded-2xl p-6 h-fit space-y-4">
+<h4 class="text-xs uppercase tracking-widest font-bold text-secondary">Verified Identity</h4>
+<div class="space-y-3">
+<div class="flex items-center justify-between text-sm">
+<span class="text-on-surface-variant">NIP-05</span>
+<span class="text-on-surface font-medium">satoshi@v.id</span>
+</div>
+<div class="flex items-center justify-between text-sm">
+<span class="text-on-surface-variant">Created</span>
+<span class="text-on-surface font-medium">Jan 2009</span>
+</div>
+<div class="flex items-center justify-between text-sm">
+<span class="text-on-surface-variant">Location</span>
+<span class="text-on-surface font-medium">Cyberspace</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Profile Tabs -->
+<nav class="mt-12 mb-8 flex gap-8 border-b border-outline-variant/15">
+<button class="pb-4 text-primary font-bold border-b-2 border-primary relative">
+                    Posts
+                    <span class="absolute -top-1 -right-4 bg-tertiary-container text-on-tertiary-container text-[10px] px-1.5 rounded-full">42</span>
+</button>
+<button class="pb-4 text-secondary opacity-60 hover:opacity-100 transition-opacity">Replies</button>
+<button class="pb-4 text-secondary opacity-60 hover:opacity-100 transition-opacity">Zaps</button>
+</nav>
+<!-- Thread Feed (Asymmetric Layout) -->
+<div class="grid grid-cols-1 gap-6">
+<!-- Thread Card 1 -->
+<article class="bg-surface-container-lowest p-8 rounded-2xl shadow-[0px_12px_32px_rgba(24,25,51,0.06)] group hover:translate-y-[-2px] transition-all duration-300">
+<div class="flex justify-between items-start mb-4">
+<div class="flex gap-2">
+<span class="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full text-xs font-bold">#Bitcoin</span>
+<span class="bg-surface-container-high text-secondary px-3 py-1 rounded-full text-xs font-bold">5m ago</span>
+</div>
+<button class="text-outline hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="more_horiz">more_horiz</span>
+</button>
+</div>
+<h2 class="text-2xl font-bold text-on-surface mb-3 group-hover:text-primary transition-colors leading-tight">The intersection of Nostr and global editorial sovereignty</h2>
+<p class="text-on-surface-variant line-clamp-2 font-body mb-6">Traditional social media platforms act as gatekeepers of truth. In a decentralized world, every user becomes their own curator, choosing which relays and keys to trust...</p>
+<div class="flex items-center justify-between pt-6 border-t border-outline-variant/10">
+<div class="flex items-center gap-6">
+<button class="flex items-center gap-2 text-secondary hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="chat_bubble">chat_bubble</span>
+<span class="text-xs font-bold">128</span>
+</button>
+<button class="flex items-center gap-2 text-secondary hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="repeat">repeat</span>
+<span class="text-xs font-bold">54</span>
+</button>
+<button class="flex items-center gap-2 text-tertiary hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[20px]" data-icon="bolt" style="font-variation-settings: 'FILL' 1;">bolt</span>
+<span class="text-xs font-bold">1.2k</span>
+</button>
+</div>
+<div class="flex -space-x-2">
+<img class="w-8 h-8 rounded-full border-2 border-surface" data-alt="Small round user avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwhrEgCP24VttjECdRDs9IA8LtGHAErzPxSBifwnnXIM-BSlbYUfsuSObAjfudy9lEK9n1cuiCoKUN3ZM6SHHmfHsSuLkZju7aEGaSrGb5BzJ3HmEAz1QIy8hN1dUUMO3r6nwyWcBLC8Pt6MvQop7vfsX1A43nYpRkooO04oDd6uVu__kziCoVpbbPKzP3jPS1RB5q96NAD2jZLGf6k_Yy8QGhj8JaVYS6jPwTxgGYlFnsjUtaKw9r2mi1sJYhKHA60Ln-A4bWmbk"/>
+<img class="w-8 h-8 rounded-full border-2 border-surface" data-alt="Small round user avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBriGVMnTdK4HPQa7mVAilgzxUtNds3Hf6EWcnumDQ9AE9IVogz1wCTciqIyaWiu6vfJZnT8n8sIrZInzn6zr6_qVSsGI7cvyGbW4pgmlKTqUJPrVbOBs-A8fh2UW3uPFfg540CTC_6Y0Ui5M0OmEEyXgr-120BRKCVfgZVNtB-ApYeoRYCBD30I-g6m8TYkNb9cVJLuTEyMU8Sz7m7XyswVU0HuzbtpwN022tL9CnvY2WevUFS_t2WJlpyRHkKq2SbrdoekZbjn60"/>
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-[10px] font-bold border-2 border-surface">+12</div>
+</div>
+</div>
+</article>
+<!-- Thread Card 2 (Unread State Styling) -->
+<article class="bg-surface-container-low p-8 rounded-2xl group hover:bg-surface-container-high transition-colors">
+<div class="flex justify-between items-start mb-4">
+<div class="flex gap-2">
+<span class="bg-tertiary text-white px-3 py-1 rounded-full text-xs font-bold">Featured</span>
+<span class="text-secondary px-3 py-1 text-xs font-bold">2h ago</span>
+</div>
+</div>
+<h2 class="text-xl font-bold text-on-surface mb-3 leading-tight">Why NIP-05 is just the beginning of decentralized identity</h2>
+<p class="text-on-surface-variant line-clamp-2 font-body mb-6">We often mistake usernames for identity. On Nostr, your identity is your key. Verification is merely a bridge between the legacy web and the protocol...</p>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-6">
+<button class="flex items-center gap-2 text-secondary opacity-60">
+<span class="material-symbols-outlined text-[20px]" data-icon="chat_bubble">chat_bubble</span>
+<span class="text-xs font-bold">45</span>
+</button>
+<button class="flex items-center gap-2 text-secondary opacity-60">
+<span class="material-symbols-outlined text-[20px]" data-icon="repeat">repeat</span>
+<span class="text-xs font-bold">12</span>
+</button>
+<button class="flex items-center gap-2 text-tertiary">
+<span class="material-symbols-outlined text-[20px]" data-icon="bolt">bolt</span>
+<span class="text-xs font-bold">890</span>
+</button>
+</div>
+</div>
+</article>
+</div>
+</main>
+</div>
+<!-- BottomNavBar Implementation -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center h-16 px-4 pb-safe lg:hidden bg-[#fcf8ff]/80 backdrop-blur-md border-t border-[#181933]/10 z-50 shadow-[0px_-4px_20px_rgba(0,0,0,0.03)]">
+<a class="flex flex-col items-center justify-center text-[#5c5c7a] opacity-60 hover:opacity-100 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="dynamic_feed">dynamic_feed</span>
+<span class="font-['Inter'] text-[10px] uppercase tracking-widest">Feed</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#5c5c7a] opacity-60 hover:opacity-100 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+<span class="font-['Inter'] text-[10px] uppercase tracking-widest">Search</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#5c5c7a] opacity-60 hover:opacity-100 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="font-['Inter'] text-[10px] uppercase tracking-widest">Alerts</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#705d00] font-bold scale-110 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="account_circle" style="font-variation-settings: 'FILL' 1;">account_circle</span>
+<span class="font-['Inter'] text-[10px] uppercase tracking-widest">Profile</span>
+</a>
+</nav>
+</body></html>
+
+<!-- Design System -->
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>The Curator | Decentralized Editorial</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-tertiary-container": "#4c3f00",
+              "secondary-container": "#dedcff",
+              "on-background": "#181933",
+              "on-surface-variant": "#47464d",
+              "on-secondary": "#ffffff",
+              "inverse-surface": "#2d2e49",
+              "on-tertiary": "#ffffff",
+              "on-surface": "#181933",
+              "surface-dim": "#d8d7fa",
+              "surface-bright": "#fcf8ff",
+              "error": "#ba1a1a",
+              "on-tertiary-fixed-variant": "#544600",
+              "secondary-fixed": "#e1dfff",
+              "tertiary-fixed-dim": "#e9c400",
+              "tertiary-fixed": "#ffe16d",
+              "on-error": "#ffffff",
+              "on-secondary-container": "#60607e",
+              "primary-fixed-dim": "#c7c3e2",
+              "outline-variant": "#c9c5cd",
+              "surface-container-lowest": "#ffffff",
+              "surface-container": "#eeecff",
+              "on-error-container": "#93000a",
+              "secondary": "#5c5c7a",
+              "secondary-fixed-dim": "#c5c3e6",
+              "on-primary": "#ffffff",
+              "primary": "#29273f",
+              "inverse-on-surface": "#f2efff",
+              "surface-tint": "#5e5b76",
+              "outline": "#78767d",
+              "surface-container-high": "#e8e6ff",
+              "tertiary": "#705d00",
+              "on-primary-fixed": "#1a1930",
+              "surface-variant": "#e1dfff",
+              "primary-container": "#3f3d56",
+              "inverse-primary": "#c7c3e2",
+              "error-container": "#ffdad6",
+              "on-secondary-fixed": "#181933",
+              "on-primary-container": "#aca8c6",
+              "primary-fixed": "#e3dfff",
+              "on-secondary-fixed-variant": "#444461",
+              "surface": "#fcf8ff",
+              "on-tertiary-fixed": "#221b00",
+              "tertiary-container": "#c9a900",
+              "on-primary-fixed-variant": "#46445d",
+              "surface-container-highest": "#e1dfff",
+              "background": "#fcf8ff",
+              "surface-container-low": "#f5f2ff"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface selection:bg-secondary-container selection:text-on-secondary-container">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-[#fcf8ff]/70 dark:bg-[#29273f]/70 backdrop-blur-xl shadow-[0px_12px_32px_rgba(24,25,51,0.06)]">
+<div class="flex justify-between items-center px-6 py-4 w-full max-w-screen-2xl mx-auto">
+<div class="flex items-center gap-8">
+<span class="text-2xl font-black text-[#29273f] dark:text-[#fcf8ff] tracking-tighter">The Curator</span>
+<div class="hidden md:flex gap-6 items-center">
+<a class="font-['Manrope'] font-bold text-lg tracking-tight text-[#705d00] dark:text-[#705d00] border-b-2 border-[#705d00] pb-1 active:scale-95 transition-transform" href="#">Explore</a>
+<a class="font-['Manrope'] font-bold text-lg tracking-tight text-[#5c5c7a] dark:text-[#f5f2ff] opacity-80 hover:text-[#29273f] dark:hover:text-white transition-colors duration-300 active:scale-95 transition-transform" href="#">Communities</a>
+<a class="font-['Manrope'] font-bold text-lg tracking-tight text-[#5c5c7a] dark:text-[#f5f2ff] opacity-80 hover:text-[#29273f] dark:hover:text-white transition-colors duration-300 active:scale-95 transition-transform" href="#">Global</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden sm:flex items-center bg-surface-container-highest rounded-full px-4 py-2 gap-2">
+<span class="material-symbols-outlined text-outline text-sm">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm w-48 font-body" placeholder="Search protocol..." type="text"/>
+</div>
+<button class="material-symbols-outlined text-secondary hover:text-primary transition-colors">notifications</button>
+<button class="material-symbols-outlined text-secondary hover:text-primary transition-colors">post_add</button>
+<img alt="User Avatar" class="w-10 h-10 rounded-xl object-cover bg-surface-container" data-alt="Stylized character avatar with purple background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBE126u0JHAqNEOyAXpqaxrDN4KVar5XVaQMjhWcEbzrsgddeOPhn0HTKfBRINpumNsF2l7Qj5VQzdMB-dgZ3DKjO8MFvrm-399SAtvtuQIZxFgnoQv9fe6b1RepIlEXeoBLENpr6s5q8sD9j9lHAhK5kf_PuS-7AxeX9nuuSGsreQ0c6TDomRbBfkqTqdf4ebdqBIQvOT3_eAxqef_7efo1BgLenfIA0Pq7GNLJj1-A2BQvcRreP7Sj_WWDeYn33H92d27mkn38xU"/>
+</div>
+</div>
+</nav>
+<!-- Main Layout Container -->
+<div class="max-w-screen-2xl mx-auto flex pt-24 px-6 gap-8">
+<!-- Left Sidebar (SideNavBar) -->
+<aside class="h-[calc(100vh-6rem)] w-64 hidden lg:flex flex-col sticky top-24 shrink-0 bg-[#f5f2ff] p-6 gap-4 rounded-xl">
+<div class="flex flex-col gap-1 mb-6">
+<h3 class="font-['Manrope'] font-extrabold text-[#29273f]">Nostr Identity</h3>
+<p class="text-xs text-secondary opacity-70">_@protocol.com</p>
+</div>
+<nav class="flex flex-col gap-2 font-['Inter'] font-medium text-sm">
+<a class="flex items-center gap-3 p-3 bg-[#29273f] text-white rounded-lg shadow-lg cursor-pointer transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span>Home</span>
+</a>
+<a class="flex items-center gap-3 p-3 text-[#5c5c7a] hover:bg-[#29273f]/5 hover:translate-x-1 rounded-lg cursor-pointer transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="trending_up">trending_up</span>
+<span>Trending</span>
+</a>
+<a class="flex items-center gap-3 p-3 text-[#5c5c7a] hover:bg-[#29273f]/5 hover:translate-x-1 rounded-lg cursor-pointer transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="push_pin">push_pin</span>
+<span>Pinned</span>
+</a>
+<a class="flex items-center gap-3 p-3 text-[#5c5c7a] hover:bg-[#29273f]/5 hover:translate-x-1 rounded-lg cursor-pointer transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="vpn_key">vpn_key</span>
+<span>My Keys</span>
+</a>
+<a class="flex items-center gap-3 p-3 text-[#5c5c7a] hover:bg-[#29273f]/5 hover:translate-x-1 rounded-lg cursor-pointer transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span>Settings</span>
+</a>
+</nav>
+<button class="mt-auto bg-gradient-to-br from-primary to-primary-container text-on-primary py-3 rounded-md font-bold text-sm shadow-lg active:scale-95 transition-transform">
+                Create Post
+            </button>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 max-w-3xl space-y-8 pb-24">
+<!-- Section Header -->
+<div class="flex justify-between items-end mb-4">
+<h1 class="text-4xl font-black tracking-tight text-primary">Discover</h1>
+<div class="flex gap-2">
+<button class="px-4 py-1.5 rounded-full bg-surface-container-high text-sm font-semibold text-primary">Recent</button>
+<button class="px-4 py-1.5 rounded-full text-sm font-semibold text-secondary opacity-60">Hot</button>
+</div>
+</div>
+<!-- Feed Card 1 -->
+<article class="group bg-surface-container-lowest p-6 rounded-xl hover:bg-surface-container-high transition-all duration-300 shadow-[0px_12px_32px_rgba(24,25,51,0.04)]">
+<div class="flex items-center gap-3 mb-4">
+<img alt="Author" class="w-8 h-8 rounded-xl bg-surface-container-low" data-alt="Abstract geometric avatar for Nostr user" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNCCzqHvRI3zmRQhIGrHZg9q8-PiFDOqxUaqau1YGXVYZ6vEr-ScqwEqVtqQTirlDk_lvT67Fo3NXibpA7jzc7SaQrAjNZfYf1xCMuOUIcifC2GHDKU9TXV7V3wtf6KsdewsSsa2SAs5XbjnXL9zp0l3BLB6HhWHJez2ci9WrobXpZJ7Xe9A4YqNAcEduXc8vQ-K0YVTLnENQjhnJkGuSrW_ip9nAqoVq9DFtv_IUm5UfOLkTW0bHDFuCXnTMEWingvVPca0pY_ZE"/>
+<div class="flex flex-col">
+<span class="text-xs font-bold text-primary font-mono tracking-tight">npub1...7xqw9</span>
+<span class="text-[10px] text-secondary opacity-60 uppercase tracking-widest">2 hours ago in #technology</span>
+</div>
+</div>
+<h2 class="text-2xl font-extrabold text-primary mb-3 leading-tight group-hover:text-tertiary transition-colors">The Future of Decentralized Identity: Beyond npubs and Keys</h2>
+<div class="flex gap-2 mb-4">
+<span class="px-3 py-1 bg-secondary-container text-on-secondary-container rounded-full text-[10px] font-bold uppercase tracking-wider">Protocol</span>
+<span class="px-3 py-1 bg-secondary-container text-on-secondary-container rounded-full text-[10px] font-bold uppercase tracking-wider">Web3</span>
+</div>
+<p class="text-secondary leading-relaxed mb-6 font-body opacity-90">
+                    We've seen various iterations of identity on-chain, but Nostr offers a unique perspective by separating the social graph from the transport layer. What does this mean for...
+                </p>
+<div class="flex items-center gap-6 pt-4 border-t border-outline-variant/15">
+<button class="flex items-center gap-1.5 text-secondary hover:text-tertiary transition-colors">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">bolt</span>
+<span class="text-xs font-bold">1.2k</span>
+</button>
+<button class="flex items-center gap-1.5 text-secondary hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-lg">chat_bubble</span>
+<span class="text-xs font-bold">42</span>
+</button>
+<button class="flex items-center gap-1.5 text-secondary hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-lg">repeat</span>
+<span class="text-xs font-bold">18</span>
+</button>
+</div>
+</article>
+<!-- Feed Card 2 (Unread State Styling) -->
+<article class="bg-surface-container-low p-6 rounded-xl hover:bg-surface-container-high transition-all duration-300">
+<div class="flex items-center gap-3 mb-4">
+<img alt="Author" class="w-8 h-8 rounded-xl bg-surface-container-low" data-alt="Abstract geometric avatar for Nostr user" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBpXUgrjDEiHF4RfOT3dab182JtBB5IuM6Z6ziOu-dASSmNjysBOq0t5NE3x7G2U72ZC4kRr0MqRNRQ2j3rcmCQtxVgEtu0nYwZLKraVsvmHHo-QnsdYafHzVTUQVA97xu3ttQpboK0Y7OrZMJ5ZViXDGA-ShTF19yj-bqVBGPXDDQoH0eBQNwzaOPO0LFgVJKM86jK4IF17ev267pvQMY9k9NDq_LEVAF5xkxOzBro9LGlziMBs8lWQGLS7Y5S_sJwqc_bnedw3nw"/>
+<div class="flex flex-col">
+<span class="text-xs font-bold text-primary font-mono">npub1...3mzl2</span>
+<span class="text-[10px] text-secondary opacity-60 uppercase tracking-widest">4 hours ago in #creative</span>
+</div>
+</div>
+<h2 class="text-2xl font-extrabold text-primary mb-3 leading-tight">Minimalist UI: Why Whitespace is Your Best Friend</h2>
+<div class="flex gap-2 mb-4">
+<span class="px-3 py-1 bg-tertiary-container text-on-tertiary-container rounded-full text-[10px] font-bold uppercase tracking-wider">Design</span>
+</div>
+<p class="text-secondary leading-relaxed mb-6 font-body opacity-90">
+                    In an age of information overload, the luxury of space is the most valuable asset a designer can offer a user. Let's look at how "The Curator" implements this...
+                </p>
+<div class="flex items-center gap-6 pt-4">
+<button class="flex items-center gap-1.5 text-secondary">
+<span class="material-symbols-outlined text-lg">bolt</span>
+<span class="text-xs font-bold">840</span>
+</button>
+<button class="flex items-center gap-1.5 text-secondary">
+<span class="material-symbols-outlined text-lg">chat_bubble</span>
+<span class="text-xs font-bold">12</span>
+</button>
+<button class="flex items-center gap-1.5 text-secondary">
+<span class="material-symbols-outlined text-lg">repeat</span>
+<span class="text-xs font-bold">5</span>
+</button>
+</div>
+</article>
+<!-- Card 3 -->
+<article class="bg-surface-container-lowest p-6 rounded-xl hover:bg-surface-container-high transition-all duration-300 shadow-[0px_12px_32px_rgba(24,25,51,0.04)]">
+<div class="flex items-center gap-3 mb-4">
+<img alt="Author" class="w-8 h-8 rounded-xl bg-surface-container-low" data-alt="Abstract geometric avatar for Nostr user" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC4M3GiCOGdeDf71g3WPEQOXfsa5R8RtsR5LNnCo5b589SJGrM2rEnfgwdH6FxgYPCMFkZywEyJYyi2MVH9Z53GjvpTBrDDGJ1aLXh0k-mb0K2RWCXKpolq5iU4A3H_VNxtbA-tnV5cepirl0TCgwrmNKk-q5UxmcaMAK-sy3khzl-sHtT1JI-oCJAE83KNLq5uyhizMtr4w4DdAup8W_Wlumywjb_KAvL97U3973vtKzTO_7e2cdrbkHSs3t_rlyLPYe22mS9lQd4"/>
+<div class="flex flex-col">
+<span class="text-xs font-bold text-primary font-mono">npub1...p8v99</span>
+<span class="text-[10px] text-secondary opacity-60 uppercase tracking-widest">Yesterday in #finance</span>
+</div>
+</div>
+<h2 class="text-2xl font-extrabold text-primary mb-3 leading-tight">Economic Incentives in Decentralized Networks</h2>
+<p class="text-secondary leading-relaxed mb-6 font-body opacity-90">
+                    Zap culture isn't just about micro-tipping; it's a fundamental shift in how we value content on the internet. Instead of attention-based metrics, we use capital-backed signals...
+                </p>
+<div class="flex items-center gap-6 pt-4 border-t border-outline-variant/15">
+<button class="flex items-center gap-1.5 text-secondary">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">bolt</span>
+<span class="text-xs font-bold">3.4k</span>
+</button>
+<button class="flex items-center gap-1.5 text-secondary">
+<span class="material-symbols-outlined text-lg">chat_bubble</span>
+<span class="text-xs font-bold">156</span>
+</button>
+</div>
+</article>
+</main>
+<!-- Right Sidebar (Trending & Activity) -->
+<aside class="hidden xl:flex flex-col w-80 gap-8 sticky top-24 h-fit">
+<!-- Trending Tags -->
+<section class="bg-surface-container-low p-6 rounded-xl">
+<h4 class="font-headline font-extrabold text-lg text-primary mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary">trending_up</span>
+                    Trending Tags
+                </h4>
+<div class="flex flex-wrap gap-2">
+<a class="px-3 py-2 bg-surface-container-lowest text-secondary text-xs font-bold rounded-lg border border-transparent hover:border-tertiary transition-all" href="#">#bitcoin</a>
+<a class="px-3 py-2 bg-surface-container-lowest text-secondary text-xs font-bold rounded-lg border border-transparent hover:border-tertiary transition-all" href="#">#nostr</a>
+<a class="px-3 py-2 bg-surface-container-lowest text-secondary text-xs font-bold rounded-lg border border-transparent hover:border-tertiary transition-all" href="#">#privacy</a>
+<a class="px-3 py-2 bg-surface-container-lowest text-secondary text-xs font-bold rounded-lg border border-transparent hover:border-tertiary transition-all" href="#">#design-system</a>
+<a class="px-3 py-2 bg-surface-container-lowest text-secondary text-xs font-bold rounded-lg border border-transparent hover:border-tertiary transition-all" href="#">#decentralization</a>
+</div>
+</section>
+<!-- Active Communities -->
+<section class="bg-surface-container-low p-6 rounded-xl">
+<h4 class="font-headline font-extrabold text-lg text-primary mb-6">Active Communities</h4>
+<div class="space-y-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-primary-container flex items-center justify-center text-white font-black">N</div>
+<div class="flex flex-col">
+<span class="text-sm font-bold text-primary">Nostr Developers</span>
+<span class="text-[10px] text-secondary">12.4k members</span>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-tertiary flex items-center justify-center text-white font-black">P</div>
+<div class="flex flex-col">
+<span class="text-sm font-bold text-primary">Philosophy Today</span>
+<span class="text-[10px] text-secondary">8.2k members</span>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center text-white font-black">A</div>
+<div class="flex flex-col">
+<span class="text-sm font-bold text-primary">Art &amp; Curations</span>
+<span class="text-[10px] text-secondary">4.1k members</span>
+</div>
+</div>
+</div>
+<button class="w-full mt-6 py-2 text-sm font-bold text-primary border-2 border-primary/10 rounded-lg hover:bg-primary/5 transition-colors">View All</button>
+</section>
+</aside>
+</div>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center h-16 px-4 pb-safe bg-[#fcf8ff]/80 dark:bg-[#29273f]/80 backdrop-blur-md lg:hidden z-50 border-t border-[#181933]/10 shadow-[0px_-4px_20px_rgba(0,0,0,0.03)]">
+<a class="flex flex-col items-center justify-center text-[#705d00] font-bold scale-110 tap-highlight-transparent" href="#">
+<span class="material-symbols-outlined" data-icon="dynamic_feed">dynamic_feed</span>
+<span class="font-['Inter'] text-[10px] uppercase tracking-widest">Feed</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#5c5c7a] opacity-60 hover:opacity-100 tap-highlight-transparent" href="#">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+<span class="font-['Inter'] text-[10px] uppercase tracking-widest">Search</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#5c5c7a] opacity-60 hover:opacity-100 tap-highlight-transparent" href="#">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="font-['Inter'] text-[10px] uppercase tracking-widest">Alerts</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#5c5c7a] opacity-60 hover:opacity-100 tap-highlight-transparent" href="#">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+<span class="font-['Inter'] text-[10px] uppercase tracking-widest">Profile</span>
+</a>
+</nav>
+<!-- FAB for Create -->
+<button class="fixed right-6 bottom-24 lg:bottom-12 w-14 h-14 rounded-full bg-gradient-to-br from-primary to-primary-container text-white flex items-center justify-center shadow-xl lg:hidden active:scale-90 transition-transform z-40">
+<span class="material-symbols-outlined text-2xl">add</span>
+</button>
+</body></html>
+
+<!-- Home - The Curator (Nostr) -->
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-tertiary-container": "#4c3f00",
+              "secondary-container": "#dedcff",
+              "on-background": "#181933",
+              "on-surface-variant": "#47464d",
+              "on-secondary": "#ffffff",
+              "inverse-surface": "#2d2e49",
+              "on-tertiary": "#ffffff",
+              "on-surface": "#181933",
+              "surface-dim": "#d8d7fa",
+              "surface-bright": "#fcf8ff",
+              "error": "#ba1a1a",
+              "on-tertiary-fixed-variant": "#544600",
+              "secondary-fixed": "#e1dfff",
+              "tertiary-fixed-dim": "#e9c400",
+              "tertiary-fixed": "#ffe16d",
+              "on-error": "#ffffff",
+              "on-secondary-container": "#60607e",
+              "primary-fixed-dim": "#c7c3e2",
+              "outline-variant": "#c9c5cd",
+              "surface-container-lowest": "#ffffff",
+              "surface-container": "#eeecff",
+              "on-error-container": "#93000a",
+              "secondary": "#5c5c7a",
+              "secondary-fixed-dim": "#c5c3e6",
+              "on-primary": "#ffffff",
+              "primary": "#29273f",
+              "inverse-on-surface": "#f2efff",
+              "surface-tint": "#5e5b76",
+              "outline": "#78767d",
+              "surface-container-high": "#e8e6ff",
+              "tertiary": "#705d00",
+              "on-primary-fixed": "#1a1930",
+              "surface-variant": "#e1dfff",
+              "primary-container": "#3f3d56",
+              "inverse-primary": "#c7c3e2",
+              "error-container": "#ffdad6",
+              "on-secondary-fixed": "#181933",
+              "on-primary-container": "#aca8c6",
+              "primary-fixed": "#e3dfff",
+              "on-secondary-fixed-variant": "#444461",
+              "surface": "#fcf8ff",
+              "on-tertiary-fixed": "#221b00",
+              "tertiary-container": "#c9a900",
+              "on-primary-fixed-variant": "#46445d",
+              "surface-container-highest": "#e1dfff",
+              "background": "#fcf8ff",
+              "surface-container-low": "#f5f2ff"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen">
+<!-- Top Navigation Shell -->
+<nav class="fixed top-0 w-full z-50 bg-[#fcf8ff]/70 backdrop-blur-xl shadow-[0px_12px_32px_rgba(24,25,51,0.06)]">
+<div class="flex justify-between items-center px-6 py-4 w-full max-w-screen-2xl mx-auto">
+<div class="text-2xl font-black text-[#29273f] tracking-tighter">The Curator</div>
+<div class="hidden md:flex items-center gap-8 font-['Manrope'] font-bold text-lg tracking-tight">
+<a class="text-[#705d00] border-b-2 border-[#705d00] pb-1" href="#">Explore</a>
+<a class="text-[#5c5c7a] opacity-80 hover:text-[#29273f] transition-colors duration-300" href="#">Communities</a>
+<a class="text-[#5c5c7a] opacity-80 hover:text-[#29273f] transition-colors duration-300" href="#">Global</a>
+</div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-[#29273f] active:scale-95 transition-transform" data-icon="notifications">notifications</button>
+<button class="material-symbols-outlined text-[#29273f] active:scale-95 transition-transform" data-icon="post_add">post_add</button>
+<div class="w-10 h-10 rounded-xl overflow-hidden shadow-sm">
+<img alt="User Avatar" data-alt="Close up portrait of a smiling man" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBTlldxREjIlDZh6irm0sibt5QrPIJjJ3crhATnlD2DDnyi9Y1IkJuXLEgdITckAucqNUM287AcASvPd5iykO8Ea3KMmbxbPbB8nxqZ9hPOGVEaQuXv0xA-etviaIHHJ-KYylS6-B0GgntXSFGlxlzD6biA4i21WA6fDTMD-a3TfSPkA-UiCAuolaEZ1X5U-yglMqtFnCKanjXyjabWF9WRYxjjxyerohkz8Vw4Hpa9g25VmNJO8t2E9UEdSTopzFgyoUDpl2xs3HU"/>
+</div>
+</div>
+</div>
+</nav>
+<div class="flex max-w-screen-2xl mx-auto pt-20">
+<!-- Side Navigation Shell (Desktop Only) -->
+<aside class="h-screen w-64 hidden lg:flex flex-col sticky top-20 bg-[#f5f2ff] p-6 gap-4 font-['Inter'] font-medium text-sm">
+<div class="flex flex-col gap-1 mb-6">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-primary-container flex items-center justify-center text-white font-bold">N</div>
+<div class="flex flex-col">
+<span class="font-['Manrope'] font-extrabold text-[#29273f]">Nostr Identity</span>
+<span class="text-xs opacity-60">_@protocol.com</span>
+</div>
+</div>
+</div>
+<nav class="flex flex-col gap-2">
+<div class="flex items-center gap-3 px-4 py-3 bg-[#29273f] text-white rounded-lg shadow-lg cursor-pointer active:opacity-80 transition-all duration-200">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span>Home</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 text-[#5c5c7a] hover:bg-[#29273f]/5 hover:translate-x-1 rounded-lg cursor-pointer active:opacity-80 transition-all duration-200">
+<span class="material-symbols-outlined" data-icon="trending_up">trending_up</span>
+<span>Trending</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 text-[#5c5c7a] hover:bg-[#29273f]/5 hover:translate-x-1 rounded-lg cursor-pointer active:opacity-80 transition-all duration-200">
+<span class="material-symbols-outlined" data-icon="push_pin">push_pin</span>
+<span>Pinned</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 text-[#5c5c7a] hover:bg-[#29273f]/5 hover:translate-x-1 rounded-lg cursor-pointer active:opacity-80 transition-all duration-200">
+<span class="material-symbols-outlined" data-icon="vpn_key">vpn_key</span>
+<span>My Keys</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 text-[#5c5c7a] hover:bg-[#29273f]/5 hover:translate-x-1 rounded-lg cursor-pointer active:opacity-80 transition-all duration-200">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span>Settings</span>
+</div>
+</nav>
+<button class="mt-auto bg-gradient-to-br from-primary to-primary-container text-white py-3 rounded-md font-bold shadow-lg hover:shadow-xl active:scale-95 transition-all">
+                Create Post
+            </button>
+</aside>
+<!-- Main Content Area (The Canvas) -->
+<main class="flex-1 px-4 md:px-12 py-8 max-w-4xl mx-auto">
+<!-- Original Post (Hero State) -->
+<article class="mb-12">
+<header class="flex items-center justify-between mb-8">
+<div class="flex items-center gap-4">
+<div class="w-14 h-14 rounded-xl bg-surface-container overflow-hidden">
+<img alt="Author" data-alt="Portrait of a young creative professional" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCGAmhFpIsaMz6i1IpCH6Cg9ixtyzuBOq8AzLwBFokWKQjzGpwSzsTFtR9T70AhnpkC7nluL8qn_Zqq4N9HTw6U0ytcDjWjLJBJW5Ivbm0oaq1QFEvXHn41neUU9xfLX1UaAc2_u1Z9slSbYida538P7U5A_pBCvS1YUPYozV3sWSGQXcF_HK08tQrbAtIsZVA6qK3N9axOTarh7c7Ra32CoyduQBiSi1sTy6DdbLE_ra7JSnpIrcHfXauvFxzNkAZJyYI16RFN1j4"/>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h1 class="font-headline font-extrabold text-xl text-on-surface">Alex Rivera</h1>
+<span class="bg-tertiary-container/20 text-tertiary px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider">Curator</span>
+</div>
+<p class="text-sm font-body text-on-surface-variant font-medium">npub1...3k8w • 4h ago</p>
+</div>
+</div>
+<button class="text-secondary hover:text-primary material-symbols-outlined" data-icon="more_horiz">more_horiz</button>
+</header>
+<div class="space-y-6">
+<h2 class="text-3xl md:text-4xl font-headline font-black tracking-tight leading-tight">
+                        The future of decentralized editorial: why we need better curation protocols.
+                    </h2>
+<p class="text-lg text-on-surface-variant leading-relaxed font-body">
+                        In an era of information overflow, the challenge isn't access to data—it's the filter. We've spent a decade optimizing for algorithms that prioritize engagement over quality. Curation is a human labor that deserves sovereign recognition. 
+                    </p>
+<div class="rounded-xl overflow-hidden shadow-2xl bg-surface-container-low">
+<img alt="Post Graphic" class="w-full object-cover max-h-[500px]" data-alt="Abstract purple and gold digital art shapes" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBphrayLJxu3oFHZn-yxdZEhwwi7JvJ2_RCqKryTZypfW4YEFIs6TP2C2WgT6QCHL9VPKyPh8uYmglMU-6yLA49Fz3-5kiOl6HBl90UH4NI8498LEY2Tps_Ty2_wINOvhfyj6vGqAwYXBb5p9DBNxn1tjROH3PtsHokqy6TKdvYIuZEunmf_7V86gsgnHrzj5SqD7nU37e-Ngu8PHQGTz5PS1eeXX7O60NxRd5-xtNHA5gO-9l1RT7yuqnG0YApLfsrh1P46gEzw6o"/>
+</div>
+<p class="text-lg text-on-surface-variant leading-relaxed font-body">
+                        Using Nostr for editorial content allows us to separate the content from the platform. Your feed isn't owned by a corporation; it's a reflection of the trust network you build. This is how we restore the digital town square.
+                    </p>
+</div>
+<div class="mt-10 flex items-center justify-between py-6 border-y border-outline-variant/15">
+<div class="flex items-center gap-8">
+<button class="flex items-center gap-2 text-secondary hover:text-tertiary transition-colors">
+<span class="material-symbols-outlined" data-icon="bolt" style="font-variation-settings: 'FILL' 1;">bolt</span>
+<span class="font-bold text-sm">1.2k Zaps</span>
+</button>
+<button class="flex items-center gap-2 text-secondary hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="forum">forum</span>
+<span class="font-bold text-sm">48 Replies</span>
+</button>
+<button class="flex items-center gap-2 text-secondary hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="share">share</span>
+<span class="font-bold text-sm">Share</span>
+</button>
+</div>
+<div class="flex -space-x-3">
+<div class="w-8 h-8 rounded-full border-2 border-surface bg-primary-container flex items-center justify-center text-[10px] text-white">MK</div>
+<div class="w-8 h-8 rounded-full border-2 border-surface bg-secondary flex items-center justify-center text-[10px] text-white">JD</div>
+<div class="w-8 h-8 rounded-full border-2 border-surface bg-tertiary-container flex items-center justify-center text-[10px] text-white">+5</div>
+</div>
+</div>
+</article>
+<!-- Conversation Header -->
+<section class="space-y-8">
+<div class="flex items-center justify-between">
+<h3 class="font-headline font-bold text-2xl">Conversation</h3>
+<div class="flex items-center gap-2 text-sm font-medium text-secondary">
+<span>Sort by:</span>
+<select class="bg-transparent border-none p-0 focus:ring-0 font-bold text-primary cursor-pointer">
+<option>Most Zapped</option>
+<option>Newest</option>
+</select>
+</div>
+</div>
+<!-- Post a Reply Input -->
+<div class="bg-surface-container-low p-4 rounded-xl flex gap-4 items-start shadow-sm">
+<div class="w-10 h-10 rounded-xl bg-surface-container-highest shrink-0 overflow-hidden">
+<img alt="Me" data-alt="User avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAgNG1XI6aKw5V5UMr7ITdcU22c5Y1WUX105JHLpgT96cnlV1v2WmxJPR0F59d5UjmUFMR8JrQ28r5A3qkbezx2N1GDDEqC-oBACCg6rZt4tgiGNvvzLujRtol2qpGJoJm5U68yvAg0gP-IIwvHxzwc8scNwBvQijVuNFvkW4or2_TA3h-BBzErrWLWMnj8Nk2xZ8u7hvwoiE3CyHow79iU3-DackBJAXsCwpW8LGtqHKMv5YkIJRchtk1m3JF31rM0lnupM8BVpRE"/>
+</div>
+<div class="flex-1 space-y-3">
+<textarea class="w-full bg-surface-container-highest border-none rounded-sm focus:ring-primary/20 focus:ring-2 resize-none p-3 text-on-surface font-body min-h-[100px]" placeholder="Write a thoughtful reply..."></textarea>
+<div class="flex justify-between items-center">
+<div class="flex gap-2 text-secondary">
+<button class="material-symbols-outlined text-xl hover:text-primary transition-colors" data-icon="image">image</button>
+<button class="material-symbols-outlined text-xl hover:text-primary transition-colors" data-icon="alternate_email">alternate_email</button>
+<button class="material-symbols-outlined text-xl hover:text-primary transition-colors" data-icon="sentiment_satisfied">sentiment_satisfied</button>
+</div>
+<button class="bg-primary text-white px-6 py-2 rounded-md font-bold text-sm active:scale-95 transition-transform">Post Reply</button>
+</div>
+</div>
+</div>
+<!-- Threaded Replies -->
+<div class="space-y-8 mt-12">
+<!-- Reply Level 1 -->
+<div class="group relative">
+<div class="flex gap-4">
+<div class="w-10 h-10 rounded-xl bg-surface-container shrink-0 overflow-hidden">
+<img alt="Reply Author" data-alt="Portrait of a smiling woman" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3ZOJMpMYCzhM-fcaEwnGfPJbKtQotx1gFs-hyQXPpN9S-zxAYFMs9ul4znBLMY34B3eALvp0IeiXPG8t7V50hQxkhna-9gtAb-qZW9cl_ri-NZb2hur6inQ95HM-f7LHyFfQBl9LjdaxMc5QUW4guwnFgn7srOoDlm6LrxwLQIh-3ymizCkiZyrU17ClelWVFfwvZ6Y7PrZZE8cuINF-h_kWU0hnaWykgg3lCcpYb_DSPqNX3hpTdPBUqzQV6eGv2jv66Dipq7do"/>
+</div>
+<div class="flex-1 space-y-3">
+<div class="flex items-center gap-2">
+<span class="font-bold text-on-surface">Sarah Chen</span>
+<span class="text-xs text-on-surface-variant">npub1...m9p2 • 2h ago</span>
+</div>
+<div class="bg-surface-container-lowest p-5 rounded-xl shadow-sm border-l-4 border-tertiary/20">
+<p class="font-body text-on-surface-variant leading-relaxed">
+                                        Strongly agree. The "Web of Trust" model in Nostr is fundamentally different because it treats reputation as an asset you own, not a metric held hostage by a platform. Have you considered how this affects long-form journalism specifically?
+                                    </p>
+</div>
+<div class="flex items-center gap-6 pt-1">
+<button class="flex items-center gap-1.5 text-secondary hover:text-tertiary text-xs font-bold transition-colors">
+<span class="material-symbols-outlined text-lg" data-icon="bolt">bolt</span>
+                                        240
+                                    </button>
+<button class="flex items-center gap-1.5 text-secondary hover:text-primary text-xs font-bold transition-colors">
+<span class="material-symbols-outlined text-lg" data-icon="reply">reply</span>
+                                        Reply
+                                    </button>
+<button class="flex items-center gap-1.5 text-secondary hover:text-primary text-xs font-bold transition-colors">
+<span class="material-symbols-outlined text-lg" data-icon="share">share</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Nested Reply (Level 2) -->
+<div class="ml-14 mt-6 flex gap-4 border-l-2 border-surface-container pl-6 relative">
+<div class="w-8 h-8 rounded-xl bg-surface-container shrink-0 overflow-hidden">
+<img alt="Reply Author" data-alt="Portrait of a person wearing glasses" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-o0JkxdYaKLn_BBEXC3KsB_V6wvBuvpDxpDZnoNDeurf-wlJdDjT9hKYAN6kSA6QqlVI_hYdQ9hHnhw1pLudWrF48A8IM_0YVU93vEjtTiQ9gMwkJKe2mwW8PP1jLYZ37ZJGo7yEnojt6XRh7yBKXyrZLlp1YYDhSWpu31nsJV2dynXe6eZ3zoQvT2wd7X-uJVmrRfa-jrOL0bGoDkUjC90EzVd4dQf7J96Zlal2hfzmgdpsL44OqEZARkJAjwvTJB7ZWQTNdqOc"/>
+</div>
+<div class="flex-1 space-y-3">
+<div class="flex items-center gap-2">
+<span class="font-bold text-sm text-on-surface">Marco K.</span>
+<span class="text-xs text-on-surface-variant">1h ago</span>
+</div>
+<div class="bg-surface-container-low p-4 rounded-xl shadow-sm">
+<p class="font-body text-sm text-on-surface-variant leading-relaxed">
+                                        Long-form is where this shines. Micropayments (Zaps) solve the monetization hurdle that killed traditional editorial without resorting to paywalls.
+                                    </p>
+</div>
+<div class="flex items-center gap-4 pt-1">
+<button class="flex items-center gap-1 text-secondary hover:text-tertiary text-[10px] font-bold transition-colors">
+<span class="material-symbols-outlined text-base" data-icon="bolt">bolt</span>
+                                        12
+                                    </button>
+<button class="flex items-center gap-1 text-secondary hover:text-primary text-[10px] font-bold transition-colors">
+<span class="material-symbols-outlined text-base" data-icon="reply">reply</span>
+                                        Reply
+                                    </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Reply Level 1 (Another Thread) -->
+<div class="flex gap-4">
+<div class="w-10 h-10 rounded-xl bg-surface-container shrink-0 overflow-hidden">
+<img alt="Reply Author" data-alt="Portrait of a bearded man" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVtSkME8cmWPJ5ADu-DUz_15AkSnEGFEsryurlxXxiA0SfIEp3cTrFTvjcUMnHD_qp9HOK4FlD-6MUpkSrSB2_QKAbEZ7ObarJTX0RgGa11s4Qw74WJvOs41wYrvka0KQw3iXIB-SiT_kVZ5-iG2zoWo2LmO9ucSPKsXFejtyHHYOoN1w7bhpOTBEUxdzGVeJBw4GwsIYTzZewjIpuLS0H__KGr4TLjlU0vAu3niaVketMHGyI8XdBJNf9S7QJNHAvmz-1OBE1TEk"/>
+</div>
+<div class="flex-1 space-y-3">
+<div class="flex items-center gap-2">
+<span class="font-bold text-on-surface">David Vance</span>
+<span class="text-xs text-on-surface-variant">3h ago</span>
+</div>
+<div class="bg-surface-container-lowest p-5 rounded-xl shadow-sm">
+<p class="font-body text-on-surface-variant leading-relaxed">
+                                    One major hurdle is still the "barrier to entry" for average users. Nostr keys are intimidating. We need more designers focusing on the human aspect of key management before this goes mainstream.
+                                </p>
+</div>
+<div class="flex items-center gap-6 pt-1">
+<button class="flex items-center gap-1.5 text-secondary hover:text-tertiary text-xs font-bold transition-colors">
+<span class="material-symbols-outlined text-lg" data-icon="bolt">bolt</span>
+                                    86
+                                </button>
+<button class="flex items-center gap-1.5 text-secondary hover:text-primary text-xs font-bold transition-colors">
+<span class="material-symbols-outlined text-lg" data-icon="reply">reply</span>
+                                    Reply
+                                </button>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Right Sidebar (Contextual Info) -->
+<aside class="hidden xl:block w-80 sticky top-20 h-fit space-y-8 pr-6 pl-4">
+<div class="bg-surface-container-low p-6 rounded-xl space-y-4">
+<h4 class="font-headline font-bold text-lg text-primary">About the Author</h4>
+<p class="text-sm text-on-surface-variant leading-relaxed">
+                    Digital anthropologist and Nostr developer. Exploring the intersection of privacy, code, and human connection.
+                </p>
+<div class="flex items-center justify-between text-xs font-bold text-secondary">
+<span>12.4k Followers</span>
+<span>94 Following</span>
+</div>
+<button class="w-full bg-primary-container text-white py-2 rounded-md font-bold text-sm hover:opacity-90 transition-opacity">
+                    Follow
+                </button>
+</div>
+<div class="space-y-4">
+<h4 class="font-headline font-bold text-lg px-2">Trending in Communities</h4>
+<div class="space-y-3">
+<div class="p-3 hover:bg-surface-container-low rounded-lg transition-colors cursor-pointer group">
+<span class="text-[10px] uppercase tracking-widest font-bold text-tertiary">#DigitalSovereignty</span>
+<p class="text-sm font-bold group-hover:text-primary">Securing your private keys for the next decade.</p>
+<span class="text-xs text-secondary">420 notes today</span>
+</div>
+<div class="p-3 hover:bg-surface-container-low rounded-lg transition-colors cursor-pointer group">
+<span class="text-[10px] uppercase tracking-widest font-bold text-tertiary">#NostrDesign</span>
+<p class="text-sm font-bold group-hover:text-primary">Why every dev needs a UI designer in 2024.</p>
+<span class="text-xs text-secondary">158 notes today</span>
+</div>
+</div>
+</div>
+</aside>
+</div>
+<!-- Bottom Navigation Shell (Mobile) -->
+<nav class="fixed bottom-0 left-0 w-full lg:hidden flex justify-around items-center h-16 px-4 pb-safe bg-[#fcf8ff]/80 backdrop-blur-md border-t border-[#181933]/10 z-50 shadow-[0px_-4px_20px_rgba(0,0,0,0.03)] font-['Inter'] text-[10px] uppercase tracking-widest">
+<div class="flex flex-col items-center justify-center text-[#705d00] font-bold scale-110 cursor-pointer active:scale-95 transition-transform">
+<span class="material-symbols-outlined" data-icon="dynamic_feed">dynamic_feed</span>
+<span>Feed</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#5c5c7a] opacity-60 cursor-pointer active:scale-95 transition-transform">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+<span>Search</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#5c5c7a] opacity-60 cursor-pointer active:scale-95 transition-transform">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span>Alerts</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#5c5c7a] opacity-60 cursor-pointer active:scale-95 transition-transform">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+<span>Profile</span>
+</div>
+</nav>
+</body></html>
+
+<!-- Thread View - The Curator -->
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Create Post | The Curator</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "secondary-fixed": "#e1dfff",
+                        "surface-variant": "#e1dfff",
+                        "on-surface": "#181933",
+                        "on-background": "#181933",
+                        "secondary": "#5c5c7a",
+                        "inverse-surface": "#2d2e49",
+                        "surface-tint": "#5e5b76",
+                        "surface": "#fcf8ff",
+                        "on-error": "#ffffff",
+                        "surface-dim": "#d8d7fa",
+                        "error-container": "#ffdad6",
+                        "tertiary-container": "#c9a900",
+                        "on-tertiary-container": "#4c3f00",
+                        "error": "#ba1a1a",
+                        "on-tertiary-fixed-variant": "#544600",
+                        "on-tertiary": "#ffffff",
+                        "on-primary-fixed": "#1a1930",
+                        "on-surface-variant": "#47464d",
+                        "background": "#fcf8ff",
+                        "tertiary-fixed-dim": "#e9c400",
+                        "surface-container-highest": "#e1dfff",
+                        "on-secondary": "#ffffff",
+                        "on-primary-container": "#aca8c6",
+                        "secondary-container": "#dedcff",
+                        "inverse-on-surface": "#f2efff",
+                        "tertiary-fixed": "#ffe16d",
+                        "tertiary": "#705d00",
+                        "secondary-fixed-dim": "#c5c3e6",
+                        "primary-fixed": "#e3dfff",
+                        "primary": "#29273f",
+                        "on-error-container": "#93000a",
+                        "outline-variant": "#c9c5cd",
+                        "primary-container": "#3f3d56",
+                        "surface-container": "#eeecff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-fixed-variant": "#444461",
+                        "on-secondary-fixed": "#181933",
+                        "on-primary-fixed-variant": "#46445d",
+                        "outline": "#78767d",
+                        "on-secondary-container": "#60607e",
+                        "surface-bright": "#fcf8ff",
+                        "inverse-primary": "#c7c3e2",
+                        "surface-container-high": "#e8e6ff",
+                        "on-tertiary-fixed": "#221b00",
+                        "on-primary": "#ffffff",
+                        "surface-container-low": "#f5f2ff",
+                        "primary-fixed-dim": "#c7c3e2"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .tonal-shift-bg {
+            background: linear-gradient(180deg, rgba(252,248,255,1) 0%, rgba(245,242,255,1) 100%);
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, .brand-logo { font-family: 'Manrope', sans-serif; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface">
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full z-50 bg-[#fcf8ff]/70 backdrop-blur-xl shadow-[0px_12px_32px_rgba(24,25,51,0.06)]">
+<div class="flex justify-between items-center px-6 py-4 w-full max-w-screen-2xl mx-auto">
+<div class="flex items-center gap-8">
+<span class="text-2xl font-black text-[#29273f] tracking-tighter">The Curator</span>
+<nav class="hidden md:flex items-center gap-6 font-['Manrope'] font-bold text-lg tracking-tight">
+<a class="text-[#5c5c7a] opacity-80 hover:text-[#29273f] transition-colors duration-300" href="#">Explore</a>
+<a class="text-[#5c5c7a] opacity-80 hover:text-[#29273f] transition-colors duration-300" href="#">Communities</a>
+<a class="text-[#5c5c7a] opacity-80 hover:text-[#29273f] transition-colors duration-300" href="#">Global</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-secondary active:scale-95 transition-transform" data-icon="notifications">notifications</button>
+<button class="material-symbols-outlined text-secondary active:scale-95 transition-transform" data-icon="post_add">post_add</button>
+<img alt="User Avatar" class="w-8 h-8 rounded-xl object-cover bg-surface-container-high" data-alt="User profile avatar icon" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB-BZWpE9DklfmEE-xV5iVQgEX0auzbMYAHi6zg4BrZMbAaRqscjaZKBKVxvpXyrX26Gkq6ZoED8RMzSiByvRQ9d8PcXUN7s1ZZHqDFoYS-lCZsNjX3eMT4NkiQ6Na73Y0q3m4FvC8C3fhYEUKvZawm3v4ruyrCf_mJ2Dw7orpgP8uJVYOVn1mP2jknEA-vOGHQTAfdJQzGuxso4mQTo9FU4LP6u9ti3HFf-8PZJZcRH0x5ueU-rXc1dK1UmQ4D66VOQU4PJqaM5fc"/>
+</div>
+</div>
+</header>
+<div class="flex pt-20 min-h-screen">
+<!-- SideNavBar -->
+<aside class="h-[calc(100vh-5rem)] w-64 hidden lg:flex flex-col sticky top-20 p-6 gap-4 bg-[#f5f2ff]">
+<div class="mb-6">
+<div class="flex items-center gap-3 mb-2">
+<img alt="User Profile" class="w-10 h-10 rounded-xl bg-surface-container-highest" data-alt="Nostr identity profile picture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4ddvnKE96K0Mp9JF_NzKqkjWtCMFzT4yzfwyNOvzHxGfU9nxM8FKIs5CN0XMx9zjz7srRfzR_l1kb9sLA7r_BavYZMZOjtkJMdEnhsjM71r9fMgjO0_NC3Br2KY9tgwjaviLjQVHGno8MCd-42QHstq0tz-4pCSy9hBU5yCdg5A0yIljW2tsW275V38UpFgd16y5sKGCzW5kQVXpf8q8ue77z7i6PRp7f3znqc6xoNfI7KmfsbJnvnxV3Ggz0cWFaX0rkw_I6PdI"/>
+<div class="overflow-hidden">
+<p class="font-['Manrope'] font-extrabold text-[#29273f] truncate">Nostr Identity</p>
+<p class="text-xs text-secondary opacity-70 truncate">_@protocol.com</p>
+</div>
+</div>
+</div>
+<nav class="flex flex-col gap-2 font-['Inter'] font-medium text-sm">
+<a class="flex items-center gap-3 px-4 py-3 text-[#5c5c7a] hover:bg-[#29273f]/5 hover:translate-x-1 transition-all duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span> Home
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 text-[#5c5c7a] hover:bg-[#29273f]/5 hover:translate-x-1 transition-all duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="trending_up">trending_up</span> Trending
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 text-[#5c5c7a] hover:bg-[#29273f]/5 hover:translate-x-1 transition-all duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="push_pin">push_pin</span> Pinned
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 text-[#5c5c7a] hover:bg-[#29273f]/5 hover:translate-x-1 transition-all duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="vpn_key">vpn_key</span> My Keys
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 text-[#5c5c7a] hover:bg-[#29273f]/5 hover:translate-x-1 transition-all duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span> Settings
+                </a>
+</nav>
+<div class="mt-auto">
+<button class="w-full py-3 bg-[#29273f] text-white rounded-lg shadow-lg font-bold active:scale-95 transition-transform">
+                    Create Post
+                </button>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 px-4 md:px-12 py-8 max-w-5xl">
+<div class="mb-10 flex items-center justify-between">
+<div>
+<h1 class="text-4xl font-extrabold text-primary tracking-tight mb-2">Drafting New Curated Thought</h1>
+<p class="text-secondary font-body">Decentralized publishing via Nostr protocol.</p>
+</div>
+<div class="flex gap-4">
+<button class="px-6 py-2.5 rounded-lg font-bold text-primary hover:bg-surface-container-high transition-colors">
+                        Save Draft
+                    </button>
+<button class="px-8 py-2.5 bg-gradient-to-br from-[#29273f] to-[#3f3d56] text-white rounded-lg font-bold shadow-lg active:scale-95 transition-all">
+                        Publish to Nostr
+                    </button>
+</div>
+</div>
+<!-- Editor Section -->
+<div class="space-y-8">
+<!-- Title Input -->
+<div class="group">
+<input class="w-full bg-surface-container-low border-none rounded-xl px-6 py-5 text-2xl font-headline font-bold text-primary placeholder:text-secondary/40 focus:ring-2 focus:ring-primary/20 transition-all outline-none" placeholder="Entry Title..." type="text"/>
+</div>
+<!-- Content Area -->
+<div class="relative">
+<textarea class="w-full min-h-[400px] bg-surface-container-lowest border-none rounded-xl px-8 py-8 text-lg font-body leading-relaxed text-on-surface placeholder:text-secondary/30 focus:ring-2 focus:ring-primary/5 transition-all outline-none resize-none shadow-sm" placeholder="Tell your story or share your discovery..."></textarea>
+<!-- Floating Toolbar -->
+<div class="absolute bottom-6 right-6 flex gap-2 bg-surface/80 backdrop-blur-md p-2 rounded-xl shadow-lg border border-outline-variant/10">
+<button class="p-2 hover:bg-surface-container-high rounded-lg transition-colors material-symbols-outlined" data-icon="format_bold">format_bold</button>
+<button class="p-2 hover:bg-surface-container-high rounded-lg transition-colors material-symbols-outlined" data-icon="format_italic">format_italic</button>
+<button class="p-2 hover:bg-surface-container-high rounded-lg transition-colors material-symbols-outlined" data-icon="link">link</button>
+<button class="p-2 hover:bg-surface-container-high rounded-lg transition-colors material-symbols-outlined" data-icon="format_quote">format_quote</button>
+</div>
+</div>
+<!-- Tags Section -->
+<div class="bg-surface-container-low p-6 rounded-xl">
+<div class="flex items-center gap-2 mb-4 text-secondary">
+<span class="material-symbols-outlined text-sm" data-icon="label">label</span>
+<span class="text-xs uppercase tracking-widest font-bold">Categorization &amp; Tags</span>
+</div>
+<div class="flex flex-wrap gap-3 items-center">
+<span class="px-4 py-1.5 bg-secondary-container text-on-secondary-container rounded-full text-sm font-medium flex items-center gap-2">
+                            #bitcoin <button class="material-symbols-outlined text-xs" data-icon="close">close</button>
+</span>
+<span class="px-4 py-1.5 bg-secondary-container text-on-secondary-container rounded-full text-sm font-medium flex items-center gap-2">
+                            #design <button class="material-symbols-outlined text-xs" data-icon="close">close</button>
+</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm p-0 w-32 placeholder:text-secondary/50" placeholder="Add tag..." type="text"/>
+</div>
+</div>
+<!-- NIP-94 Media Support Section -->
+<div class="bg-surface-container-low p-8 rounded-xl border-2 border-dashed border-outline-variant/30">
+<div class="flex items-center justify-between mb-6">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-tertiary" data-icon="perm_media">perm_media</span>
+<h3 class="font-headline font-bold text-lg">NIP-94 Media Metadata</h3>
+</div>
+<button class="text-primary text-sm font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="add_circle">add_circle</span> Add Asset
+                        </button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="space-y-4">
+<div>
+<label class="block text-[10px] uppercase tracking-widest font-bold text-secondary mb-1">Asset URL</label>
+<input class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-sm font-body focus:ring-2 focus:ring-primary/10" type="text" value="https://cdn.curator.io/v/a93f21.mp4"/>
+</div>
+<div>
+<label class="block text-[10px] uppercase tracking-widest font-bold text-secondary mb-1">SHA-256 Hash</label>
+<input class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-sm font-mono focus:ring-2 focus:ring-primary/10" type="text" value="e3b0c44298fc1c149afbf4c8996fb92427ae41..."/>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div>
+<label class="block text-[10px] uppercase tracking-widest font-bold text-secondary mb-1">MIME Type</label>
+<select class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-sm font-body focus:ring-2 focus:ring-primary/10">
+<option>video/mp4</option>
+<option>image/webp</option>
+<option>image/jpeg</option>
+</select>
+</div>
+<div>
+<label class="block text-[10px] uppercase tracking-widest font-bold text-secondary mb-1">Size (Bytes)</label>
+<input class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-sm font-body focus:ring-2 focus:ring-primary/10" type="number" value="1048576"/>
+</div>
+<div class="col-span-2">
+<div class="p-4 bg-surface-container-lowest rounded-lg flex items-center gap-4">
+<div class="w-12 h-12 bg-secondary/10 rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary" data-icon="videocam">videocam</span>
+</div>
+<div class="flex-1 overflow-hidden">
+<p class="text-xs font-bold truncate">a93f21_presentation.mp4</p>
+<p class="text-[10px] text-secondary">Ready for broadcast</p>
+</div>
+<button class="material-symbols-outlined text-error opacity-60 hover:opacity-100" data-icon="delete">delete</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Mobile Spacer -->
+<div class="h-20 lg:hidden"></div>
+</main>
+</div>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center h-16 px-4 pb-safe bg-[#fcf8ff]/80 backdrop-blur-md lg:hidden z-50 border-t border-[#181933]/10">
+<a class="flex flex-col items-center justify-center text-[#5c5c7a] opacity-60" href="#">
+<span class="material-symbols-outlined" data-icon="dynamic_feed">dynamic_feed</span>
+<span class="font-['Inter'] text-[10px] uppercase tracking-widest">Feed</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#5c5c7a] opacity-60" href="#">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+<span class="font-['Inter'] text-[10px] uppercase tracking-widest">Search</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#705d00] font-bold scale-110" href="#">
+<span class="material-symbols-outlined" data-icon="post_add" style="font-variation-settings: 'FILL' 1;">post_add</span>
+<span class="font-['Inter'] text-[10px] uppercase tracking-widest">Post</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#5c5c7a] opacity-60" href="#">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+<span class="font-['Inter'] text-[10px] uppercase tracking-widest">Profile</span>
+</a>
+</nav>
+</body></html>
+
+<!-- Create Post - The Curator -->
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>The Curator | Decentralized Editorial</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-tertiary-container": "#4c3f00",
+              "secondary-container": "#dedcff",
+              "on-background": "#181933",
+              "on-surface-variant": "#47464d",
+              "on-secondary": "#ffffff",
+              "inverse-surface": "#2d2e49",
+              "on-tertiary": "#ffffff",
+              "on-surface": "#181933",
+              "surface-dim": "#d8d7fa",
+              "surface-bright": "#fcf8ff",
+              "error": "#ba1a1a",
+              "on-tertiary-fixed-variant": "#544600",
+              "secondary-fixed": "#e1dfff",
+              "tertiary-fixed-dim": "#e9c400",
+              "tertiary-fixed": "#ffe16d",
+              "on-error": "#ffffff",
+              "on-secondary-container": "#60607e",
+              "primary-fixed-dim": "#c7c3e2",
+              "outline-variant": "#c9c5cd",
+              "surface-container-lowest": "#ffffff",
+              "surface-container": "#eeecff",
+              "on-error-container": "#93000a",
+              "secondary": "#5c5c7a",
+              "secondary-fixed-dim": "#c5c3e6",
+              "on-primary": "#ffffff",
+              "primary": "#3F3D56",
+              "inverse-on-surface": "#f2efff",
+              "surface-tint": "#5e5b76",
+              "outline": "#78767d",
+              "surface-container-high": "#e8e6ff",
+              "tertiary": "#705d00",
+              "on-primary-fixed": "#1a1930",
+              "surface-variant": "#e1dfff",
+              "primary-container": "#3F3D56",
+              "inverse-primary": "#c7c3e2",
+              "error-container": "#ffdad6",
+              "on-secondary-fixed": "#181933",
+              "on-primary-container": "#aca8c6",
+              "primary-fixed": "#e3dfff",
+              "on-secondary-fixed-variant": "#444461",
+              "surface": "#fcf8ff",
+              "on-tertiary-fixed": "#221b00",
+              "tertiary-container": "#c9a900",
+              "on-primary-fixed-variant": "#46445d",
+              "surface-container-highest": "#e1dfff",
+              "background": "#fcf8ff",
+              "surface-container-low": "#f5f2ff"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.5rem", "lg": "0.75rem", "xl": "1rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4 { font-family: 'Manrope', sans-serif; }
+        .category-collapse:checked ~ .category-content {
+            display: none;
+        }
+        .category-collapse:checked ~ .category-header .chevron-icon {
+            transform: rotate(-90deg);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface selection:bg-secondary-container selection:text-on-secondary-container">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-[#fcf8ff]/70 dark:bg-[#29273f]/70 backdrop-blur-xl shadow-[0px_12px_32px_rgba(24,25,51,0.06)]">
+<div class="flex justify-between items-center px-6 py-4 w-full max-w-screen-2xl mx-auto">
+<div class="flex items-center gap-8">
+<span class="text-2xl font-black text-[#29273f] dark:text-[#fcf8ff] tracking-tighter">The Curator</span>
+<div class="hidden md:flex gap-6 items-center">
+<a class="font-['Manrope'] font-bold text-lg tracking-tight text-[#705d00] dark:text-[#705d00] border-b-2 border-[#705d00] pb-1 active:scale-95 transition-transform" href="#">Explore</a>
+<a class="font-['Manrope'] font-bold text-lg tracking-tight text-[#5c5c7a] dark:text-[#f5f2ff] opacity-80 hover:text-[#29273f] dark:hover:text-white transition-colors duration-300 active:scale-95 transition-transform" href="#">Communities</a>
+<a class="font-['Manrope'] font-bold text-lg tracking-tight text-[#5c5c7a] dark:text-[#f5f2ff] opacity-80 hover:text-[#29273f] dark:hover:text-white transition-colors duration-300 active:scale-95 transition-transform" href="#">Global</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden sm:flex items-center bg-surface-container-highest rounded-full px-4 py-2 gap-2">
+<span class="material-symbols-outlined text-outline text-sm">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm w-48 font-body" placeholder="Search protocol..." type="text"/>
+</div>
+<button class="material-symbols-outlined text-secondary hover:text-primary transition-colors">notifications</button>
+<button class="material-symbols-outlined text-secondary hover:text-primary transition-colors">post_add</button>
+<img alt="User Avatar" class="w-10 h-10 rounded-xl object-cover bg-surface-container" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBE126u0JHAqNEOyAXpqaxrDN4KVar5XVaQMjhWcEbzrsgddeOPhn0HTKfBRINpumNsF2l7Qj5VQzdMB-dgZ3DKjO8MFvrm-399SAtvtuQIZxFgnoQv9fe6b1RepIlEXeoBLENpr6s5q8sD9j9lHAhK5kf_PuS-7AxeX9nuuSGsreQ0c6TDomRbBfkqTqdf4ebdqBIQvOT3_eAxqef_7efo1BgLenfIA0Pq7GNLJj1-A2BQvcRreP7Sj_WWDeYn33H92d27mkn38xU"/>
+</div>
+</div>
+</nav>
+<!-- Main Layout Container -->
+<div class="max-w-screen-2xl mx-auto flex pt-24 px-6 gap-8">
+<!-- Left Sidebar (SideNavBar) -->
+<aside class="h-[calc(100vh-6rem)] w-64 hidden lg:flex flex-col sticky top-24 shrink-0 bg-[#f5f2ff] p-6 gap-4 rounded-xl">
+<div class="flex flex-col gap-1 mb-6">
+<h3 class="font-['Manrope'] font-extrabold text-[#29273f]">Nostr Identity</h3>
+<p class="text-xs text-secondary opacity-70">_@protocol.com</p>
+</div>
+<nav class="flex flex-col gap-2 font-['Inter'] font-medium text-sm">
+<a class="flex items-center gap-3 p-3 bg-[#29273f] text-white rounded-lg shadow-lg cursor-pointer transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span>Home</span>
+</a>
+<a class="flex items-center gap-3 p-3 text-[#5c5c7a] hover:bg-[#29273f]/5 hover:translate-x-1 rounded-lg cursor-pointer transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="trending_up">trending_up</span>
+<span>Trending</span>
+</a>
+<a class="flex items-center gap-3 p-3 text-[#5c5c7a] hover:bg-[#29273f]/5 hover:translate-x-1 rounded-lg cursor-pointer transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="push_pin">push_pin</span>
+<span>Pinned</span>
+</a>
+<a class="flex items-center gap-3 p-3 text-[#5c5c7a] hover:bg-[#29273f]/5 hover:translate-x-1 rounded-lg cursor-pointer transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="vpn_key">vpn_key</span>
+<span>My Keys</span>
+</a>
+<a class="flex items-center gap-3 p-3 text-[#5c5c7a] hover:bg-[#29273f]/5 hover:translate-x-1 rounded-lg cursor-pointer transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span>Settings</span>
+</a>
+</nav>
+<button class="mt-auto bg-gradient-to-br from-primary to-primary-container text-on-primary py-3 rounded-md font-bold text-sm shadow-lg active:scale-95 transition-transform">
+            Create Post
+        </button>
+</aside>
+<!-- Main Content Canvas: Rooms & Categories -->
+<main class="flex-1 max-w-4xl space-y-8 pb-24">
+<!-- Section Header -->
+<div class="flex justify-between items-end mb-6">
+<h1 class="text-4xl font-black tracking-tight text-primary">Discover Rooms</h1>
+<div class="flex gap-2">
+<button class="px-4 py-1.5 rounded-full bg-surface-container-high text-sm font-semibold text-primary">Categories</button>
+<button class="px-4 py-1.5 rounded-full text-sm font-semibold text-secondary opacity-60">All Rooms</button>
+</div>
+</div>
+<!-- Category: Lifestyle -->
+<section class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-[0px_12px_32px_rgba(24,25,51,0.04)]">
+<input class="hidden category-collapse" id="collapse-lifestyle" type="checkbox"/>
+<label class="category-header flex items-center justify-between p-6 cursor-pointer bg-white hover:bg-surface-container-low transition-colors" for="collapse-lifestyle">
+<div class="flex items-center gap-4">
+<span class="text-3xl">🌟</span>
+<div>
+<h2 class="text-xl font-extrabold text-primary">Lifestyle</h2>
+<p class="text-xs text-secondary opacity-70">General lifestyle and community discussions • 4 rooms</p>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="px-3 py-1 bg-surface-container-high rounded-full text-[10px] font-bold text-primary uppercase tracking-widest">4 rooms</span>
+<span class="material-symbols-outlined chevron-icon transition-transform text-secondary">expand_more</span>
+</div>
+</label>
+<div class="category-content p-6 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-outline-variant/10">
+<!-- Room Card 1 -->
+<div class="p-5 rounded-xl border border-outline-variant/20 hover:border-primary/30 transition-all cursor-pointer group">
+<div class="text-2xl mb-3">🍜</div>
+<h3 class="font-bold text-primary group-hover:text-tertiary transition-colors">Foodie Thailand</h3>
+<p class="text-xs text-secondary leading-relaxed mt-2 line-clamp-2">Food, restaurants, and culinary experiences in Thailand</p>
+<div class="flex items-center justify-between mt-4 text-[10px] font-bold text-secondary/60 uppercase tracking-tighter">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">chat_bubble</span> 0 threads</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">history</span> No activity</span>
+</div>
+</div>
+<!-- Room Card 2 -->
+<div class="p-5 rounded-xl border border-outline-variant/20 hover:border-primary/30 transition-all cursor-pointer group">
+<div class="text-2xl mb-3">✈️</div>
+<h3 class="font-bold text-primary group-hover:text-tertiary transition-colors">Travel Diaries</h3>
+<p class="text-xs text-secondary leading-relaxed mt-2 line-clamp-2">Travel stories, tips, and destination recommendations</p>
+<div class="flex items-center justify-between mt-4 text-[10px] font-bold text-secondary/60 uppercase tracking-tighter">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">chat_bubble</span> 12 threads</span>
+<span class="flex items-center gap-1 font-semibold text-tertiary"><span class="material-symbols-outlined text-sm">bolt</span> 2m ago</span>
+</div>
+</div>
+<!-- Room Card 3 -->
+<div class="p-5 rounded-xl border border-outline-variant/20 hover:border-primary/30 transition-all cursor-pointer group">
+<div class="text-2xl mb-3">💬</div>
+<h3 class="font-bold text-primary group-hover:text-tertiary transition-colors">Chill &amp; Chat</h3>
+<p class="text-xs text-secondary leading-relaxed mt-2 line-clamp-2">General chat and casual conversations</p>
+<div class="flex items-center justify-between mt-4 text-[10px] font-bold text-secondary/60 uppercase tracking-tighter">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">chat_bubble</span> 0 threads</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">history</span> No activity</span>
+</div>
+</div>
+<!-- Room Card 4 -->
+<div class="p-5 rounded-xl border border-outline-variant/20 hover:border-primary/30 transition-all cursor-pointer group">
+<div class="text-2xl mb-3">🐾</div>
+<h3 class="font-bold text-primary group-hover:text-tertiary transition-colors">Pet Lovers</h3>
+<p class="text-xs text-secondary leading-relaxed mt-2 line-clamp-2">Pets, animal care, and pet owner community</p>
+<div class="flex items-center justify-between mt-4 text-[10px] font-bold text-secondary/60 uppercase tracking-tighter">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">chat_bubble</span> 0 threads</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">history</span> No activity</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Category: Tech & Nostr -->
+<section class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-[0px_12px_32px_rgba(24,25,51,0.04)]">
+<input class="hidden category-collapse" id="collapse-tech" type="checkbox"/>
+<label class="category-header flex items-center justify-between p-6 cursor-pointer bg-white hover:bg-surface-container-low transition-colors" for="collapse-tech">
+<div class="flex items-center gap-4">
+<span class="text-3xl">💻</span>
+<div>
+<h2 class="text-xl font-extrabold text-primary">Tech &amp; Nostr</h2>
+<p class="text-xs text-secondary opacity-70">Technology and Nostr protocol discussions • 5 rooms</p>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="px-3 py-1 bg-surface-container-high rounded-full text-[10px] font-bold text-primary uppercase tracking-widest">5 rooms</span>
+<span class="material-symbols-outlined chevron-icon transition-transform text-secondary">expand_more</span>
+</div>
+</label>
+<div class="category-content p-6 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-outline-variant/10">
+<div class="p-5 rounded-xl border border-outline-variant/20 hover:border-primary/30 transition-all cursor-pointer group">
+<div class="text-2xl mb-3">🛠️</div>
+<h3 class="font-bold text-primary group-hover:text-tertiary transition-colors">Protocol Dev</h3>
+<p class="text-xs text-secondary leading-relaxed mt-2 line-clamp-2">Diving deep into NIPs and relay implementations</p>
+<div class="flex items-center justify-between mt-4 text-[10px] font-bold text-secondary/60 uppercase tracking-tighter">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">chat_bubble</span> 42 threads</span>
+<span class="flex items-center gap-1 font-semibold text-tertiary"><span class="material-symbols-outlined text-sm">bolt</span> Active now</span>
+</div>
+</div>
+<div class="p-5 rounded-xl border border-outline-variant/20 hover:border-primary/30 transition-all cursor-pointer group">
+<div class="text-2xl mb-3">🔐</div>
+<h3 class="font-bold text-primary group-hover:text-tertiary transition-colors">Key Management</h3>
+<p class="text-xs text-secondary leading-relaxed mt-2 line-clamp-2">Best practices for securing your npub and private keys</p>
+<div class="flex items-center justify-between mt-4 text-[10px] font-bold text-secondary/60 uppercase tracking-tighter">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">chat_bubble</span> 18 threads</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">history</span> 1h ago</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Category: Nostr Special -->
+<section class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-[0px_12px_32px_rgba(24,25,51,0.04)]">
+<input class="hidden category-collapse" id="collapse-special" type="checkbox"/>
+<label class="category-header flex items-center justify-between p-6 cursor-pointer bg-white hover:bg-surface-container-low transition-colors" for="collapse-special">
+<div class="flex items-center gap-4">
+<span class="text-3xl text-tertiary material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">bolt</span>
+<div>
+<h2 class="text-xl font-extrabold text-primary">Nostr Special</h2>
+<p class="text-xs text-secondary opacity-70">Specialized Nostr and decentralization topics • 4 rooms</p>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="px-3 py-1 bg-surface-container-high rounded-full text-[10px] font-bold text-primary uppercase tracking-widest">4 rooms</span>
+<span class="material-symbols-outlined chevron-icon transition-transform text-secondary">expand_more</span>
+</div>
+</label>
+<div class="category-content p-6 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-outline-variant/10">
+<div class="p-5 rounded-xl border border-outline-variant/20 hover:border-primary/30 transition-all cursor-pointer group">
+<div class="text-2xl mb-3">⚡</div>
+<h3 class="font-bold text-primary group-hover:text-tertiary transition-colors">Zap Culture</h3>
+<p class="text-xs text-secondary leading-relaxed mt-2 line-clamp-2">Everything about Lightning integration and tipping on Nostr</p>
+<div class="flex items-center justify-between mt-4 text-[10px] font-bold text-secondary/60 uppercase tracking-tighter">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">chat_bubble</span> 0 threads</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">history</span> No activity</span>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Right Sidebar (Trending & Activity) -->
+<aside class="hidden xl:flex flex-col w-80 gap-8 sticky top-24 h-fit">
+<!-- Trending Tags -->
+<section class="bg-surface-container-low p-6 rounded-xl">
+<h4 class="font-headline font-extrabold text-lg text-primary mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary">trending_up</span>
+                Trending Tags
+            </h4>
+<div class="flex flex-wrap gap-2">
+<a class="px-3 py-2 bg-surface-container-lowest text-secondary text-xs font-bold rounded-lg border border-transparent hover:border-tertiary transition-all" href="#">#bitcoin</a>
+<a class="px-3 py-2 bg-surface-container-lowest text-secondary text-xs font-bold rounded-lg border border-transparent hover:border-tertiary transition-all" href="#">#nostr</a>
+<a class="px-3 py-2 bg-surface-container-lowest text-secondary text-xs font-bold rounded-lg border border-transparent hover:border-tertiary transition-all" href="#">#privacy</a>
+<a class="px-3 py-2 bg-surface-container-lowest text-secondary text-xs font-bold rounded-lg border border-transparent hover:border-tertiary transition-all" href="#">#design-system</a>
+<a class="px-3 py-2 bg-surface-container-lowest text-secondary text-xs font-bold rounded-lg border border-transparent hover:border-tertiary transition-all" href="#">#decentralization</a>
+</div>
+</section>
+<!-- Active Communities -->
+<section class="bg-surface-container-low p-6 rounded-xl">
+<h4 class="font-headline font-extrabold text-lg text-primary mb-6">Active Communities</h4>
+<div class="space-y-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-primary-container flex items-center justify-center text-white font-black">N</div>
+<div class="flex flex-col">
+<span class="text-sm font-bold text-primary">Nostr Developers</span>
+<span class="text-[10px] text-secondary">12.4k members</span>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-tertiary flex items-center justify-center text-white font-black">P</div>
+<div class="flex flex-col">
+<span class="text-sm font-bold text-primary">Philosophy Today</span>
+<span class="text-[10px] text-secondary">8.2k members</span>
+</div>
+</div>
+</div>
+<button class="w-full mt-6 py-2 text-sm font-bold text-primary border-2 border-primary/10 rounded-lg hover:bg-primary/5 transition-colors">View All</button>
+</section>
+</aside>
+</div>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center h-16 px-4 pb-safe bg-[#fcf8ff]/80 dark:bg-[#29273f]/80 backdrop-blur-md lg:hidden z-50 border-t border-[#181933]/10 shadow-[0px_-4px_20px_rgba(0,0,0,0.03)]">
+<a class="flex flex-col items-center justify-center text-[#705d00] font-bold scale-110 tap-highlight-transparent" href="#">
+<span class="material-symbols-outlined" data-icon="dynamic_feed">dynamic_feed</span>
+<span class="font-['Inter'] text-[10px] uppercase tracking-widest">Rooms</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#5c5c7a] opacity-60 hover:opacity-100 tap-highlight-transparent" href="#">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+<span class="font-['Inter'] text-[10px] uppercase tracking-widest">Search</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#5c5c7a] opacity-60 hover:opacity-100 tap-highlight-transparent" href="#">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="font-['Inter'] text-[10px] uppercase tracking-widest">Alerts</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#5c5c7a] opacity-60 hover:opacity-100 tap-highlight-transparent" href="#">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+<span class="font-['Inter'] text-[10px] uppercase tracking-widest">Profile</span>
+</a>
+</nav>
+<!-- FAB for Create -->
+<button class="fixed right-6 bottom-24 lg:bottom-12 w-14 h-14 rounded-full bg-gradient-to-br from-primary to-primary-container text-white flex items-center justify-center shadow-xl lg:hidden active:scale-90 transition-transform z-40">
+<span class="material-symbols-outlined text-2xl">add</span>
+</button>
+</body></html>

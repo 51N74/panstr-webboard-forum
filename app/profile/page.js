@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNostrAuth } from "../context/NostrAuthContext";
-import { formatPubkey, uploadFileNip96, finalizeEvent, publishToPool, initializePool, publishAppHandler } from "../lib/nostrClient";
+import { formatPubkey, uploadFileNip96, finalizeEvent, publishToPool, initializePool, publishAppHandler, getEvents } from "../lib/nostrClient";
 import Link from "next/link";
 
 export default function ProfilePage() {
@@ -10,27 +10,62 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsEditing_Saving] = useState(false);
   const [editData, setEditData] = useState({});
+  const [activeTab, setActiveTab] = useState("posts"); // posts, replies, zaps
+  const [userPosts, setUserPosts] = useState([]);
+  const [loadingPosts, setLoadingPosts] = useState(false);
   const fileInputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
   const [publishingHandler, setPublishingHandler] = useState(false);
 
+  // Fetch user posts
+  useEffect(() => {
+    if (user && activeTab === "posts") {
+      fetchUserPosts();
+    }
+  }, [user, activeTab]);
+
+  const fetchUserPosts = async () => {
+    if (!user?.pubkey) return;
+    
+    setLoadingPosts(true);
+    try {
+      const events = await getEvents({
+        kinds: [1, 30023],
+        authors: [user.pubkey],
+        limit: 20,
+      });
+      setUserPosts(events || []);
+    } catch (err) {
+      console.error("Error fetching posts:", err);
+    } finally {
+      setLoadingPosts(false);
+    }
+  };
+
   if (isLoading)
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="loading loading-spinner loading-lg text-blue-600"></div>
+      <div className="min-h-screen bg-surface flex justify-center items-center pt-20">
+        <div className="w-10 h-10 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
       </div>
     );
+    
   if (error)
     return (
-      <div className="alert alert-error max-w-md mx-auto mt-8">
-        <span>{error}</span>
+      <div className="min-h-screen bg-surface flex justify-center items-center pt-20">
+        <div className="bg-error-container text-error px-6 py-4 rounded-xl border border-error/20">
+          <p className="font-bold">{error}</p>
+        </div>
       </div>
     );
+    
   if (!user)
     return (
-      <div className="alert alert-warning max-w-md mx-auto mt-8 shadow-lg">
-        <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-        <span>Please connect to Nostr to view your profile</span>
+      <div className="min-h-screen bg-surface flex justify-center items-center pt-20">
+        <div className="bg-surface-container-low px-8 py-6 rounded-2xl border border-outline-variant/20 text-center">
+          <span className="material-symbols-outlined text-4xl text-secondary mb-2">lock</span>
+          <p className="text-primary font-bold mb-4">Please connect to Nostr</p>
+          <p className="text-sm text-secondary">Connect your Nostr identity to view and manage your profile</p>
+        </div>
       </div>
     );
 
@@ -108,236 +143,307 @@ export default function ProfilePage() {
     }
   };
 
+  const formatTimeAgo = (timestamp) => {
+    const now = Math.floor(Date.now() / 1000);
+    const diff = now - timestamp;
+    if (diff < 60) return "Just now";
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
+    return new Date(timestamp * 1000).toLocaleDateString();
+  };
+
+  // Mock stats - in real implementation would fetch from Nostr
+  const stats = {
+    followers: "12.4k",
+    following: "842",
+    satsReceived: "1.2M",
+  };
+
   return (
-    <div className="flex flex-col lg:flex-row gap-8 p-4 lg:p-12 max-w-7xl mx-auto animate-fade-in">
-      {/* Profile Card */}
-      <div className="flex-1 lg:flex-initial lg:w-96">
-        <div className="bg-white shadow-xl rounded-2xl p-8 border border-gray-100">
-          <div className="flex flex-col items-center">
-            <div className="avatar mb-6 relative group">
-              <div className="w-32 h-32 rounded-full ring-4 ring-blue-50 ring-offset-base-100 shadow-inner overflow-hidden">
-                <img
-                  src={isEditing ? editData.picture : user.picture}
+    <div className="min-h-screen bg-surface">
+      {/* Main Content Area */}
+      <main className="max-w-screen-2xl mx-auto px-4 md:px-12 py-8">
+        
+        {/* Profile Header */}
+        <section className="relative mb-12">
+          {/* Cover Image Area */}
+          <div className="h-48 md:h-64 w-full rounded-2xl bg-surface-container-low overflow-hidden relative">
+            <img 
+              className="w-full h-full object-cover opacity-80" 
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuAnmHdSQ47f6pxIqa6TQk1dAD5LdzABABAQTC4gdFwCynKjCXdxER-1LuAhT6WYZxBMGfL_XndQesTk1N3C1Zvjeov_D83hrpahGCG5CGPUGxUmEj5kddkNI_gSK-JOJnVSRRPV7jNPM1El64r6rPd7Iojhcds--aWzq23laKDe1elF8od24c3MVW8DHUreOv7iINjN_MZx1cimONCaVWObCOaTI3fsyDdDdWhChPbFAXNLgAEsOLUJhw3O-Ql7u-BM6m2l4vfGask"
+              alt="Profile cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-surface/40 to-transparent"></div>
+          </div>
+          
+          {/* Avatar & Identity */}
+          <div className="absolute -bottom-16 left-4 md:left-8 flex flex-col md:flex-row md:items-end gap-6">
+            <div className="relative">
+              <div className="w-32 h-32 md:w-40 md:h-40 rounded-xl border-4 border-surface bg-surface-container-lowest shadow-xl overflow-hidden">
+                <img 
+                  className="w-full h-full object-cover" 
+                  src={isEditing ? editData.picture : (user.picture || `https://robohash.org/${user.pubkey}.png`)}
                   alt={user.display_name || user.name}
-                  className="object-cover w-full h-full"
                   onError={(e) => {
                     e.target.src = `https://robohash.org/${user.pubkey}.png`;
                   }}
                 />
               </div>
               {isEditing && (
-                <button 
-                  onClick={() => fileInputRef.current.click()}
-                  className="absolute inset-0 bg-black/40 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  {uploading ? <span className="loading loading-spinner loading-sm"></span> : "Change"}
-                </button>
+                <>
+                  <button
+                    onClick={() => fileInputRef.current.click()}
+                    className="absolute inset-0 bg-black/40 text-white rounded-xl flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity"
+                  >
+                    {uploading ? <span className="loading loading-spinner loading-sm"></span> : "Change"}
+                  </button>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    accept="image/*"
+                  />
+                </>
               )}
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                onChange={handleFileUpload} 
-                className="hidden" 
-                accept="image/*" 
-              />
             </div>
-
-            <div className="text-center mb-6 w-full">
-              <h1 className="text-3xl font-bold text-gray-900">
-                {user.display_name || user.name}
-              </h1>
-              {user.name && user.display_name && user.name !== user.display_name && (
-                <p className="text-blue-600 font-medium mt-1">@{user.name}</p>
-              )}
-
-              <div className="mt-4 space-y-2">
-                <div className="flex items-center justify-center gap-2 text-sm text-gray-500 bg-gray-50 py-2 rounded-lg font-mono">
-                  {formatPubkey(user.pubkey, "npub")}
-                </div>
-
+            
+            <div className="pb-2">
+              <div className="flex items-center gap-2">
+                <h1 className="text-3xl font-black text-on-surface tracking-tight">
+                  {user.display_name || user.name}
+                </h1>
                 {user.nip05Verified && (
-                  <div className="flex items-center justify-center gap-1 text-sm text-green-600 font-bold bg-green-50 py-1 rounded-lg">
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                    Verified via {user.nip05}
+                  <span className="material-symbols-outlined text-tertiary" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+                )}
+                {isEditing && (
+                  <button
+                    onClick={handleSaveProfile}
+                    disabled={isSaving}
+                    className="ml-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary-container transition-colors disabled:opacity-50"
+                  >
+                    {isSaving ? "Saving..." : "Save"}
+                  </button>
+                )}
+              </div>
+              <p className="text-secondary font-mono text-sm opacity-70">
+                {formatPubkey(user.pubkey, "npub")}
+              </p>
+              {user.name && user.display_name && user.name !== user.display_name && (
+                <p className="text-tertiary font-bold text-sm mt-1">@{user.name}</p>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* Bio & Stats Grid */}
+        <section className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="md:col-span-2 space-y-4">
+            {/* NIP-05 / Lightning */}
+            {(user.nip05 || user.lud16) && (
+              <div className="flex flex-wrap gap-2">
+                {user.nip05 && (
+                  <div className={`flex items-center gap-2 text-tertiary font-bold text-sm px-3 py-1 rounded-full w-fit border ${user.nip05Verified ? 'bg-tertiary-container/20 border-tertiary/30' : 'bg-surface-container-high border-outline-variant/30'}`}>
+                    <span className="material-symbols-outlined text-sm">{user.nip05Verified ? 'verified' : 'alternate_email'}</span>
+                    <span>{user.nip05}</span>
+                  </div>
+                )}
+                {user.lud16 && (
+                  <div className="flex items-center gap-2 text-tertiary font-bold text-sm bg-tertiary-container/10 px-3 py-1 rounded-full w-fit">
+                    <span className="material-symbols-outlined text-sm">bolt</span>
+                    <span>{user.lud16}</span>
                   </div>
                 )}
               </div>
+            )}
+            
+            {/* About/Bio */}
+            {user.about && (
+              <p className="text-on-surface-variant leading-relaxed text-lg font-body">
+                {user.about}
+              </p>
+            )}
+            
+            {/* Stats */}
+            <div className="flex gap-6 pt-2">
+              <div className="flex flex-col">
+                <span className="text-2xl font-black text-on-surface">{stats.followers}</span>
+                <span className="text-xs uppercase tracking-widest text-secondary opacity-60">Followers</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-2xl font-black text-on-surface">{stats.following}</span>
+                <span className="text-xs uppercase tracking-widest text-secondary opacity-60">Following</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-2xl font-black text-on-surface">{stats.satsReceived}</span>
+                <span className="text-xs uppercase tracking-widest text-secondary opacity-60">Sats Received</span>
+              </div>
             </div>
 
-            {user.about && (
-              <div className="w-full mb-6 italic text-gray-600 text-center leading-relaxed">
-                "{user.about}"
-              </div>
-            )}
-
-            <div className="w-full space-y-3">
-              {!isEditing ? (
-                <button 
+            {/* Edit Button (if not editing) */}
+            {!isEditing && (
+              <div className="pt-4">
+                <button
                   onClick={handleEditClick}
-                  className="btn btn-primary w-full shadow-lg shadow-blue-100"
+                  className="px-6 py-3 bg-surface-container-high text-primary rounded-xl font-bold text-sm hover:bg-surface-container hover:shadow-md transition-all"
                 >
                   Edit Profile
                 </button>
-              ) : (
-                <div className="flex gap-2">
-                  <button 
-                    onClick={handleSaveProfile}
-                    disabled={isSaving}
-                    className="btn btn-success flex-1"
-                  >
-                    {isSaving ? <span className="loading loading-spinner loading-sm"></span> : "Save"}
-                  </button>
-                  <button 
-                    onClick={() => setIsEditing(false)}
-                    className="btn btn-ghost"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              )}
-              <button
-                onClick={refreshProfile}
-                className="btn btn-outline w-full"
-              >
-                Refresh Data
-              </button>
+              </div>
+            )}
+          </div>
+          
+          {/* Verified Identity Card */}
+          <div className="bg-surface-container-low rounded-2xl p-6 h-fit space-y-4 border border-outline-variant/10">
+            <h4 className="text-xs uppercase tracking-widest font-bold text-secondary">Verified Identity</h4>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-on-surface-variant">NIP-05</span>
+                <span className="text-on-surface font-medium">{user.nip05 || "Not verified"}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-on-surface-variant">Auth Method</span>
+                <span className="text-on-surface font-medium">{user.authMethod === "extension" ? "Extension" : "Private Key"}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-on-surface-variant">Created</span>
+                <span className="text-on-surface font-medium">Jan 2024</span>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+        </section>
 
-      {/* Main Content Area */}
-      <div className="flex-1 space-y-8">
-        {isEditing && (
-          <div className="bg-white shadow-xl rounded-2xl p-8 border border-blue-100 animate-slide-up">
-            <h2 className="text-xl font-bold mb-6 text-gray-900 flex items-center gap-2">
-              <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-              Profile Settings
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="form-control">
-                <label className="label"><span className="label-text font-bold">Display Name</span></label>
-                <input 
-                  type="text" 
-                  className="input input-bordered focus:border-blue-500" 
-                  value={editData.display_name}
-                  onChange={e => setEditData({...editData, display_name: e.target.value})}
-                />
+        {/* Profile Tabs */}
+        <nav className="mt-12 mb-8 flex gap-8 border-b border-outline-variant/15">
+          <button 
+            onClick={() => setActiveTab("posts")}
+            className={`pb-4 font-bold relative transition-all ${activeTab === "posts" ? "text-primary border-b-2 border-primary" : "text-secondary opacity-60 hover:opacity-100"}`}
+          >
+            Posts
+            {userPosts.length > 0 && (
+              <span className="absolute -top-1 -right-4 bg-tertiary-container text-on-tertiary-container text-[10px] px-1.5 rounded-full">{userPosts.length}</span>
+            )}
+          </button>
+          <button 
+            onClick={() => setActiveTab("replies")}
+            className={`pb-4 font-bold relative transition-all ${activeTab === "replies" ? "text-primary border-b-2 border-primary" : "text-secondary opacity-60 hover:opacity-100"}`}
+          >
+            Replies
+          </button>
+          <button 
+            onClick={() => setActiveTab("zaps")}
+            className={`pb-4 font-bold relative transition-all ${activeTab === "zaps" ? "text-primary border-b-2 border-primary" : "text-secondary opacity-60 hover:opacity-100"}`}
+          >
+            Zaps
+          </button>
+        </nav>
+
+        {/* Thread Feed */}
+        {activeTab === "posts" && (
+          <div className="grid grid-cols-1 gap-6 pb-24">
+            {loadingPosts ? (
+              <div className="flex justify-center py-12">
+                <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
               </div>
-              <div className="form-control">
-                <label className="label"><span className="label-text font-bold">Username (@)</span></label>
-                <input 
-                  type="text" 
-                  className="input input-bordered focus:border-blue-500" 
-                  value={editData.name}
-                  onChange={e => setEditData({...editData, name: e.target.value})}
-                />
+            ) : userPosts.length > 0 ? (
+              userPosts.map((post) => (
+                <article 
+                  key={post.id} 
+                  className="bg-surface-container-lowest p-6 md:p-8 rounded-2xl shadow-[0px_12px_32px_rgba(24,25,51,0.06)] group hover:translate-y-[-2px] transition-all duration-300 border border-outline-variant/10"
+                >
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex gap-2 flex-wrap">
+                      {post.tags?.filter(t => t[0] === 't').slice(0, 3).map((tag, i) => (
+                        <span key={i} className="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full text-xs font-bold">
+                          #{tag[1]}
+                        </span>
+                      ))}
+                      <span className="bg-surface-container-high text-secondary px-3 py-1 rounded-full text-xs font-bold">
+                        {formatTimeAgo(post.created_at)}
+                      </span>
+                    </div>
+                    <button className="text-outline hover:text-primary transition-colors">
+                      <span className="material-symbols-outlined">more_horiz</span>
+                    </button>
+                  </div>
+                  
+                  <h2 className="text-xl md:text-2xl font-bold text-on-surface mb-3 group-hover:text-primary transition-colors leading-tight">
+                    {post.content?.split('\n')[0]?.slice(0, 100) || "Untitled Post"}
+                  </h2>
+                  
+                  <p className="text-on-surface-variant line-clamp-2 font-body mb-6">
+                    {post.content?.slice(0, 200)}...
+                  </p>
+                  
+                  <div className="flex items-center justify-between pt-6 border-t border-outline-variant/10">
+                    <div className="flex items-center gap-6">
+                      <button className="flex items-center gap-2 text-secondary hover:text-primary transition-colors">
+                        <span className="material-symbols-outlined text-[20px]">chat_bubble</span>
+                        <span className="text-xs font-bold">0</span>
+                      </button>
+                      <button className="flex items-center gap-2 text-secondary hover:text-primary transition-colors">
+                        <span className="material-symbols-outlined text-[20px]">repeat</span>
+                        <span className="text-xs font-bold">0</span>
+                      </button>
+                      <button className="flex items-center gap-2 text-tertiary hover:scale-110 transition-transform">
+                        <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>bolt</span>
+                        <span className="text-xs font-bold">0</span>
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              ))
+            ) : (
+              <div className="text-center py-16 bg-surface-container-low rounded-2xl border border-outline-variant/10">
+                <span className="material-symbols-outlined text-6xl text-secondary/40 mb-4">post_add</span>
+                <p className="text-on-surface-variant font-bold text-lg mb-2">No posts yet</p>
+                <p className="text-secondary text-sm mb-6">Start sharing your thoughts with the community</p>
+                <Link href="/_create" className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-xl font-bold text-sm hover:bg-primary-container transition-colors">
+                  <span className="material-symbols-outlined text-base">add</span>
+                  Create Post
+                </Link>
               </div>
-              <div className="form-control md:col-span-2">
-                <label className="label"><span className="label-text font-bold">About</span></label>
-                <textarea 
-                  className="textarea textarea-bordered h-24 focus:border-blue-500" 
-                  value={editData.about}
-                  onChange={e => setEditData({...editData, about: e.target.value})}
-                />
-              </div>
-              <div className="form-control">
-                <label className="label"><span className="label-text font-bold">NIP-05 Identifier</span></label>
-                <input 
-                  type="text" 
-                  className="input input-bordered focus:border-blue-500" 
-                  value={editData.nip05}
-                  onChange={e => setEditData({...editData, nip05: e.target.value})}
-                  placeholder="user@domain.com"
-                />
-              </div>
-              <div className="form-control">
-                <label className="label"><span className="label-text font-bold">Lightning Address (LU16)</span></label>
-                <input 
-                  type="text" 
-                  className="input input-bordered focus:border-blue-500" 
-                  value={editData.lud16}
-                  onChange={e => setEditData({...editData, lud16: e.target.value})}
-                  placeholder="bolt@pay.address"
-                />
-              </div>
-            </div>
+            )}
           </div>
         )}
 
-        {/* Account Info */}
-        <div className="bg-white shadow-xl rounded-2xl p-8 border border-gray-100">
-          <h2 className="text-xl font-bold mb-6 text-gray-900 flex items-center gap-2">
-            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A3.323 3.323 0 0010.605 7.09a3.323 3.323 0 00-4.738 0 3.323 3.323 0 000 4.738 3.323 3.323 0 004.738 0 3.323 3.323 0 000-4.738z" /></svg>
-            Account Details
-          </h2>
-
-          <div className="space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-gray-50 rounded-xl">
-              <div>
-                <p className="text-sm font-bold text-gray-500 uppercase tracking-wider">Auth Method</p>
-                <p className="font-semibold text-gray-900 mt-1">
-                  {user.authMethod === "extension" ? "🚀 Browser Extension" : "🔑 Private Key"}
-                </p>
-              </div>
-              <span className={`badge ${user.authMethod === "extension" ? "badge-success" : "badge-info"} badge-lg`}>
-                Connected
-              </span>
-            </div>
-
-            <div>
-              <label className="label"><span className="label-text font-bold text-gray-500">Public Key (HEX)</span></label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={user.pubkey}
-                  readOnly
-                  className="input input-bordered w-full font-mono text-sm bg-gray-50"
-                />
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(user.pubkey);
-                    alert("Copied!");
-                  }}
-                  className="btn btn-square btn-ghost hover:bg-blue-50"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
-                </button>
-              </div>
-            </div>
-
-            <div className="pt-4 border-t border-gray-100">
-              <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Discovery</h3>
-              <div className="bg-blue-50 p-4 rounded-xl flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-sm font-bold text-blue-900">Publicize Panstr</p>
-                  <p className="text-xs text-blue-700 mt-1">Announce Panstr as a handler for Threads and Communities so other apps can discover it (NIP-89).</p>
-                </div>
-                <button 
-                  onClick={handlePublishHandler}
-                  disabled={publishingHandler}
-                  className="btn btn-primary btn-sm whitespace-nowrap"
-                >
-                  {publishingHandler ? <span className="loading loading-spinner loading-xs"></span> : "Publicize"}
-                </button>
-              </div>
-            </div>
+        {activeTab === "replies" && (
+          <div className="text-center py-16 bg-surface-container-low rounded-2xl border border-outline-variant/10">
+            <span className="material-symbols-outlined text-6xl text-secondary/40 mb-4">chat_bubble</span>
+            <p className="text-on-surface-variant font-bold text-lg mb-2">No replies yet</p>
+            <p className="text-secondary text-sm">Your replies will appear here</p>
           </div>
-        </div>
+        )}
 
-        {/* Recent Activity */}
-        <div className="bg-white shadow-xl rounded-2xl p-8 border border-gray-100">
-          <h2 className="text-xl font-bold mb-6 text-gray-900">Your Posts</h2>
-          <div className="text-center py-16 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
-            <p className="text-gray-400 text-lg">Activity feed coming soon...</p>
-            <Link href="/" className="btn btn-primary btn-sm mt-6">
-              Go to Home
-            </Link>
+        {activeTab === "zaps" && (
+          <div className="text-center py-16 bg-surface-container-low rounded-2xl border border-outline-variant/10">
+            <span className="material-symbols-outlined text-6xl text-secondary/40 mb-4" style={{ fontVariationSettings: "'FILL' 1" }}>bolt</span>
+            <p className="text-on-surface-variant font-bold text-lg mb-2">No zaps yet</p>
+            <p className="text-secondary text-sm">Zaps you receive will appear here</p>
           </div>
-        </div>
-      </div>
+        )}
+      </main>
+
+      {/* Bottom Navigation (Mobile) */}
+      <nav className="fixed bottom-0 left-0 w-full flex justify-around items-center h-16 px-4 pb-safe lg:hidden bg-surface/80 backdrop-blur-md border-t border-outline-variant/20 z-50 shadow-[0px_-4px_20px_rgba(0,0,0,0.03)]">
+        <Link href="/" className="flex flex-col items-center justify-center text-secondary opacity-60 hover:opacity-100 transition-all">
+          <span className="material-symbols-outlined">dynamic_feed</span>
+          <span className="font-['Inter'] text-[10px] uppercase tracking-widest">Feed</span>
+        </Link>
+        <Link href="/search" className="flex flex-col items-center justify-center text-secondary opacity-60 hover:opacity-100 transition-all">
+          <span className="material-symbols-outlined">search</span>
+          <span className="font-['Inter'] text-[10px] uppercase tracking-widest">Search</span>
+        </Link>
+        <Link href="/notifications" className="flex flex-col items-center justify-center text-secondary opacity-60 hover:opacity-100 transition-all">
+          <span className="material-symbols-outlined">notifications</span>
+          <span className="font-['Inter'] text-[10px] uppercase tracking-widest">Alerts</span>
+        </Link>
+        <Link href="/profile" className="flex flex-col items-center justify-center text-tertiary font-bold scale-110 transition-all">
+          <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>account_circle</span>
+          <span className="font-['Inter'] text-[10px] uppercase tracking-widest">Profile</span>
+        </Link>
+      </nav>
     </div>
   );
 }

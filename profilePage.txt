@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>The Curator | Profile</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-tertiary-container": "#4c3f00",
+                        "secondary-container": "#dedcff",
+                        "on-background": "#181933",
+                        "on-surface-variant": "#47464d",
+                        "on-secondary": "#ffffff",
+                        "inverse-surface": "#2d2e49",
+                        "on-tertiary": "#ffffff",
+                        "on-surface": "#181933",
+                        "surface-dim": "#d8d7fa",
+                        "surface-bright": "#fcf8ff",
+                        "error": "#ba1a1a",
+                        "on-tertiary-fixed-variant": "#544600",
+                        "secondary-fixed": "#e1dfff",
+                        "tertiary-fixed-dim": "#e9c400",
+                        "tertiary-fixed": "#ffe16d",
+                        "on-error": "#ffffff",
+                        "on-secondary-container": "#60607e",
+                        "primary-fixed-dim": "#c7c3e2",
+                        "outline-variant": "#c9c5cd",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container": "#eeecff",
+                        "on-error-container": "#93000a",
+                        "secondary": "#5c5c7a",
+                        "secondary-fixed-dim": "#c5c3e6",
+                        "on-primary": "#ffffff",
+                        "primary": "#29273f",
+                        "inverse-on-surface": "#f2efff",
+                        "surface-tint": "#5e5b76",
+                        "outline": "#78767d",
+                        "surface-container-high": "#e8e6ff",
+                        "tertiary": "#705d00",
+                        "on-primary-fixed": "#1a1930",
+                        "surface-variant": "#e1dfff",
+                        "primary-container": "#3f3d56",
+                        "inverse-primary": "#c7c3e2",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed": "#181933",
+                        "on-primary-container": "#aca8c6",
+                        "primary-fixed": "#e3dfff",
+                        "on-secondary-fixed-variant": "#444461",
+                        "surface": "#fcf8ff",
+                        "on-tertiary-fixed": "#221b00",
+                        "tertiary-container": "#c9a900",
+                        "on-primary-fixed-variant": "#46445d",
+                        "surface-container-highest": "#e1dfff",
+                        "background": "#fcf8ff",
+                        "surface-container-low": "#f5f2ff"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface">
+<!-- TopNavBar Implementation -->
+<header class="fixed top-0 w-full z-50 bg-[#fcf8ff]/70 backdrop-blur-xl shadow-[0px_12px_32px_rgba(24,25,51,0.06)]">
+<div class="flex justify-between items-center px-6 py-4 w-full max-w-screen-2xl mx-auto">
+<div class="text-2xl font-black text-[#29273f] tracking-tighter">The Curator</div>
+<nav class="hidden md:flex items-center gap-8">
+<a class="font-['Manrope'] font-bold text-lg tracking-tight text-[#5c5c7a] opacity-80 hover:text-[#29273f] transition-colors duration-300" href="#">Explore</a>
+<a class="font-['Manrope'] font-bold text-lg tracking-tight text-[#5c5c7a] opacity-80 hover:text-[#29273f] transition-colors duration-300" href="#">Communities</a>
+<a class="font-['Manrope'] font-bold text-lg tracking-tight text-[#705d00] border-b-2 border-[#705d00] pb-1" href="#">Global</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="active:scale-95 transition-transform text-[#29273f]">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="active:scale-95 transition-transform text-[#29273f]">
+<span class="material-symbols-outlined" data-icon="post_add">post_add</span>
+</button>
+<div class="w-10 h-10 rounded-xl bg-surface-container overflow-hidden">
+<img alt="User Avatar" data-alt="Close-up portrait of a smiling user" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD7lFrrh1lzrCk_0--3yX3unJjoVMm2Qj0Jo0gsyRY9XpSQjEWSIAy-0nvTLHO9iRwMaDJHA5Fom1y7bnDBVIZNi5e0i5etGM68b10y9JRCvgSKqD-Nlq3rjPmgJW5Fb8J3NnBb9zmP9SnJR63pXKVygRNodDALN4cEHe77oMHjw7K6VSPvz9Paps2r81_4GHgQzTE8U7-WdiJb7jnWbX2TgxJnMFryPGdrPOHHpJx9CGEmdVJlI2iRY7cAZCI6D5sqBvajgUWe0cw"/>
+</div>
+</div>
+</div>
+</header>
+<div class="flex max-w-screen-2xl mx-auto pt-20">
+<!-- SideNavBar Implementation -->
+<aside class="h-screen w-64 hidden lg:flex flex-col sticky top-20 p-6 gap-4 bg-[#f5f2ff]">
+<div class="flex items-center gap-3 mb-6">
+<div class="w-12 h-12 rounded-xl bg-primary-container flex items-center justify-center text-white">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</div>
+<div>
+<h3 class="font-['Manrope'] font-extrabold text-[#29273f] leading-none">Nostr Identity</h3>
+<p class="text-xs text-[#5c5c7a] opacity-60">_@protocol.com</p>
+</div>
+</div>
+<nav class="flex flex-col gap-1">
+<a class="flex items-center gap-3 p-3 text-[#5c5c7a] hover:bg-[#29273f]/5 hover:translate-x-1 transition-all duration-200 rounded-lg">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-['Inter'] font-medium text-sm">Home</span>
+</a>
+<a class="flex items-center gap-3 p-3 text-[#5c5c7a] hover:bg-[#29273f]/5 hover:translate-x-1 transition-all duration-200 rounded-lg">
+<span class="material-symbols-outlined" data-icon="trending_up">trending_up</span>
+<span class="font-['Inter'] font-medium text-sm">Trending</span>
+</a>
+<a class="flex items-center gap-3 p-3 text-[#5c5c7a] hover:bg-[#29273f]/5 hover:translate-x-1 transition-all duration-200 rounded-lg">
+<span class="material-symbols-outlined" data-icon="push_pin">push_pin</span>
+<span class="font-['Inter'] font-medium text-sm">Pinned</span>
+</a>
+<a class="flex items-center gap-3 p-3 text-[#5c5c7a] hover:bg-[#29273f]/5 hover:translate-x-1 transition-all duration-200 rounded-lg">
+<span class="material-symbols-outlined" data-icon="vpn_key">vpn_key</span>
+<span class="font-['Inter'] font-medium text-sm">My Keys</span>
+</a>
+<a class="flex items-center gap-3 p-3 bg-[#29273f] text-white rounded-lg shadow-lg">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-['Inter'] font-medium text-sm">Settings</span>
+</a>
+</nav>
+<button class="mt-8 bg-gradient-to-br from-primary to-primary-container text-white py-3 rounded-md font-bold text-sm tracking-wide shadow-lg active:scale-95 transition-all">
+                Create Post
+            </button>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 px-4 md:px-12 py-8 bg-surface">
+<!-- Profile Header -->
+<section class="relative mb-12">
+<!-- Cover Image Area -->
+<div class="h-48 md:h-64 w-full rounded-2xl bg-surface-container-low overflow-hidden relative">
+<img class="w-full h-full object-cover opacity-80" data-alt="Abstract wavy gradient background in purple and blue" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAnmHdSQ47f6pxIqa6TQk1dAD5LdzABABAQTC4gdFwCynKjCXdxER-1LuAhT6WYZxBMGfL_XndQesTk1N3C1Zvjeov_D83hrpahGCG5CGPUGxUmEj5kddkNI_gSK-JOJnVSRRPV7jNPM1El64r6rPd7Iojhcds--aWzq23laKDe1elF8od24c3MVW8DHUreOv7iINjN_MZx1cimONCaVWObCOaTI3fsyDdDdWhChPbFAXNLgAEsOLUJhw3O-Ql7u-BM6m2l4vfGask"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface/40 to-transparent"></div>
+</div>
+<!-- Avatar & Identity -->
+<div class="absolute -bottom-16 left-8 flex flex-col md:flex-row md:items-end gap-6">
+<div class="w-32 h-32 md:w-40 md:h-40 rounded-xl border-4 border-surface bg-surface-container-lowest shadow-xl overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Profile picture of the digital curator" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBjVwCBKQ21m91L1l0pl7yftRnlTrMJPrenapTZtl39AMg3jhDOxyk0lkW-bJ-7YjeJlwWCQRoMQumGUGbmWgvbSO0dX0uH8I_BHM9kZVFkOlyv9jSG-wAt2RvU7SIS-l1EmNFZfXeGqfn85bnMKRfTQkZu_ixjLq9RrOv0Lic57Tzg2wFGhtysGYUzLo1g3Zyw1jCYyLFCOmNm2K7VeaD83nOeXot1XXz0HOPTuvE4bZwt1HAr0JU4kbiOa8FewpFfBWmCYJ_ymNo"/>
+</div>
+<div class="pb-2">
+<div class="flex items-center gap-2">
+<h1 class="text-3xl font-black text-on-surface tracking-tight">Satoshi Nakamoto</h1>
+<span class="material-symbols-outlined text-tertiary" data-icon="verified" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+<p class="text-secondary font-mono text-sm opacity-70">npub1sh8...x9p2</p>
+</div>
+</div>
+</section>
+<!-- Bio & Stats Grid -->
+<section class="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8">
+<div class="md:col-span-2 space-y-4">
+<div class="flex items-center gap-2 text-tertiary font-bold text-sm bg-tertiary-container/10 px-3 py-1 rounded-full w-fit">
+<span class="material-symbols-outlined text-sm" data-icon="alternate_email">alternate_email</span>
+<span>satoshi@bitcoin.org</span>
+</div>
+<p class="text-on-surface-variant leading-relaxed text-lg font-body">
+                        Exploring the boundaries of decentralized protocols and editorial design. Building a more open web, one event at a time. Architect of the Curated Protocol.
+                    </p>
+<div class="flex gap-6 pt-2">
+<div class="flex flex-col">
+<span class="text-2xl font-black text-on-surface">12.4k</span>
+<span class="text-xs uppercase tracking-widest text-secondary opacity-60">Followers</span>
+</div>
+<div class="flex flex-col">
+<span class="text-2xl font-black text-on-surface">842</span>
+<span class="text-xs uppercase tracking-widest text-secondary opacity-60">Following</span>
+</div>
+<div class="flex flex-col">
+<span class="text-2xl font-black text-on-surface">1.2M</span>
+<span class="text-xs uppercase tracking-widest text-secondary opacity-60">Sats Received</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-low rounded-2xl p-6 h-fit space-y-4">
+<h4 class="text-xs uppercase tracking-widest font-bold text-secondary">Verified Identity</h4>
+<div class="space-y-3">
+<div class="flex items-center justify-between text-sm">
+<span class="text-on-surface-variant">NIP-05</span>
+<span class="text-on-surface font-medium">satoshi@v.id</span>
+</div>
+<div class="flex items-center justify-between text-sm">
+<span class="text-on-surface-variant">Created</span>
+<span class="text-on-surface font-medium">Jan 2009</span>
+</div>
+<div class="flex items-center justify-between text-sm">
+<span class="text-on-surface-variant">Location</span>
+<span class="text-on-surface font-medium">Cyberspace</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Profile Tabs -->
+<nav class="mt-12 mb-8 flex gap-8 border-b border-outline-variant/15">
+<button class="pb-4 text-primary font-bold border-b-2 border-primary relative">
+                    Posts
+                    <span class="absolute -top-1 -right-4 bg-tertiary-container text-on-tertiary-container text-[10px] px-1.5 rounded-full">42</span>
+</button>
+<button class="pb-4 text-secondary opacity-60 hover:opacity-100 transition-opacity">Replies</button>
+<button class="pb-4 text-secondary opacity-60 hover:opacity-100 transition-opacity">Zaps</button>
+</nav>
+<!-- Thread Feed (Asymmetric Layout) -->
+<div class="grid grid-cols-1 gap-6">
+<!-- Thread Card 1 -->
+<article class="bg-surface-container-lowest p-8 rounded-2xl shadow-[0px_12px_32px_rgba(24,25,51,0.06)] group hover:translate-y-[-2px] transition-all duration-300">
+<div class="flex justify-between items-start mb-4">
+<div class="flex gap-2">
+<span class="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full text-xs font-bold">#Bitcoin</span>
+<span class="bg-surface-container-high text-secondary px-3 py-1 rounded-full text-xs font-bold">5m ago</span>
+</div>
+<button class="text-outline hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="more_horiz">more_horiz</span>
+</button>
+</div>
+<h2 class="text-2xl font-bold text-on-surface mb-3 group-hover:text-primary transition-colors leading-tight">The intersection of Nostr and global editorial sovereignty</h2>
+<p class="text-on-surface-variant line-clamp-2 font-body mb-6">Traditional social media platforms act as gatekeepers of truth. In a decentralized world, every user becomes their own curator, choosing which relays and keys to trust...</p>
+<div class="flex items-center justify-between pt-6 border-t border-outline-variant/10">
+<div class="flex items-center gap-6">
+<button class="flex items-center gap-2 text-secondary hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="chat_bubble">chat_bubble</span>
+<span class="text-xs font-bold">128</span>
+</button>
+<button class="flex items-center gap-2 text-secondary hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="repeat">repeat</span>
+<span class="text-xs font-bold">54</span>
+</button>
+<button class="flex items-center gap-2 text-tertiary hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[20px]" data-icon="bolt" style="font-variation-settings: 'FILL' 1;">bolt</span>
+<span class="text-xs font-bold">1.2k</span>
+</button>
+</div>
+<div class="flex -space-x-2">
+<img class="w-8 h-8 rounded-full border-2 border-surface" data-alt="Small round user avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwhrEgCP24VttjECdRDs9IA8LtGHAErzPxSBifwnnXIM-BSlbYUfsuSObAjfudy9lEK9n1cuiCoKUN3ZM6SHHmfHsSuLkZju7aEGaSrGb5BzJ3HmEAz1QIy8hN1dUUMO3r6nwyWcBLC8Pt6MvQop7vfsX1A43nYpRkooO04oDd6uVu__kziCoVpbbPKzP3jPS1RB5q96NAD2jZLGf6k_Yy8QGhj8JaVYS6jPwTxgGYlFnsjUtaKw9r2mi1sJYhKHA60Ln-A4bWmbk"/>
+<img class="w-8 h-8 rounded-full border-2 border-surface" data-alt="Small round user avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBriGVMnTdK4HPQa7mVAilgzxUtNds3Hf6EWcnumDQ9AE9IVogz1wCTciqIyaWiu6vfJZnT8n8sIrZInzn6zr6_qVSsGI7cvyGbW4pgmlKTqUJPrVbOBs-A8fh2UW3uPFfg540CTC_6Y0Ui5M0OmEEyXgr-120BRKCVfgZVNtB-ApYeoRYCBD30I-g6m8TYkNb9cVJLuTEyMU8Sz7m7XyswVU0HuzbtpwN022tL9CnvY2WevUFS_t2WJlpyRHkKq2SbrdoekZbjn60"/>
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-[10px] font-bold border-2 border-surface">+12</div>
+</div>
+</div>
+</article>
+<!-- Thread Card 2 (Unread State Styling) -->
+<article class="bg-surface-container-low p-8 rounded-2xl group hover:bg-surface-container-high transition-colors">
+<div class="flex justify-between items-start mb-4">
+<div class="flex gap-2">
+<span class="bg-tertiary text-white px-3 py-1 rounded-full text-xs font-bold">Featured</span>
+<span class="text-secondary px-3 py-1 text-xs font-bold">2h ago</span>
+</div>
+</div>
+<h2 class="text-xl font-bold text-on-surface mb-3 leading-tight">Why NIP-05 is just the beginning of decentralized identity</h2>
+<p class="text-on-surface-variant line-clamp-2 font-body mb-6">We often mistake usernames for identity. On Nostr, your identity is your key. Verification is merely a bridge between the legacy web and the protocol...</p>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-6">
+<button class="flex items-center gap-2 text-secondary opacity-60">
+<span class="material-symbols-outlined text-[20px]" data-icon="chat_bubble">chat_bubble</span>
+<span class="text-xs font-bold">45</span>
+</button>
+<button class="flex items-center gap-2 text-secondary opacity-60">
+<span class="material-symbols-outlined text-[20px]" data-icon="repeat">repeat</span>
+<span class="text-xs font-bold">12</span>
+</button>
+<button class="flex items-center gap-2 text-tertiary">
+<span class="material-symbols-outlined text-[20px]" data-icon="bolt">bolt</span>
+<span class="text-xs font-bold">890</span>
+</button>
+</div>
+</div>
+</article>
+</div>
+</main>
+</div>
+<!-- BottomNavBar Implementation -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center h-16 px-4 pb-safe lg:hidden bg-[#fcf8ff]/80 backdrop-blur-md border-t border-[#181933]/10 z-50 shadow-[0px_-4px_20px_rgba(0,0,0,0.03)]">
+<a class="flex flex-col items-center justify-center text-[#5c5c7a] opacity-60 hover:opacity-100 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="dynamic_feed">dynamic_feed</span>
+<span class="font-['Inter'] text-[10px] uppercase tracking-widest">Feed</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#5c5c7a] opacity-60 hover:opacity-100 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+<span class="font-['Inter'] text-[10px] uppercase tracking-widest">Search</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#5c5c7a] opacity-60 hover:opacity-100 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="font-['Inter'] text-[10px] uppercase tracking-widest">Alerts</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#705d00] font-bold scale-110 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="account_circle" style="font-variation-settings: 'FILL' 1;">account_circle</span>
+<span class="font-['Inter'] text-[10px] uppercase tracking-widest">Profile</span>
+</a>
+</nav>
+</body></html>

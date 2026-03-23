@@ -728,6 +728,16 @@ export async function initializePool(relayUrls = DEFAULT_RELAYS) {
     },
   });
 
+  // Add error handler for pool to catch SendingOnClosedConnection errors
+  pool.addEventListener?.('error', (event) => {
+    if (event?.error?.name === 'SendingOnClosedConnection') {
+      // Silently handle closed connection errors - these are expected during normal operation
+      console.debug(`Pool error (closed connection): ${event?.error?.message}`);
+    } else {
+      console.error('Pool error:', event?.error);
+    }
+  });
+
   globalPool = pool;
   return pool;
 }
@@ -909,10 +919,28 @@ export function liveSubscribe(pool, relayUrls, filters, onEvent, options = {}) {
     try {
       heartbeat = setInterval(() => {
         try {
+          // Check if pool has active relays before querying
+          if (!pool || !pool.relays || pool.relays.size === 0) {
+            return;
+          }
+          
+          // Filter to only connected relays
+          const connectedRelays = Array.from(pool.relays.entries())
+            .filter(([_, relay]) => relay && relay.status === 1) // OPEN state
+            .map(([url, _]) => url);
+          
+          if (connectedRelays.length === 0) {
+            return;
+          }
+          
           // A minimal query (limit:1) to ping relays; wrapped in try/catch
-          pool.querySync(relays, { limit: 1 });
+          pool.querySync(connectedRelays, { limit: 1 });
         } catch (err) {
           // ignore transient errors; they will be reflected in relay health monitoring elsewhere
+          // Specifically handle SendingOnClosedConnection errors
+          if (err.name !== 'SendingOnClosedConnection') {
+            console.debug("Heartbeat ping error (ignored):", err.message);
+          }
         }
       }, heartbeatMs);
     } catch (err) {
@@ -950,10 +978,15 @@ export function liveSubscribe(pool, relayUrls, filters, onEvent, options = {}) {
         // rare case where subscribe returns an unsubscribe function
         try {
           sub();
-        } catch (e) { }
+        } catch (e) { 
+          // Ignore errors from function-style unsubscribe
+        }
       }
     } catch (err) {
-      // ignore unsubscribe errors
+      // Ignore unsubscribe errors, especially SendingOnClosedConnection
+      if (err.name !== 'SendingOnClosedConnection') {
+        console.debug("Unsubscribe error (ignored):", err.message);
+      }
     } finally {
       if (heartbeat) {
         try {
@@ -1008,12 +1041,49 @@ export function clearAllLiveSubscriptions() {
 }
 
 /**
- * Query events from pool
+ * Query events from pool with error handling for closed connections
  */
 export async function queryEvents(pool, relayUrls, filters) {
   // Use default relays if relayUrls is not provided
   const relays = relayUrls || DEFAULT_RELAYS;
-  return await pool.querySync(relays, filters);
+  try {
+    return await pool.querySync(relays, filters);
+  } catch (error) {
+    // Handle SendingOnClosedConnection errors gracefully
+    if (error.name === 'SendingOnClosedConnection') {
+      console.debug(`Query failed due to closed connection: ${error.message}`);
+      return [];
+    }
+    throw error;
+  }
+}
+
+/**
+ * Safe query wrapper that filters connected relays before querying
+ */
+export async function safeQueryEvents(pool, relayUrls, filters) {
+  try {
+    // Filter to only connected relays
+    const allRelays = relayUrls || DEFAULT_RELAYS;
+    const connectedRelays = allRelays.filter((url) => {
+      const relay = pool.relays?.get(url);
+      return relay && relay.status === 1; // OPEN state
+    });
+    
+    if (connectedRelays.length === 0) {
+      console.debug('No connected relays available for query');
+      return [];
+    }
+    
+    return await pool.querySync(connectedRelays, filters);
+  } catch (error) {
+    // Handle SendingOnClosedConnection errors gracefully
+    if (error.name === 'SendingOnClosedConnection') {
+      console.debug(`Query failed due to closed connection: ${error.message}`);
+      return [];
+    }
+    throw error;
+  }
 }
 
 /**
@@ -1905,6 +1975,10 @@ export async function testRelay(relayUrl) {
       error: null,
     };
   } catch (error) {
+    // Handle SendingOnClosedConnection errors gracefully
+    if (error.name === 'SendingOnClosedConnection') {
+      console.debug(`Relay ${relayUrl} connection closed during test`);
+    }
     return {
       relay: relayUrl,
       connected: false,
@@ -2519,7 +2593,7 @@ export async function searchEventsWithNIP50(
       searchFilters.until = offset; // Some relays use 'until' for pagination
     }
 
-    const results = await pool.querySync(searchCapableRelays, searchFilters);
+    const results = await safeQueryEvents(pool, searchCapableRelays, searchFilters);
 
     // If sortBy is relevance, the relay should handle it
     // Otherwise sort locally
@@ -2765,7 +2839,7 @@ export async function advancedNIP50Search(pool, relayUrls, options = {}) {
       ...(includeProfiles && { include_authors: true }),
     };
 
-    const results = await pool.querySync(searchCapableRelays, searchRequest);
+    const results = await safeQueryEvents(pool, searchCapableRelays, searchRequest);
 
     // Apply additional processing based on ranking strategy
     return {
@@ -2838,7 +2912,7 @@ export async function getAppHandlers(
       limit: 100,
     };
 
-    const appEvents = await pool.querySync(searchCapableRelays, appFilters);
+    const appEvents = await safeQueryEvents(pool, searchCapableRelays, appFilters);
 
     // Group events by app type and extract metadata
     const apps = new Map();
@@ -3273,7 +3347,7 @@ export async function searchEvents(query) {
       limit: 50,
     };
 
-    const events = await pool.querySync(DEFAULT_RELAYS, filters);
+    const events = await safeQueryEvents(pool, DEFAULT_RELAYS, filters);
     return events;
   } catch (error) {
     console.error("Error searching events:", error);
@@ -3287,7 +3361,7 @@ export async function searchEvents(query) {
 export async function searchUsers(query) {
   try {
     const pool = await initializePool();
-    const events = await pool.querySync(DEFAULT_RELAYS, {
+    const events = await safeQueryEvents(pool, DEFAULT_RELAYS, {
       kinds: [0],
       search: query,
       limit: 20,
@@ -3315,7 +3389,7 @@ export async function getTrendingEvents(timeframe = "day") {
     const since = getTimeframeSince(timeframe);
     const pool = await initializePool();
 
-    const events = await pool.querySync(DEFAULT_RELAYS, {
+    const events = await safeQueryEvents(pool, DEFAULT_RELAYS, {
       kinds: [1, 30023],
       since,
       limit: 100,
@@ -3331,7 +3405,7 @@ export async function getTrendingEvents(timeframe = "day") {
 export async function getEvents(filters) {
   try {
     const pool = await initializePool();
-    const events = await pool.querySync(DEFAULT_RELAYS, filters);
+    const events = await safeQueryEvents(pool, DEFAULT_RELAYS, filters);
     return events;
   } catch (error) {
     console.error("Error getting events:", error);
@@ -3409,33 +3483,34 @@ export function createMetadataEvent(metadata, privateKeyBytes) {
 
 /**
  * Helper to publish a forum thread event (kind: 30023 - long-form / NIP-23)
+ * with STRICT ROOM ISOLATION
  *
- * Required tags (per project spec):
+ * Required tags:
  *  - ["d", "unique-thread-id"]          // unique replaceable id
  *  - ["title", "thread title"]
- *  - ["board", "board-name"]
- *  - ["t", "forum"]
- *  - ["t", "webboard"]
- *  - ["published_at", "timestamp"]
+ *  - ["room", "room-id"]                // MANDATORY: Room identifier for isolation
+ *  - ["category", "category-id"]        // MANDATORY: Category identifier
+ *  - ["t", "tag"]                       // Room-specific tags (validated)
+ *  - ["published_at", "timestamp"]      // Publication time
  * Optional:
  *  - ["summary", "brief description"]
  *  - ["sticky", "true"/"false"]
  *  - ["locked", "true"/"false"]
- *  - ["category", "category-name"]
  *
  * Parameters:
- *  - pool: SimplePool instance (from initializePool)
+ *  - pool: SimplePool instance
  *  - relayUrls: array of relay URLs (optional)
- *  - privateKeyBytes: Uint8Array private key (required if no browser extension)
+ *  - privateKeyBytes: Uint8Array private key
  *  - opts: object with fields:
  *      - threadId (required) : string
- *      - title (required-ish) : string
- *      - board (required-ish) : string (e.g., "nostr-cafe")
- *      - content : markdown string (body)
- *      - published_at : unix timestamp (seconds) - defaults to now
- *      - summary, sticky, locked, category : optional metadata
+ *      - title (required) : string
+ *      - roomId (required) : string - Room for isolation
+ *      - content : markdown string
+ *      - tags : array of pre-built tags (includes room, category, t tags)
+ *      - published_at : unix timestamp - defaults to now
+ *      - summary, sticky, locked : optional metadata
  *
- * Returns the signed and published event.
+ * @returns {Promise<Object>} The signed and published event
  */
 export async function publishThread(
   pool,
@@ -3446,29 +3521,45 @@ export async function publishThread(
   const {
     threadId,
     title = "",
-    board = "",
+    roomId, // REQUIRED for room isolation
     content = "",
+    tags: customTags, // Pre-built tags array (from room isolation)
     published_at = Math.floor(Date.now() / 1000),
     summary,
     sticky,
     locked,
-    category,
   } = opts || {};
 
   if (!threadId) {
     throw new Error("publishThread: 'threadId' (d-tag) is required");
   }
 
-  // Build required tags
-  const tags = [
+  if (!roomId) {
+    throw new Error("publishThread: 'roomId' is required for room isolation");
+  }
+
+  // Build tags array
+  let tags = [
     ["d", threadId],
     ["title", title],
-    ["board", board],
-    ["t", "forum"],
-    ["t", "webboard"],
-    ["t", board], // Add board as a hashtag for better relay filtering
-    ["published_at", String(published_at)],
   ];
+
+  // Use custom tags if provided (from room isolation), otherwise use legacy format
+  if (customTags && Array.isArray(customTags)) {
+    tags = [...tags, ...customTags];
+  } else {
+    // Legacy format (backward compatibility)
+    const board = opts.board || roomId;
+    tags.push(
+      ["board", board],
+      ["t", "forum"],
+      ["t", "webboard"],
+      ["t", board]
+    );
+  }
+
+  // Add published_at
+  tags.push(["published_at", String(published_at)]);
 
   // Optional tags
   if (summary) tags.push(["summary", summary]);
@@ -3476,13 +3567,13 @@ export async function publishThread(
     tags.push(["sticky", sticky ? "true" : "false"]);
   if (typeof locked !== "undefined")
     tags.push(["locked", locked ? "true" : "false"]);
-  if (category) tags.push(["category", category]);
 
-  // Use the existing publish helper which handles signing (browser extension or private key)
+  // Use the existing publish helper which handles signing
   const event = await publishToPool(pool, relayUrls, privateKeyBytes, content, {
     kind: 30023,
     tags,
   });
 
+  console.log(`[publishThread] Thread published to room "${roomId}" with tags:`, tags.slice(0, 6));
   return event;
 }
