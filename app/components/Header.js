@@ -11,23 +11,22 @@ import UserProfile from "./profiles/UserProfile";
 import { formatPubkey, getAllRelays, testRelay } from "../lib/nostrClient";
 
 /**
- * Header component - updated to use new board configuration
- * This provides navigation to all rooms and manages user authentication
+ * Header component - The Curator Design System
+ * Elegant, modern navbar with Material 3 inspired styling
  */
 
 export default function Header() {
   const { user, isLoading, logout } = useNostrAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [relayCount, setRelayCount] = useState(0);
   const dropdownRef = useRef(null);
 
-  // Check relay connections on mount
   useEffect(() => {
     checkRelays();
   }, []);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -41,7 +40,6 @@ export default function Header() {
     };
   }, []);
 
-  // Set up global profile display function
   useEffect(() => {
     if (typeof window !== "undefined") {
       window.showUserProfile = (pubkey) => {
@@ -87,308 +85,350 @@ export default function Header() {
 
   if (isLoading) {
     return (
-      <header className="bg-white/90 backdrop-blur-lg border-b border-gray-200/50 sticky top-0 z-50 shadow-sm">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <span className="text-3xl animate-pulse">🌏</span>
-              <span className="text-xl font-bold gradient-text">
-                Panstr Forum
-              </span>
-            </div>
-            <div className="loading loading-spinner loading-sm text-blue-600"></div>
+      <header className="fixed top-0 w-full z-50 bg-surface/70 backdrop-blur-xl shadow-[0px_12px_32px_rgba(24,25,51,0.06)]">
+        <div className="flex justify-between items-center px-6 py-4 w-full max-w-screen-2xl mx-auto">
+          <div className="flex items-center space-x-3">
+            <span className="text-3xl animate-pulse">🌏</span>
+            <span className="text-2xl font-black text-primary tracking-tighter">
+              Panstr
+            </span>
           </div>
+          <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
         </div>
       </header>
     );
   }
 
   return (
-    <header className="bg-white/95 backdrop-blur-xl border-b border-gray-200/60 sticky top-0 z-50 shadow-lg">
-      <div className="container mx-auto px-6">
-        <div className="flex items-center justify-between h-20">
-          {/* Logo and Brand */}
-          <div className="flex items-center space-x-6">
+    <header className="fixed top-0 w-full z-50 bg-surface/70 backdrop-blur-xl shadow-[0px_12px_32px_rgba(24,25,51,0.06)]">
+      <div className="flex justify-between items-center px-4 sm:px-6 py-4 w-full max-w-screen-2xl mx-auto">
+        {/* Logo and Brand */}
+        <div className="flex items-center gap-6">
+          <Link
+            href="/"
+            className="text-2xl font-black text-primary tracking-tighter hover:opacity-80 transition-opacity"
+          >
+            <span className="flex items-center gap-2">
+              <span className="text-3xl">🌏</span>
+              <span className="hidden sm:inline">Panstr</span>
+            </span>
+          </Link>
+
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center gap-6 lg:gap-8">
             <Link
               href="/"
-              className="flex items-center space-x-3 hover:opacity-90 transition-all duration-300 group"
+              className="font-['Manrope'] font-bold text-lg tracking-tight text-secondary opacity-80 hover:text-primary hover:opacity-100 transition-all duration-300 relative group"
             >
-              <div className="relative">
-                <span className="text-4xl group-hover:scale-110 transition-transform duration-300 inline-block">🌏</span>
-                <div className="absolute inset-0 bg-blue-400/20 blur-xl rounded-full group-hover:bg-blue-500/30 transition-all duration-300"></div>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-2xl font-bold gradient-text tracking-tight">
-                  Panstr Forum
-                </span>
-                <span className="text-xs text-gray-500 font-medium">Decentralized Discussions</span>
-              </div>
-            </Link>
-          </div>
-
-          {/* Mobile Search */}
-          <div className="md:hidden flex-1 mx-4">
-            <SearchComponent compact={true} />
-          </div>
-
-          {/* Navigation */}
-          <nav className="hidden md:flex items-center space-x-10">
-            <Link
-              href="/"
-              className="text-gray-700 hover:text-blue-600 transition-all duration-300 font-semibold relative group text-base"
-            >
-              <span className="relative z-10">Forums</span>
-              <span className="absolute -bottom-2 left-0 w-0 h-1 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300 rounded-full"></span>
+              Forums
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-tertiary group-hover:w-full transition-all duration-300"></span>
             </Link>
             <div className="relative group">
-              <button className="text-gray-700 hover:text-blue-600 transition-all duration-300 font-semibold flex items-center space-x-2 group text-base">
-                <span className="relative z-10">Rooms</span>
-                <svg
-                  className="w-5 h-5 transform group-hover:rotate-180 transition-transform duration-300"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2.5}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
+              <button className="font-['Manrope'] font-bold text-lg tracking-tight text-secondary opacity-80 hover:text-primary hover:opacity-100 transition-all duration-300 flex items-center gap-2">
+                Rooms
+                <span className="material-symbols-outlined text-base transform group-hover:rotate-180 transition-transform duration-300">
+                  expand_more
+                </span>
               </button>
 
-              {/* Enhanced Room Dropdown */}
-              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-4 w-[600px] glass-morphism rounded-3xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-500 transform group-hover:translate-y-0 translate-y-4 border-2 border-white/40">
-                <div className="p-8">
-                  {/* Dropdown Header */}
-                  <div className="mb-6 pb-4 border-b border-gray-200/50">
-                    <h3 className="text-xl font-bold gradient-text mb-1">Explore Rooms</h3>
-                    <p className="text-sm text-gray-600">Join conversations across different topics</p>
+              {/* Enhanced Room Dropdown - The Curator Style */}
+              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-4 w-[650px] bg-surface-container-lowest rounded-2xl shadow-[0px_12px_32px_rgba(24,25,51,0.08)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:translate-y-0 translate-y-2 border border-outline-variant/20 z-50">
+                <div className="p-6">
+                  <div className="mb-4 pb-4 border-b border-outline-variant/15">
+                    <h3 className="text-lg font-bold text-primary mb-1">Explore Rooms</h3>
+                    <p className="text-sm text-secondary">Join conversations across different topics</p>
                   </div>
 
-                  {/* Rooms Grid */}
-                  <div className="grid grid-cols-2 gap-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+                  <div className="grid grid-cols-2 gap-3 max-h-[450px] overflow-y-auto custom-scrollbar">
                     {OFFICIAL_ROOMS.map((room) => (
                       <Link
                         key={room.tag}
                         href={`/room/${room.tag.substring(1)}`}
-                        className="group/room relative flex items-start space-x-4 p-5 rounded-2xl hover:bg-gradient-to-br hover:from-blue-50 hover:to-purple-50 transition-all duration-300 border-2 border-transparent hover:border-blue-200/50 hover:shadow-lg transform hover:-translate-y-1"
+                        className="group/room flex items-start gap-4 p-4 rounded-xl hover:bg-surface-container-high transition-all duration-300 border border-transparent hover:border-outline-variant/30"
                       >
-                        {/* Icon with glow effect */}
-                        <div className="relative flex-shrink-0">
-                          <span className="text-3xl group-hover/room:scale-125 transition-transform duration-300 inline-block filter drop-shadow-lg">
-                            {room.icon}
-                          </span>
-                          <div className="absolute inset-0 bg-blue-400/20 blur-xl rounded-full opacity-0 group-hover/room:opacity-100 transition-opacity duration-300"></div>
-                        </div>
-
-                        {/* Room Info */}
-                        <div className="min-w-0 flex-1">
-                          <div className="font-bold text-base text-gray-800 group-hover/room:text-blue-600 transition-colors duration-300 mb-1">
+                        <span className="text-2xl group-hover/room:scale-125 transition-transform duration-300">
+                          {room.icon}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-bold text-sm text-primary group-hover/room:text-tertiary transition-colors duration-300 mb-1">
                             {room.name}
                           </div>
-                          <div className="text-xs text-gray-600 leading-relaxed line-clamp-2">
+                          <div className="text-xs text-on-surface-variant line-clamp-2">
                             {room.description}
                           </div>
-
-                          {/* Hover indicator */}
-                          <div className="mt-2 flex items-center space-x-1 text-blue-600 opacity-0 group-hover/room:opacity-100 transition-all duration-300 transform translate-x-0 group-hover/room:translate-x-1">
-                            <span className="text-xs font-semibold">Visit Room</span>
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-                            </svg>
-                          </div>
                         </div>
-
-                        {/* Decorative corner accent */}
-                        <div className="absolute top-3 right-3 w-2 h-2 bg-blue-500 rounded-full opacity-0 group-hover/room:opacity-100 transition-opacity duration-300"></div>
                       </Link>
                     ))}
-                  </div>
-
-                  {/* Footer CTA */}
-                  <div className="mt-6 pt-4 border-t border-gray-200/50 text-center">
-                    <Link
-                      href="/"
-                      className="inline-flex items-center space-x-2 text-sm font-semibold text-blue-600 hover:text-purple-600 transition-colors duration-300"
-                    >
-                      <span>View All Rooms</span>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                      </svg>
-                    </Link>
                   </div>
                 </div>
               </div>
             </div>
+            <Link
+              href="/communities"
+              className="font-['Manrope'] font-bold text-lg tracking-tight text-secondary opacity-80 hover:text-primary hover:opacity-100 transition-all duration-300"
+            >
+              Communities
+            </Link>
+            <Link
+              href="/discovery"
+              className="font-['Manrope'] font-bold text-lg tracking-tight text-tertiary border-b-2 border-tertiary pb-0.5"
+            >
+              Discover
+            </Link>
           </nav>
+        </div>
 
-          {/* Right Section */}
-          <div className="flex items-center space-x-5">
-            {/* Enhanced Search */}
-            <div className="hidden md:block">
-              <div className="relative group/search">
-                <SearchComponent compact={true} />
-              </div>
+        {/* Right Section */}
+        <div className="flex items-center gap-3 sm:gap-4">
+          {/* Search - Desktop */}
+          <div className="hidden sm:flex items-center bg-surface-container-highest rounded-full px-4 py-2 gap-2 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+            <span className="material-symbols-outlined text-outline text-sm">search</span>
+            <input
+              className="bg-transparent border-none focus:ring-0 text-sm w-40 lg:w-56 font-body text-on-surface placeholder:text-on-surface-variant/50"
+              placeholder="Search protocol..."
+              type="text"
+            />
+          </div>
+
+          {/* Relay Status - Desktop */}
+          <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container-high border border-outline-variant/20 text-xs font-bold text-secondary">
+            <div className="relative">
+              <div
+                className={`w-2 h-2 rounded-full ${relayCount > 0 ? "bg-green-500" : "bg-red-500"}`}
+              ></div>
+              {relayCount > 0 && (
+                <div className="absolute inset-0 bg-green-400 rounded-full animate-ping opacity-75"></div>
+              )}
             </div>
+            <span>{relayCount} {relayCount === 1 ? 'relay' : 'relays'}</span>
+          </div>
 
-            {/* Enhanced Relay Status */}
-            <div className="hidden sm:flex items-center space-x-2.5 text-sm px-4 py-2 rounded-full bg-gradient-to-r from-gray-100/90 to-gray-50/90 backdrop-blur-sm border border-gray-200/50 shadow-sm hover:shadow-md transition-all duration-300">
-              <div className="relative">
-                <div
-                  className={`w-2.5 h-2.5 rounded-full ${relayCount > 0 ? "bg-green-500 animate-pulse" : "bg-red-500"}`}
-                ></div>
-                {relayCount > 0 && (
-                  <div className="absolute inset-0 bg-green-400 rounded-full animate-ping opacity-75"></div>
-                )}
-              </div>
-              <span className="text-gray-700 font-semibold">
-                {relayCount} {relayCount === 1 ? 'relay' : 'relays'}
-              </span>
+          {/* Notifications */}
+          {user && (
+            <div className="hidden sm:block">
+              <Notifications compact={true} />
             </div>
+          )}
 
-            {/* Notifications */}
-            {user && <Notifications compact={true} />}
+          {/* Action Buttons */}
+          <button
+            className="hidden sm:flex material-symbols-outlined text-secondary hover:text-primary transition-colors active:scale-95"
+            title="Notifications"
+          >
+            notifications
+          </button>
 
-            {/* User Menu */}
-            {user ? (
-              <div className="relative" ref={dropdownRef}>
+          {/* User Menu */}
+          {user ? (
+            <>
+              {/* Desktop Profile */}
+              <div className="hidden sm:block relative" ref={dropdownRef}>
                 <button
-                  onClick={() =>
-                    setIsProfileDropdownOpen(!isProfileDropdownOpen)
-                  }
-                  className="flex items-center space-x-3 p-2.5 rounded-2xl hover:bg-gradient-to-br hover:from-blue-50 hover:to-purple-50 transition-all duration-300 group border-2 border-transparent hover:border-blue-200/50"
+                  onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                  className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-surface-container-high transition-all duration-200 border border-transparent hover:border-outline-variant/30"
                 >
                   {user.picture ? (
                     <img
                       src={user.picture}
                       alt={user.name || "User"}
-                      className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-200 group-hover:ring-blue-400 transition-all duration-300 shadow-md"
+                      className="w-9 h-9 rounded-xl object-cover border border-outline-variant/30"
                     />
                   ) : (
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 text-white rounded-full flex items-center justify-center font-bold text-base shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
-                      {user.name?.[0]?.toUpperCase() ||
-                        user.npub?.substring(0, 2).toUpperCase()}
+                    <div className="w-9 h-9 rounded-xl bg-primary-container flex items-center justify-center text-white font-bold text-sm">
+                      {user.name?.[0]?.toUpperCase() || user.npub?.substring(0, 2).toUpperCase()}
                     </div>
                   )}
-                  <svg
-                    className="w-5 h-5 text-gray-500 group-hover:text-blue-600 transform group-hover:rotate-180 transition-all duration-300"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2.5}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
                 </button>
 
-                {/* Profile Dropdown */}
+                {/* Profile Dropdown - The Curator Style */}
                 {isProfileDropdownOpen && (
-                  <div className="absolute top-full right-0 mt-4 w-80 glass-morphism rounded-3xl shadow-2xl p-6 z-50 animate-fade-in border-2 border-white/40">
-                    <div className="flex items-center space-x-4 pb-5 border-b border-gray-200/50 mb-4">
+                  <div className="absolute top-full right-0 mt-4 w-80 bg-surface-container-lowest rounded-2xl shadow-[0px_12px_32px_rgba(24,25,51,0.08)] p-5 z-50 border border-outline-variant/20">
+                    <div className="flex items-center gap-4 pb-4 border-b border-outline-variant/15 mb-4">
                       {user.picture ? (
                         <img
                           src={user.picture}
                           alt={user.name || "User"}
-                          className="w-16 h-16 rounded-full object-cover ring-4 ring-white shadow-xl"
+                          className="w-14 h-14 rounded-xl object-cover border border-outline-variant/30"
                         />
                       ) : (
-                        <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 text-white rounded-full flex items-center justify-center font-bold text-2xl shadow-xl">
-                          {user.name?.[0]?.toUpperCase() ||
-                            user.npub?.substring(0, 2).toUpperCase()}
+                        <div className="w-14 h-14 rounded-xl bg-primary-container flex items-center justify-center text-white font-bold text-xl">
+                          {user.name?.[0]?.toUpperCase() || user.npub?.substring(0, 2).toUpperCase()}
                         </div>
                       )}
                       <div className="min-w-0 flex-1">
-                        <div className="font-bold text-gray-900 truncate text-lg">
+                        <div className="font-bold text-primary truncate text-base">
                           {user.display_name || user.name || "Anonymous"}
                         </div>
-                        <div className="text-xs text-gray-500 font-mono truncate">
+                        <div className="text-xs text-secondary font-mono truncate">
                           {user.npub?.substring(0, 16)}...
                         </div>
                         {user.nip05 && (
-                          <div className="text-xs text-green-600 flex items-center space-x-1 mt-2 px-2.5 py-1 bg-green-50/90 rounded-full w-fit border border-green-200/50">
-                            <svg
-                              className="w-3.5 h-3.5"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                            <span className="font-semibold">{user.nip05}</span>
+                          <div className="flex items-center gap-1 mt-1.5 px-2 py-1 bg-tertiary-container/10 rounded-full w-fit">
+                            <span className="material-symbols-filled text-tertiary text-xs">verified</span>
+                            <span className="text-xs font-bold text-tertiary">{user.nip05}</span>
                           </div>
                         )}
                       </div>
                     </div>
 
-                    <div className="space-y-1.5">
+                    <div className="space-y-1">
                       <Link
                         href="/profile"
-                        className="block w-full text-left px-4 py-3 rounded-xl hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-300 text-gray-700 hover:text-blue-600 font-semibold border border-transparent hover:border-blue-200/50"
+                        onClick={() => setIsProfileDropdownOpen(false)}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-secondary hover:bg-surface-container-high hover:text-primary transition-all duration-200 font-medium text-sm"
                       >
-                        👤 My Profile
+                        <span className="material-symbols-outlined text-base">account_circle</span>
+                        Profile
                       </Link>
-                      <div className="border-t border-gray-200/50 my-3"></div>
-                      <div className="text-xs font-bold text-gray-500 px-4 py-2 uppercase tracking-wider">
-                        Professional Features
-                      </div>
-                      <Link
-                        href="/services"
-                        className="block w-full text-left px-4 py-3 rounded-xl hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-300 text-gray-700 hover:text-blue-600 font-semibold border border-transparent hover:border-blue-200/50"
-                      >
-                        🏪 Service Marketplace
-                      </Link>
-                      <Link
-                        href="/communities"
-                        className="block w-full text-left px-4 py-3 rounded-xl hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-300 text-gray-700 hover:text-blue-600 font-semibold border border-transparent hover:border-blue-200/50"
-                      >
-                        🏛️ Communities
-                      </Link>
-                      <Link
-                        href="/wiki"
-                        className="block w-full text-left px-4 py-3 rounded-xl hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-300 text-gray-700 hover:text-blue-600 font-semibold border border-transparent hover:border-blue-200/50"
-                      >
-                        📚 Wiki System
-                      </Link>
-                      <div className="border-t border-gray-200/50 my-3"></div>
                       <Link
                         href="/settings"
-                        className="block w-full text-left px-4 py-3 rounded-xl hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-300 text-gray-700 hover:text-blue-600 font-semibold border border-transparent hover:border-blue-200/50"
+                        onClick={() => setIsProfileDropdownOpen(false)}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-secondary hover:bg-surface-container-high hover:text-primary transition-all duration-200 font-medium text-sm"
                       >
-                        ⚙️ Settings
+                        <span className="material-symbols-outlined text-base">settings</span>
+                        Settings
                       </Link>
+                      <div className="border-t border-outline-variant/15 my-2"></div>
                       <button
                         onClick={() => {
                           logout();
                           setIsProfileDropdownOpen(false);
                         }}
-                        className="block w-full text-left px-4 py-3 rounded-xl hover:bg-red-50 transition-all duration-300 text-red-600 hover:text-red-700 font-semibold border border-transparent hover:border-red-200/50"
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-error hover:bg-error-container/30 transition-all duration-200 font-medium text-sm"
                       >
-                        🚪 Logout
+                        <span className="material-symbols-outlined text-base">logout</span>
+                        Logout
                       </button>
                     </div>
                   </div>
                 )}
               </div>
-            ) : (
+
+              {/* Mobile Menu Button */}
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="sm:hidden flex items-center justify-center w-10 h-10 rounded-xl hover:bg-surface-container-high transition-colors"
+                aria-label="Toggle menu"
+              >
+                {isMobileMenuOpen ? (
+                  <span className="material-symbols-outlined text-on-surface">close</span>
+                ) : (
+                  <span className="material-symbols-outlined text-on-surface">menu</span>
+                )}
+              </button>
+            </>
+          ) : (
+            <>
+              {/* Mobile Menu Button */}
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="sm:hidden flex items-center justify-center w-10 h-10 rounded-xl hover:bg-surface-container-high transition-colors"
+                aria-label="Toggle menu"
+              >
+                {isMobileMenuOpen ? (
+                  <span className="material-symbols-outlined text-on-surface">close</span>
+                ) : (
+                  <span className="material-symbols-outlined text-on-surface">menu</span>
+                )}
+              </button>
+
+              {/* Desktop Login Button */}
               <button
                 onClick={() => setShowLoginModal(true)}
-                className="modern-button-primary text-sm px-6 py-3 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
+                className="hidden sm:flex curator-button-primary text-sm"
               >
-                🔗 Connect Nostr
+                Connect
               </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Mobile Menu */}
+      {isMobileMenuOpen && (
+        <div className="sm:hidden bg-surface-container-lowest border-t border-outline-variant/20 rounded-b-2xl shadow-lg mx-4 mt-2 mb-4">
+          <div className="px-4 py-6 space-y-4">
+            {/* Search */}
+            <div className="pb-4 border-b border-outline-variant/15">
+              <SearchComponent compact={true} />
+            </div>
+
+            {/* Navigation Links */}
+            <nav className="space-y-2">
+              <Link
+                href="/"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center gap-3 px-4 py-3 rounded-xl text-secondary hover:bg-surface-container-high hover:text-primary transition-all duration-200 font-medium"
+              >
+                <span className="material-symbols-outlined">home</span>
+                Forums
+              </Link>
+              <Link
+                href="/discovery"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center gap-3 px-4 py-3 rounded-xl text-secondary hover:bg-surface-container-high hover:text-primary transition-all duration-200 font-medium"
+              >
+                <span className="material-symbols-outlined">explore</span>
+                Discover
+              </Link>
+              <Link
+                href="/communities"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center gap-3 px-4 py-3 rounded-xl text-secondary hover:bg-surface-container-high hover:text-primary transition-all duration-200 font-medium"
+              >
+                <span className="material-symbols-outlined">groups</span>
+                Communities
+              </Link>
+            </nav>
+
+            {/* Relay Status */}
+            {user && (
+              <>
+                <div className="pt-4 border-t border-outline-variant/15">
+                  <div className="flex items-center gap-2 text-sm px-4 py-2 rounded-xl bg-surface-container-high">
+                    <div className="relative">
+                      <div className={`w-2 h-2 rounded-full ${relayCount > 0 ? "bg-green-500" : "bg-red-500"}`}></div>
+                      {relayCount > 0 && (
+                        <div className="absolute inset-0 bg-green-400 rounded-full animate-ping opacity-75"></div>
+                      )}
+                    </div>
+                    <span className="font-bold text-secondary">{relayCount} relays</span>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-outline-variant/15 space-y-2">
+                  <Link
+                    href="/profile"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-secondary hover:bg-surface-container-high hover:text-primary transition-all duration-200 font-medium"
+                  >
+                    <span className="material-symbols-outlined">account_circle</span>
+                    Profile
+                  </Link>
+                  <Link
+                    href="/settings"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-secondary hover:bg-surface-container-high hover:text-primary transition-all duration-200 font-medium"
+                  >
+                    <span className="material-symbols-outlined">settings</span>
+                    Settings
+                  </Link>
+                  <button
+                    onClick={() => {
+                      logout();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-error hover:bg-error-container/30 transition-all duration-200 font-medium"
+                  >
+                    <span className="material-symbols-outlined">logout</span>
+                    Logout
+                  </button>
+                </div>
+              </>
             )}
           </div>
         </div>
-      </div>
+      )}
 
       {/* Login Modal */}
       {showLoginModal && (

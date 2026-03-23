@@ -5,6 +5,7 @@ module.exports = {
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
+  darkMode: "class",
   theme: {
     container: {
       center: true,
@@ -18,19 +19,61 @@ module.exports = {
     },
     extend: {
       colors: {
-        primary: {
-          50: "#eff6ff",
-          100: "#dbeafe",
-          200: "#bfdbfe",
-          300: "#93c5fd",
-          400: "#60a5fa",
-          500: "#3b82f6",
-          600: "#2563eb",
-          700: "#1d4ed8",
-          800: "#1e40af",
-          900: "#1e3a8a",
-          950: "#172554",
-        },
+        // The Curator Design System - Material 3 inspired
+        primary: "#29273f",
+        "primary-container": "#3f3d56",
+        "on-primary": "#ffffff",
+        "primary-fixed": "#e3dfff",
+        "primary-fixed-dim": "#c7c3e2",
+        "on-primary-fixed": "#1a1930",
+        "on-primary-fixed-variant": "#46445d",
+        "on-primary-container": "#aca8c6",
+        
+        secondary: "#5c5c7a",
+        "secondary-container": "#dedcff",
+        "on-secondary": "#ffffff",
+        "secondary-fixed": "#e1dfff",
+        "secondary-fixed-dim": "#c5c3e6",
+        "on-secondary-fixed": "#181933",
+        "on-secondary-fixed-variant": "#444461",
+        "on-secondary-container": "#60607e",
+        
+        tertiary: "#705d00",
+        "tertiary-container": "#c9a900",
+        "on-tertiary": "#ffffff",
+        "tertiary-fixed": "#ffe16d",
+        "tertiary-fixed-dim": "#e9c400",
+        "on-tertiary-fixed": "#221b00",
+        "on-tertiary-fixed-variant": "#544600",
+        "on-tertiary-container": "#4c3f00",
+        
+        background: "#fcf8ff",
+        "on-background": "#181933",
+        surface: "#fcf8ff",
+        "surface-dim": "#d8d7fa",
+        "surface-bright": "#fcf8ff",
+        "surface-container-lowest": "#ffffff",
+        "surface-container-low": "#f5f2ff",
+        "surface-container": "#eeecff",
+        "surface-container-high": "#e8e6ff",
+        "surface-container-highest": "#e1dfff",
+        "on-surface": "#181933",
+        "on-surface-variant": "#47464d",
+        "inverse-surface": "#2d2e49",
+        "inverse-on-surface": "#f2efff",
+        "inverse-primary": "#c7c3e2",
+        "surface-tint": "#5e5b76",
+        
+        "surface-variant": "#e1dfff",
+        outline: "#78767d",
+        "outline-variant": "#c9c5cd",
+        
+        error: "#ba1a1a",
+        "error-container": "#ffdad6",
+        "on-error": "#ffffff",
+        "on-error-container": "#93000a",
+        
+        // Legacy color support
         gray: {
           50: "#f9fafb",
           100: "#f3f4f6",
@@ -46,8 +89,20 @@ module.exports = {
         },
       },
       fontFamily: {
+        headline: ["Manrope", "Inter", "system-ui", "sans-serif"],
+        body: ["Inter", "system-ui", "sans-serif"],
+        label: ["Inter", "system-ui", "sans-serif"],
         sans: ["Inter", "system-ui", "sans-serif"],
         mono: ["JetBrains Mono", "monospace"],
+      },
+      borderRadius: {
+        DEFAULT: "0.25rem",
+        lg: "0.5rem",
+        xl: "0.75rem",
+        "2xl": "1rem",
+        "3xl": "1.5rem",
+        "4xl": "2rem",
+        full: "9999px",
       },
       animation: {
         float: "float 6s ease-in-out infinite",
@@ -63,10 +118,10 @@ module.exports = {
           "50%": { transform: "translateY(-10px)" },
         },
         glow: {
-          from: { boxShadow: "0 0 10px rgba(59, 130, 246, 0.5)" },
+          from: { boxShadow: "0 0 10px rgba(112, 93, 0, 0.5)" },
           to: {
             boxShadow:
-              "0 0 20px rgba(59, 130, 246, 0.8), 0 0 30px rgba(59, 130, 246, 0.4)",
+              "0 0 20px rgba(112, 93, 0, 0.8), 0 0 30px rgba(112, 93, 0, 0.4)",
           },
         },
         slideUp: {
@@ -88,10 +143,12 @@ module.exports = {
           "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
       },
       boxShadow: {
-        glow: "0 0 20px rgba(59, 130, 246, 0.3)",
+        glow: "0 0 20px rgba(112, 93, 0, 0.3)",
         "glow-green": "0 0 20px rgba(34, 197, 94, 0.3)",
         colored:
           "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+        "curator-card": "0px 12px 32px rgba(24, 25, 51, 0.06)",
+        "curator-card-hover": "0px 16px 40px rgba(24, 25, 51, 0.1)",
       },
       backdropBlur: {
         xs: "blur(2px)",
@@ -102,17 +159,17 @@ module.exports = {
         88: "22rem",
         128: "32rem",
       },
-      borderRadius: {
-        "4xl": "2rem",
-      },
       typography: {
         DEFAULT: {
           css: {
             maxWidth: "none",
-            color: "#374151",
+            color: "#47464d",
             lineHeight: "1.75",
           },
         },
+      },
+      screens: {
+        xs: "480px",
       },
     },
   },

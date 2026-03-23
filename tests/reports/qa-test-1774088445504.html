@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panstr QA Test Report - qa-test-1774088445504</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 20px; }
+        .container { max-width: 1400px; margin: 0 auto; background: white; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; }
+        .header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: white; padding: 40px; text-align: center; }
+        .header h1 { font-size: 2.5em; margin-bottom: 10px; }
+        .header p { opacity: 0.8; font-size: 1.1em; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; padding: 40px; background: #f8f9fa; }
+        .stat-card { background: white; padding: 25px; border-radius: 12px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .stat-number { font-size: 2.5em; font-weight: bold; color: #667eea; }
+        .stat-label { color: #666; margin-top: 8px; font-size: 0.95em; }
+        .section { padding: 40px; border-bottom: 1px solid #eee; }
+        .section h2 { font-size: 1.8em; margin-bottom: 25px; color: #1a1a2e; }
+        .account-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .account-card { background: #f8f9fa; padding: 20px; border-radius: 12px; border-left: 4px solid #667eea; }
+        .account-name { font-weight: bold; font-size: 1.2em; }
+        .account-npub { font-family: monospace; font-size: 0.85em; color: #666; background: #eee; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 8px; }
+        .event-list { max-height: 400px; overflow-y: auto; }
+        .event-item { padding: 15px; margin: 10px 0; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #4caf50; }
+        .event-item.reply { border-left-color: #2196f3; }
+        .event-item.reaction { border-left-color: #ff9800; }
+        .event-meta { font-size: 0.85em; color: #666; margin-top: 8px; }
+        .verification-box { padding: 20px; background: #e8f5e9; border-radius: 8px; margin: 20px 0; }
+        .verification-box.error { background: #ffebee; }
+        .log-list { max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 0.85em; background: #1a1a2e; color: #4caf50; padding: 20px; border-radius: 8px; }
+        .log-entry { margin: 5px 0; }
+        .log-entry.error { color: #f44336; }
+        .log-entry.warning { color: #ff9800; }
+        .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.85em; font-weight: bold; margin: 5px; }
+        .badge-success { background: #4caf50; color: white; }
+        .badge-error { background: #f44336; color: white; }
+        .badge-warning { background: #ff9800; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌏 Panstr Forum - QA Test Report</h1>
+            <p>Multi-Room Interaction Test Suite</p>
+            <p style="margin-top: 15px; opacity: 0.6;">Test Run: qa-test-1774088445504</p>
+            <p>Duration: 171.85s | 21/03/2026, 5:23:37 pm</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number">3</div>
+                <div class="stat-label">Test Accounts</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">13</div>
+                <div class="stat-label">Threads Created</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">6</div>
+                <div class="stat-label">Replies Posted</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">4</div>
+                <div class="stat-label">Reactions</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">14</div>
+                <div class="stat-label">Rooms Tested</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">22</div>
+                <div class="stat-label">Total Events</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>✅ Verification Results</h2>
+            <div class="verification-box ">
+                <h3>Signature Verification</h3>
+                <p>Valid: 22 | Invalid: 0</p>
+                <span class="badge badge-success">
+                  ALL VALID
+                </span>
+            </div>
+            <div class="verification-box">
+                <h3>Tag Compliance</h3>
+                <p>Compliant: 13 | Non-compliant: 0</p>
+                <span class="badge badge-success">
+                  FULLY COMPLIANT
+                </span>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>👥 Test Accounts</h2>
+            <div class="account-grid">
+                
+                    <div class="account-card">
+                        <div class="account-name">NostrNinja_TH</div>
+                        <div style="color: #666; margin-top: 5px;">Nostr Ninja</div>
+                        <div class="account-npub">npub1...j7ucmqt202ky</div>
+                        <div style="margin-top: 12px; font-size: 0.9em;">Events: 3</div>
+                    </div>
+                
+                    <div class="account-card">
+                        <div class="account-name">CryptoTraveler</div>
+                        <div style="color: #666; margin-top: 5px;">Crypto Traveler</div>
+                        <div class="account-npub">npub1...3ea8vqr44fts</div>
+                        <div style="margin-top: 12px; font-size: 0.9em;">Events: 7</div>
+                    </div>
+                
+                    <div class="account-card">
+                        <div class="account-name">PrivacyWarrior</div>
+                        <div style="color: #666; margin-top: 5px;">Privacy Warrior</div>
+                        <div class="account-npub">npub1...guukgqrhfsyz</div>
+                        <div style="margin-top: 12px; font-size: 0.9em;">Events: 12</div>
+                    </div>
+                
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>⚡ Events Created</h2>
+            <div class="event-list">
+                
+                    <div class="event-item profile">
+                        <strong>PROFILE</strong> - Kind 0
+                        <div class="event-meta">
+                            Room: undefined | Account: tester-001 | ID: 7e9738bfaa203e4b...
+                        </div>
+                    </div>
+                
+                    <div class="event-item profile">
+                        <strong>PROFILE</strong> - Kind 0
+                        <div class="event-meta">
+                            Room: undefined | Account: tester-002 | ID: 51d7bc0c3c9ccde0...
+                        </div>
+                    </div>
+                
+                    <div class="event-item profile">
+                        <strong>PROFILE</strong> - Kind 0
+                        <div class="event-meta">
+                            Room: undefined | Account: tester-003 | ID: 73850ff085f8507f...
+                        </div>
+                    </div>
+                
+                    <div class="event-item thread">
+                        <strong>THREAD</strong> - Kind 30023
+                        <div class="event-meta">
+                            Room: foodie-thailand | Account: tester-003 | ID: 58b1b4f4d060da1e...
+                        </div>
+                    </div>
+                
+                    <div class="event-item thread">
+                        <strong>THREAD</strong> - Kind 30023
+                        <div class="event-meta">
+                            Room: travel-diaries | Account: tester-001 | ID: 2cc4d57a7d3c5317...
+                        </div>
+                    </div>
+                
+                    <div class="event-item thread">
+                        <strong>THREAD</strong> - Kind 30023
+                        <div class="event-meta">
+                            Room: chill-chat | Account: tester-002 | ID: 8902c925229a7a40...
+                        </div>
+                    </div>
+                
+                    <div class="event-item thread">
+                        <strong>THREAD</strong> - Kind 30023
+                        <div class="event-meta">
+                            Room: pet-lovers | Account: tester-003 | ID: c67e2c09d7503fff...
+                        </div>
+                    </div>
+                
+                    <div class="event-item thread">
+                        <strong>THREAD</strong> - Kind 30023
+                        <div class="event-meta">
+                            Room: nostr-cafe | Account: tester-003 | ID: e1482d321c4f896f...
+                        </div>
+                    </div>
+                
+                    <div class="event-item thread">
+                        <strong>THREAD</strong> - Kind 30023
+                        <div class="event-meta">
+                            Room: bitcoin-talk | Account: tester-003 | ID: 1c3ccc6d8aaca415...
+                        </div>
+                    </div>
+                
+                    <div class="event-item thread">
+                        <strong>THREAD</strong> - Kind 30023
+                        <div class="event-meta">
+                            Room: crypto-corner | Account: tester-003 | ID: 422e3415c54d3199...
+                        </div>
+                    </div>
+                
+                    <div class="event-item thread">
+                        <strong>THREAD</strong> - Kind 30023
+                        <div class="event-meta">
+                            Room: tech-hub-thailand | Account: tester-003 | ID: 41bfb75eb1b7604e...
+                        </div>
+                    </div>
+                
+                    <div class="event-item thread">
+                        <strong>THREAD</strong> - Kind 30023
+                        <div class="event-meta">
+                            Room: developers-den | Account: tester-002 | ID: 5c83dcf555890e8c...
+                        </div>
+                    </div>
+                
+                    <div class="event-item thread">
+                        <strong>THREAD</strong> - Kind 30023
+                        <div class="event-meta">
+                            Room: relay-station | Account: tester-003 | ID: 99769e6482d1cd53...
+                        </div>
+                    </div>
+                
+                    <div class="event-item thread">
+                        <strong>THREAD</strong> - Kind 30023
+                        <div class="event-meta">
+                            Room: zap-zone | Account: tester-003 | ID: 8e9269a4c1126228...
+                        </div>
+                    </div>
+                
+                    <div class="event-item thread">
+                        <strong>THREAD</strong> - Kind 30023
+                        <div class="event-meta">
+                            Room: freedom-of-speech | Account: tester-002 | ID: 7937ab78acd34167...
+                        </div>
+                    </div>
+                
+                    <div class="event-item thread">
+                        <strong>THREAD</strong> - Kind 30023
+                        <div class="event-meta">
+                            Room: decentralized-life | Account: tester-003 | ID: bbabad874fbe82c6...
+                        </div>
+                    </div>
+                
+                    <div class="event-item reply">
+                        <strong>REPLY</strong> - Kind 1
+                        <div class="event-meta">
+                            Room: foodie-thailand | Account: tester-001 | ID: 99caff360d682cbc...
+                        </div>
+                    </div>
+                
+                    <div class="event-item reply">
+                        <strong>REPLY</strong> - Kind 1
+                        <div class="event-meta">
+                            Room: travel-diaries | Account: tester-002 | ID: 360813373edd30c4...
+                        </div>
+                    </div>
+                
+                    <div class="event-item reply">
+                        <strong>REPLY</strong> - Kind 1
+                        <div class="event-meta">
+                            Room: crypto-corner | Account: tester-002 | ID: 8d6bc688b8376b03...
+                        </div>
+                    </div>
+                
+                    <div class="event-item reply">
+                        <strong>REPLY</strong> - Kind 1
+                        <div class="event-meta">
+                            Room: tech-hub-thailand | Account: tester-002 | ID: 01add66801833c20...
+                        </div>
+                    </div>
+                
+                    <div class="event-item reply">
+                        <strong>REPLY</strong> - Kind 1
+                        <div class="event-meta">
+                            Room: developers-den | Account: tester-003 | ID: 59fba769bf5bfa5b...
+                        </div>
+                    </div>
+                
+                    <div class="event-item reply">
+                        <strong>REPLY</strong> - Kind 1
+                        <div class="event-meta">
+                            Room: freedom-of-speech | Account: tester-003 | ID: eaa31396cd49a327...
+                        </div>
+                    </div>
+                
+                
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📋 Test Logs</h2>
+            <div class="log-list">
+                
+                    <div class="log-entry ">
+                        [0.01s] Generating fake accounts with Nostr keypairs...
+                    </div>
+                
+                    <div class="log-entry ">
+                        [0.08s] Created account: NostrNinja_TH (Nostr Ninja)
+                    </div>
+                
+                    <div class="log-entry ">
+                        [0.09s] Created account: CryptoTraveler (Crypto Traveler)
+                    </div>
+                
+                    <div class="log-entry ">
+                        [0.09s] Created account: PrivacyWarrior (Privacy Warrior)
+                    </div>
+                
+                    <div class="log-entry ">
+                        [0.09s] Generated 3 test accounts
+                    </div>
+                
+                    <div class="log-entry ">
+                        [0.09s] Creating profile metadata events (Kind 0)...
+                    </div>
+                
+                    <div class="log-entry ">
+                        [0.10s] Profile created for NostrNinja_TH
+                    </div>
+                
+                    <div class="log-entry ">
+                        [0.12s] Profile created for CryptoTraveler
+                    </div>
+                
+                    <div class="log-entry ">
+                        [0.14s] Profile created for PrivacyWarrior
+                    </div>
+                
+                    <div class="log-entry ">
+                        [0.14s] Initializing relay pool...
+                    </div>
+                
+                    <div class="log-entry ">
+                        [5.20s] Connected to 3/5 relays
+                    </div>
+                
+                    <div class="log-entry warning">
+                        [5.20s] Failed to connect: wss://relay.nostr.band, wss://relay.siamdev.cc
+                    </div>
+                
+                    <div class="log-entry ">
+                        [5.20s] 
+📝 Creating threads in all rooms...
+                    </div>
+                
+                    <div class="log-entry ">
+                        [5.20s] Found 13 rooms to test
+                    </div>
+                
+                    <div class="log-entry ">
+                        [10.21s] Thread created in Foodie Thailand by PrivacyWarrior
+                    </div>
+                
+                    <div class="log-entry ">
+                        [20.95s] Thread created in Travel Diaries by NostrNinja_TH
+                    </div>
+                
+                    <div class="log-entry ">
+                        [26.47s] Thread created in Chill & Chat by CryptoTraveler
+                    </div>
+                
+                    <div class="log-entry ">
+                        [37.20s] Thread created in Pet Lovers by PrivacyWarrior
+                    </div>
+                
+                    <div class="log-entry ">
+                        [42.11s] Thread created in Nostr Café by PrivacyWarrior
+                    </div>
+                
+                    <div class="log-entry ">
+                        [52.69s] Thread created in Bitcoin Talk by PrivacyWarrior
+                    </div>
+                
+                    <div class="log-entry ">
+                        [57.60s] Thread created in Crypto Corner by PrivacyWarrior
+                    </div>
+                
+                    <div class="log-entry ">
+                        [68.19s] Thread created in Tech Hub Thailand by PrivacyWarrior
+                    </div>
+                
+                    <div class="log-entry ">
+                        [73.70s] Thread created in Developer's Den by CryptoTraveler
+                    </div>
+                
+                    <div class="log-entry ">
+                        [78.61s] Thread created in Relay Station by PrivacyWarrior
+                    </div>
+                
+                    <div class="log-entry ">
+                        [89.22s] Thread created in Zap Zone by PrivacyWarrior
+                    </div>
+                
+                    <div class="log-entry ">
+                        [94.13s] Thread created in Freedom of Speech by CryptoTraveler
+                    </div>
+                
+                    <div class="log-entry ">
+                        [99.04s] Thread created in Decentralized Life by PrivacyWarrior
+                    </div>
+                
+                    <div class="log-entry ">
+                        [99.54s] Created 13 threads
+                    </div>
+                
+                    <div class="log-entry ">
+                        [99.54s] 
+💬 Simulating cross-interactions...
+                    </div>
+                
+                    <div class="log-entry ">
+                        [103.95s] NostrNinja_TH replied to tester-003's thread in foodie-thailand
+                    </div>
+                
+                    <div class="log-entry ">
+                        [112.70s] CryptoTraveler replied to tester-001's thread in travel-diaries
+                    </div>
+                
+                    <div class="log-entry ">
+                        [118.01s] CryptoTraveler replied to tester-003's thread in crypto-corner
+                    </div>
+                
+                    <div class="log-entry ">
+                        [128.71s] CryptoTraveler replied to tester-003's thread in tech-hub-thailand
+                    </div>
+                
+                    <div class="log-entry ">
+                        [133.45s] PrivacyWarrior replied to tester-002's thread in developers-den
+                    </div>
+                
+                    <div class="log-entry ">
+                        [144.20s] PrivacyWarrior replied to tester-002's thread in freedom-of-speech
+                    </div>
+                
+                    <div class="log-entry ">
+                        [144.50s] Created 6 interactions
+                    </div>
+                
+                    <div class="log-entry ">
+                        [144.50s] 
+⚡ Creating reactions (Kind 7)...
+                    </div>
+                
+                    <div class="log-entry ">
+                        [148.92s] NostrNinja_TH reacted to thread in travel-diaries
+                    </div>
+                
+                    <div class="log-entry ">
+                        [159.21s] NostrNinja_TH reacted to thread in developers-den
+                    </div>
+                
+                    <div class="log-entry ">
+                        [166.84s] NostrNinja_TH reacted to thread in relay-station
+                    </div>
+                
+                    <div class="log-entry ">
+                        [171.85s] PrivacyWarrior reacted to thread in zap-zone
+                    </div>
+                
+                    <div class="log-entry ">
+                        [171.85s] Created 4 reactions
+                    </div>
+                
+                    <div class="log-entry ">
+                        [171.85s] 
+🔍 Verifying all event signatures...
+                    </div>
+                
+                    <div class="log-entry ">
+                        [171.85s] Signature verification: 22 valid, 0 invalid
+                    </div>
+                
+                    <div class="log-entry ">
+                        [171.85s] 
+🏷️  Verifying room-specific tag compliance...
+                    </div>
+                
+                    <div class="log-entry ">
+                        [171.85s] Tag compliance: 13 compliant, 0 non-compliant
+                    </div>
+                
+                    <div class="log-entry ">
+                        [171.85s] 
+📊 Generating test report...
+                    </div>
+                
+                    <div class="log-entry ">
+                        [171.85s] 
+🔍 Verifying all event signatures...
+                    </div>
+                
+                    <div class="log-entry ">
+                        [171.85s] Signature verification: 22 valid, 0 invalid
+                    </div>
+                
+                    <div class="log-entry ">
+                        [171.85s] 
+🏷️  Verifying room-specific tag compliance...
+                    </div>
+                
+                    <div class="log-entry ">
+                        [171.85s] Tag compliance: 13 compliant, 0 non-compliant
+                    </div>
+                
+                    <div class="log-entry ">
+                        [171.85s] Report saved to: /Users/admin/Coding/panstr-webboard-forum/test/reports/qa-test-1774088445504.json
+                    </div>
+                
+            </div>
+        </div>
+
+        <div style="text-align: center; padding: 30px; background: #f8f9fa; color: #666; font-size: 0.9em;">
+            Generated by Panstr Multi-Room QA Test Suite
+        </div>
+    </div>
+</body>
+</html>

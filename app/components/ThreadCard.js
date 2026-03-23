@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useNostr } from "../context/NostrContext";
 import { useNostrAuth } from "../context/NostrAuthContext";
+import { useNostrLists } from "../context/NostrListsContext";
 import {
   initializePool,
   liveSubscribe,
@@ -15,6 +16,7 @@ import db, { liveZapsForEvent } from "../lib/storage/indexedDB";
 export default function ThreadCard({ thread, roomId }) {
   const { getProfile } = useNostr();
   const { user } = useNostrAuth();
+  const { isMuted, isBookmarked, updateMuteList, updateBookmarkList } = useNostrLists();
   const [author, setAuthor] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -164,6 +166,14 @@ export default function ThreadCard({ thread, roomId }) {
     return "Untitled Thread";
   };
 
+  const getThreadTags = () => {
+    // Extract 't' tags (topic tags) from the thread
+    if (!thread.tags || thread.tags.length === 0) return [];
+    return thread.tags
+      .filter((tag) => tag[0] === "t" && tag[1])
+      .map((tag) => tag[1]);
+  };
+
   const getContentPreview = () => {
     const content = thread.content || "";
     const lines = content.split("\n").filter((line) => line.trim());
@@ -210,6 +220,25 @@ export default function ThreadCard({ thread, roomId }) {
   const replyCount = getReplyCount();
   const viewCount = getViewCount();
 
+  if (isMuted('p', thread.pubkey)) {
+    return null;
+  }
+
+  const handleBookmark = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const action = isBookmarked('e', thread.id) ? 'remove' : 'add';
+    await updateBookmarkList('e', thread.id, action);
+  };
+
+  const handleMute = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (confirm(`Are you sure you want to mute ${author?.name || 'this user'}?`)) {
+      await updateMuteList('p', thread.pubkey, 'add');
+    }
+  };
+
   return (
     <Link href={`/room/${roomId}/thread/${thread.id}`}>
       <div className="block modern-card modern-card-hover p-7 border border-gray-200/50 hover:border-blue-300/70 cursor-pointer group/thread">
@@ -232,8 +261,12 @@ export default function ThreadCard({ thread, roomId }) {
                     </div>
                   )}
                 </span>
-                {author?.nip05 && (
-                  <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
+                {author?.nip05Verified && (
+                  <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
+                    <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </div>
                 )}
               </div>
             </div>
@@ -247,9 +280,16 @@ export default function ThreadCard({ thread, roomId }) {
                     <span className="truncate">
                       {author?.name || author?.display_name || "Anonymous"}
                     </span>
-                    {author?.nip05 && (
-                      <span className="modern-badge-success text-xs">✓</span>
+                    {author?.nip05Verified && (
+                      <span className="modern-badge-success text-xs px-1 flex items-center justify-center rounded-full" title={author.nip05}>✓</span>
                     )}
+                    <button 
+                      onClick={handleMute}
+                      className="text-[10px] text-gray-400 hover:text-red-500 transition-colors ml-1"
+                      title="Mute User"
+                    >
+                      (mute)
+                    </button>
                   </div>
                 )}
               </div>
@@ -261,6 +301,19 @@ export default function ThreadCard({ thread, roomId }) {
 
           {/* Enhanced Status Badges */}
           <div className="flex items-center space-x-2">
+            <button
+              onClick={handleBookmark}
+              className={`p-2 rounded-full transition-all duration-200 ${
+                isBookmarked('e', thread.id) 
+                  ? "bg-yellow-100 text-yellow-600" 
+                  : "bg-gray-100 text-gray-400 hover:text-yellow-500"
+              }`}
+              title={isBookmarked('e', thread.id) ? "Remove Bookmark" : "Bookmark Thread"}
+            >
+              <svg className="w-5 h-5" fill={isBookmarked('e', thread.id) ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+              </svg>
+            </button>
             {isPinned() && (
               <span className="modern-badge-warning animate-pulse">
                 📌 Pinned
@@ -276,6 +329,25 @@ export default function ThreadCard({ thread, roomId }) {
         <h3 className="font-bold text-xl text-gray-900 mb-3 group-hover/thread:text-blue-600 transition-colors line-clamp-2 leading-tight">
           {title}
         </h3>
+
+        {/* Thread Tags */}
+        {getThreadTags().length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-3">
+            {getThreadTags().slice(0, 5).map((tag, idx) => (
+              <span
+                key={idx}
+                className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors"
+              >
+                #{tag.replace(/-/g, ' ')}
+              </span>
+            ))}
+            {getThreadTags().length > 5 && (
+              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                +{getThreadTags().length - 5} more
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Enhanced Content Preview */}
         <p className="text-gray-600 mb-6 line-clamp-3 leading-relaxed">

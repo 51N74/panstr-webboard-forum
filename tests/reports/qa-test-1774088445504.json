@@ -1,0 +1,727 @@
+{
+  "testRunId": "qa-test-1774088445504",
+  "timestamp": "2026-03-21T10:23:37.355Z",
+  "duration": "171.85s",
+  "summary": {
+    "totalAccounts": 3,
+    "totalEvents": 22,
+    "totalInteractions": 10,
+    "threadsCreated": 13,
+    "repliesCreated": 6,
+    "reactionsCreated": 4,
+    "roomsTested": 14
+  },
+  "accounts": [
+    {
+      "id": "tester-001",
+      "name": "NostrNinja_TH",
+      "displayName": "Nostr Ninja",
+      "npub": "npub18p2ksextcjhcaryr3j9e544tyuwp6t5kqs6qld5hcr6vj6j7ucmqt202ky",
+      "eventsCreated": 3
+    },
+    {
+      "id": "tester-002",
+      "name": "CryptoTraveler",
+      "displayName": "Crypto Traveler",
+      "npub": "npub1l7va4gnfar6a8n3gk5q9rm5meamdapzyvnrwj0s5aghlg93ea8vqr44fts",
+      "eventsCreated": 7
+    },
+    {
+      "id": "tester-003",
+      "name": "PrivacyWarrior",
+      "displayName": "Privacy Warrior",
+      "npub": "npub10uyn0prlcq67qkra20mmgm0grdugkm9nx5pl9lk92wuam5guukgqrhfsyz",
+      "eventsCreated": 12
+    }
+  ],
+  "events": [
+    {
+      "type": "profile",
+      "account": "tester-001",
+      "eventId": "7e9738bfaa203e4b38500e5970feb6473ea6e742c3b03f7a522fc6e9642db303",
+      "kind": 0,
+      "timestamp": 1774088445
+    },
+    {
+      "type": "profile",
+      "account": "tester-002",
+      "eventId": "51d7bc0c3c9ccde041d17227af8c2522f17e7c99653e979dc5b9ad39ea5fed85",
+      "kind": 0,
+      "timestamp": 1774088445
+    },
+    {
+      "type": "profile",
+      "account": "tester-003",
+      "eventId": "73850ff085f8507f4b141bc8dbcfcc532e44698cf554533b20f1ea19b2b1f87e",
+      "kind": 0,
+      "timestamp": 1774088445
+    },
+    {
+      "type": "thread",
+      "room": "foodie-thailand",
+      "account": "tester-003",
+      "eventId": "58b1b4f4d060da1e9ace75da88b087ca30310c509f1dc3a1b47bda8fb7fe169c",
+      "kind": 30023,
+      "timestamp": 1774088450
+    },
+    {
+      "type": "thread",
+      "room": "travel-diaries",
+      "account": "tester-001",
+      "eventId": "2cc4d57a7d3c531780aa1a81fdc110a915fbde863ccb5a92612d19fa7a5905da",
+      "kind": 30023,
+      "timestamp": 1774088456
+    },
+    {
+      "type": "thread",
+      "room": "chill-chat",
+      "account": "tester-002",
+      "eventId": "8902c925229a7a407164ceb35e8ffb5d15b7d24e1b549044617c560d432a3360",
+      "kind": 30023,
+      "timestamp": 1774088466
+    },
+    {
+      "type": "thread",
+      "room": "pet-lovers",
+      "account": "tester-003",
+      "eventId": "c67e2c09d7503fff57139058174d28853fdf704effa623ec75f541f31df1a72d",
+      "kind": 30023,
+      "timestamp": 1774088472
+    },
+    {
+      "type": "thread",
+      "room": "nostr-cafe",
+      "account": "tester-003",
+      "eventId": "e1482d321c4f896f95fa494e637adbef789df51adaa107b55efad679d124222b",
+      "kind": 30023,
+      "timestamp": 1774088483
+    },
+    {
+      "type": "thread",
+      "room": "bitcoin-talk",
+      "account": "tester-003",
+      "eventId": "1c3ccc6d8aaca41580242d72cc240c9f1ea8f71ecf561cb972bb79816ef0ef33",
+      "kind": 30023,
+      "timestamp": 1774088488
+    },
+    {
+      "type": "thread",
+      "room": "crypto-corner",
+      "account": "tester-003",
+      "eventId": "422e3415c54d31990d6a133aef8daa300f9e207b73f280967264889ab0587769",
+      "kind": 30023,
+      "timestamp": 1774088498
+    },
+    {
+      "type": "thread",
+      "room": "tech-hub-thailand",
+      "account": "tester-003",
+      "eventId": "41bfb75eb1b7604eef7a18f16fc6c5b1c16913e873baec8fce41e5c8eafcda8c",
+      "kind": 30023,
+      "timestamp": 1774088503
+    },
+    {
+      "type": "thread",
+      "room": "developers-den",
+      "account": "tester-002",
+      "eventId": "5c83dcf555890e8c46debcdfddab458a790053cd000fc9665a6a22794c1be1b0",
+      "kind": 30023,
+      "timestamp": 1774088514
+    },
+    {
+      "type": "thread",
+      "room": "relay-station",
+      "account": "tester-003",
+      "eventId": "99769e6482d1cd53eff1930e36d8382f13f60afcfe049e13268b639eaae3e020",
+      "kind": 30023,
+      "timestamp": 1774088519
+    },
+    {
+      "type": "thread",
+      "room": "zap-zone",
+      "account": "tester-003",
+      "eventId": "8e9269a4c1126228c9fb9d1ed38acecc389117adc4e9c462133e0c1917b5a4d9",
+      "kind": 30023,
+      "timestamp": 1774088524
+    },
+    {
+      "type": "thread",
+      "room": "freedom-of-speech",
+      "account": "tester-002",
+      "eventId": "7937ab78acd341670ad622610e3561bb794bc62d32715f537a545c29e58dd49d",
+      "kind": 30023,
+      "timestamp": 1774088535
+    },
+    {
+      "type": "thread",
+      "room": "decentralized-life",
+      "account": "tester-003",
+      "eventId": "bbabad874fbe82c62e8421a64772acaa330cf2fc924a2c68b51ed12ff1e0950e",
+      "kind": 30023,
+      "timestamp": 1774088540
+    },
+    {
+      "type": "reply",
+      "room": "foodie-thailand",
+      "account": "tester-001",
+      "eventId": "99caff360d682cbc0e0ae684fe20df03a6c47c02443acbda1f745d739d7195d3",
+      "kind": 1,
+      "timestamp": 1774088545
+    },
+    {
+      "type": "reply",
+      "room": "travel-diaries",
+      "account": "tester-002",
+      "eventId": "360813373edd30c422f541ffff4af32cb27a79d64c84dd42633fc313d2278a1c",
+      "kind": 1,
+      "timestamp": 1774088549
+    },
+    {
+      "type": "reply",
+      "room": "crypto-corner",
+      "account": "tester-002",
+      "eventId": "8d6bc688b8376b03a7673dddca2d48b9a7197d76fca0c6428d7df2f83d6d987a",
+      "kind": 1,
+      "timestamp": 1774088558
+    },
+    {
+      "type": "reply",
+      "room": "tech-hub-thailand",
+      "account": "tester-002",
+      "eventId": "01add66801833c20904c29c88e1aee6ef55ab47596bbd14464e9fcf673f8bd04",
+      "kind": 1,
+      "timestamp": 1774088563
+    },
+    {
+      "type": "reply",
+      "room": "developers-den",
+      "account": "tester-003",
+      "eventId": "59fba769bf5bfa5b0f65b4ae940f1cf0cc05545ed5487de6c60bc66eea4376a8",
+      "kind": 1,
+      "timestamp": 1774088574
+    },
+    {
+      "type": "reply",
+      "room": "freedom-of-speech",
+      "account": "tester-003",
+      "eventId": "eaa31396cd49a327044695e5119df243b87b50e2d01fbd419b64f063adbce5e0",
+      "kind": 1,
+      "timestamp": 1774088579
+    }
+  ],
+  "interactions": [
+    {
+      "type": "reply",
+      "thread": "58b1b4f4d060da1e9ace75da88b087ca30310c509f1dc3a1b47bda8fb7fe169c",
+      "account": "tester-001",
+      "eventId": "99caff360d682cbc0e0ae684fe20df03a6c47c02443acbda1f745d739d7195d3"
+    },
+    {
+      "type": "reply",
+      "thread": "2cc4d57a7d3c531780aa1a81fdc110a915fbde863ccb5a92612d19fa7a5905da",
+      "account": "tester-002",
+      "eventId": "360813373edd30c422f541ffff4af32cb27a79d64c84dd42633fc313d2278a1c"
+    },
+    {
+      "type": "reply",
+      "thread": "422e3415c54d31990d6a133aef8daa300f9e207b73f280967264889ab0587769",
+      "account": "tester-002",
+      "eventId": "8d6bc688b8376b03a7673dddca2d48b9a7197d76fca0c6428d7df2f83d6d987a"
+    },
+    {
+      "type": "reply",
+      "thread": "41bfb75eb1b7604eef7a18f16fc6c5b1c16913e873baec8fce41e5c8eafcda8c",
+      "account": "tester-002",
+      "eventId": "01add66801833c20904c29c88e1aee6ef55ab47596bbd14464e9fcf673f8bd04"
+    },
+    {
+      "type": "reply",
+      "thread": "5c83dcf555890e8c46debcdfddab458a790053cd000fc9665a6a22794c1be1b0",
+      "account": "tester-003",
+      "eventId": "59fba769bf5bfa5b0f65b4ae940f1cf0cc05545ed5487de6c60bc66eea4376a8"
+    },
+    {
+      "type": "reply",
+      "thread": "7937ab78acd341670ad622610e3561bb794bc62d32715f537a545c29e58dd49d",
+      "account": "tester-003",
+      "eventId": "eaa31396cd49a327044695e5119df243b87b50e2d01fbd419b64f063adbce5e0"
+    },
+    {
+      "type": "reaction",
+      "thread": "2cc4d57a7d3c531780aa1a81fdc110a915fbde863ccb5a92612d19fa7a5905da",
+      "account": "tester-001",
+      "eventId": "dcb6d59f6e7669f2095b1e3507888fcf18d4d95d7bbf4739c9cbf0b5ea6fe621"
+    },
+    {
+      "type": "reaction",
+      "thread": "5c83dcf555890e8c46debcdfddab458a790053cd000fc9665a6a22794c1be1b0",
+      "account": "tester-001",
+      "eventId": "d32cb15740fe6eafcebe73b75e27dd928527a692c03a4d95074d1fee8fd2d791"
+    },
+    {
+      "type": "reaction",
+      "thread": "99769e6482d1cd53eff1930e36d8382f13f60afcfe049e13268b639eaae3e020",
+      "account": "tester-001",
+      "eventId": "e55a21f458af08baa76236b40b4ca2b7cf8f4f3bc6c0a07db647721c89af7be8"
+    },
+    {
+      "type": "reaction",
+      "thread": "8e9269a4c1126228c9fb9d1ed38acecc389117adc4e9c462133e0c1917b5a4d9",
+      "account": "tester-003",
+      "eventId": "18480accac7b8a7c5d959b035b2b537f8f6ff8e5c851c4f1e4fc7a30c81095e0"
+    }
+  ],
+  "verification": {
+    "signatures": {
+      "valid": 22,
+      "invalid": 0,
+      "allValid": true
+    },
+    "tagCompliance": {
+      "compliant": 13,
+      "nonCompliant": 0
+    }
+  },
+  "logs": [
+    {
+      "timestamp": "2026-03-21T10:20:45.508Z",
+      "elapsed": "0.01s",
+      "type": "test",
+      "message": "Generating fake accounts with Nostr keypairs...",
+      "data": null
+    },
+    {
+      "timestamp": "2026-03-21T10:20:45.588Z",
+      "elapsed": "0.08s",
+      "type": "success",
+      "message": "Created account: NostrNinja_TH (Nostr Ninja)",
+      "data": {
+        "pubkey": "38556864cbc4af8e...",
+        "npub": "npub18p2ksextcjhcaryr3j9e544tyuwp6t5kqs6qld5hcr6vj6j7ucmqt202ky"
+      }
+    },
+    {
+      "timestamp": "2026-03-21T10:20:45.590Z",
+      "elapsed": "0.09s",
+      "type": "success",
+      "message": "Created account: CryptoTraveler (Crypto Traveler)",
+      "data": {
+        "pubkey": "ff99daa269e8f5d3...",
+        "npub": "npub1l7va4gnfar6a8n3gk5q9rm5meamdapzyvnrwj0s5aghlg93ea8vqr44fts"
+      }
+    },
+    {
+      "timestamp": "2026-03-21T10:20:45.592Z",
+      "elapsed": "0.09s",
+      "type": "success",
+      "message": "Created account: PrivacyWarrior (Privacy Warrior)",
+      "data": {
+        "pubkey": "7f0937847fc035e0...",
+        "npub": "npub10uyn0prlcq67qkra20mmgm0grdugkm9nx5pl9lk92wuam5guukgqrhfsyz"
+      }
+    },
+    {
+      "timestamp": "2026-03-21T10:20:45.592Z",
+      "elapsed": "0.09s",
+      "type": "success",
+      "message": "Generated 3 test accounts",
+      "data": null
+    },
+    {
+      "timestamp": "2026-03-21T10:20:45.592Z",
+      "elapsed": "0.09s",
+      "type": "nostr",
+      "message": "Creating profile metadata events (Kind 0)...",
+      "data": null
+    },
+    {
+      "timestamp": "2026-03-21T10:20:45.609Z",
+      "elapsed": "0.10s",
+      "type": "success",
+      "message": "Profile created for NostrNinja_TH",
+      "data": {
+        "event_id": "7e9738bfaa203e4b...",
+        "signature": "dc3bd9c98f5f9bf7..."
+      }
+    },
+    {
+      "timestamp": "2026-03-21T10:20:45.624Z",
+      "elapsed": "0.12s",
+      "type": "success",
+      "message": "Profile created for CryptoTraveler",
+      "data": {
+        "event_id": "51d7bc0c3c9ccde0...",
+        "signature": "91ca9f80c25627fe..."
+      }
+    },
+    {
+      "timestamp": "2026-03-21T10:20:45.644Z",
+      "elapsed": "0.14s",
+      "type": "success",
+      "message": "Profile created for PrivacyWarrior",
+      "data": {
+        "event_id": "73850ff085f8507f...",
+        "signature": "9b315070ffea7a9e..."
+      }
+    },
+    {
+      "timestamp": "2026-03-21T10:20:45.645Z",
+      "elapsed": "0.14s",
+      "type": "nostr",
+      "message": "Initializing relay pool...",
+      "data": null
+    },
+    {
+      "timestamp": "2026-03-21T10:20:50.701Z",
+      "elapsed": "5.20s",
+      "type": "success",
+      "message": "Connected to 3/5 relays",
+      "data": null
+    },
+    {
+      "timestamp": "2026-03-21T10:20:50.702Z",
+      "elapsed": "5.20s",
+      "type": "warning",
+      "message": "Failed to connect: wss://relay.nostr.band, wss://relay.siamdev.cc",
+      "data": null
+    },
+    {
+      "timestamp": "2026-03-21T10:20:50.702Z",
+      "elapsed": "5.20s",
+      "type": "test",
+      "message": "\n📝 Creating threads in all rooms...",
+      "data": null
+    },
+    {
+      "timestamp": "2026-03-21T10:20:50.703Z",
+      "elapsed": "5.20s",
+      "type": "info",
+      "message": "Found 13 rooms to test",
+      "data": null
+    },
+    {
+      "timestamp": "2026-03-21T10:20:55.715Z",
+      "elapsed": "10.21s",
+      "type": "success",
+      "message": "Thread created in Foodie Thailand by PrivacyWarrior",
+      "data": {
+        "event_id": "58b1b4f4d060da1e...",
+        "title": "Hidden gem restaurants in Chiang Mai..."
+      }
+    },
+    {
+      "timestamp": "2026-03-21T10:21:06.459Z",
+      "elapsed": "20.95s",
+      "type": "success",
+      "message": "Thread created in Travel Diaries by NostrNinja_TH",
+      "data": {
+        "event_id": "2cc4d57a7d3c5317...",
+        "title": "Backpacking Thailand on a budget..."
+      }
+    },
+    {
+      "timestamp": "2026-03-21T10:21:11.971Z",
+      "elapsed": "26.47s",
+      "type": "success",
+      "message": "Thread created in Chill & Chat by CryptoTraveler",
+      "data": {
+        "event_id": "8902c925229a7a40...",
+        "title": "Random thoughts on decentralization..."
+      }
+    },
+    {
+      "timestamp": "2026-03-21T10:21:22.699Z",
+      "elapsed": "37.20s",
+      "type": "success",
+      "message": "Thread created in Pet Lovers by PrivacyWarrior",
+      "data": {
+        "event_id": "c67e2c09d7503fff...",
+        "title": "Pet-friendly cafes and parks..."
+      }
+    },
+    {
+      "timestamp": "2026-03-21T10:21:27.611Z",
+      "elapsed": "42.11s",
+      "type": "success",
+      "message": "Thread created in Nostr Café by PrivacyWarrior",
+      "data": {
+        "event_id": "e1482d321c4f896f...",
+        "title": "Best Nostr clients for beginners?..."
+      }
+    },
+    {
+      "timestamp": "2026-03-21T10:21:38.198Z",
+      "elapsed": "52.69s",
+      "type": "success",
+      "message": "Thread created in Bitcoin Talk by PrivacyWarrior",
+      "data": {
+        "event_id": "1c3ccc6d8aaca415...",
+        "title": "Lightning Network adoption in Thailand..."
+      }
+    },
+    {
+      "timestamp": "2026-03-21T10:21:43.109Z",
+      "elapsed": "57.60s",
+      "type": "success",
+      "message": "Thread created in Crypto Corner by PrivacyWarrior",
+      "data": {
+        "event_id": "422e3415c54d3199...",
+        "title": "DeFi yields in 2026 - Still worth it?..."
+      }
+    },
+    {
+      "timestamp": "2026-03-21T10:21:53.696Z",
+      "elapsed": "68.19s",
+      "type": "success",
+      "message": "Thread created in Tech Hub Thailand by PrivacyWarrior",
+      "data": {
+        "event_id": "41bfb75eb1b7604e...",
+        "title": "Tech jobs in Bangkok - Market update..."
+      }
+    },
+    {
+      "timestamp": "2026-03-21T10:21:59.205Z",
+      "elapsed": "73.70s",
+      "type": "success",
+      "message": "Thread created in Developer's Den by CryptoTraveler",
+      "data": {
+        "event_id": "5c83dcf555890e8c...",
+        "title": "Building with nostr-tools v2..."
+      }
+    },
+    {
+      "timestamp": "2026-03-21T10:22:04.118Z",
+      "elapsed": "78.61s",
+      "type": "success",
+      "message": "Thread created in Relay Station by PrivacyWarrior",
+      "data": {
+        "event_id": "99769e6482d1cd53...",
+        "title": "Running a profitable relay in 2026..."
+      }
+    },
+    {
+      "timestamp": "2026-03-21T10:22:14.722Z",
+      "elapsed": "89.22s",
+      "type": "success",
+      "message": "Thread created in Zap Zone by PrivacyWarrior",
+      "data": {
+        "event_id": "8e9269a4c1126228...",
+        "title": "Lightning address setup guide..."
+      }
+    },
+    {
+      "timestamp": "2026-03-21T10:22:19.636Z",
+      "elapsed": "94.13s",
+      "type": "success",
+      "message": "Thread created in Freedom of Speech by CryptoTraveler",
+      "data": {
+        "event_id": "7937ab78acd34167...",
+        "title": "Censorship resistance in practice..."
+      }
+    },
+    {
+      "timestamp": "2026-03-21T10:22:24.547Z",
+      "elapsed": "99.04s",
+      "type": "success",
+      "message": "Thread created in Decentralized Life by PrivacyWarrior",
+      "data": {
+        "event_id": "bbabad874fbe82c6...",
+        "title": "Self-sovereign identity setup..."
+      }
+    },
+    {
+      "timestamp": "2026-03-21T10:22:25.048Z",
+      "elapsed": "99.54s",
+      "type": "success",
+      "message": "Created 13 threads",
+      "data": null
+    },
+    {
+      "timestamp": "2026-03-21T10:22:25.048Z",
+      "elapsed": "99.54s",
+      "type": "test",
+      "message": "\n💬 Simulating cross-interactions...",
+      "data": null
+    },
+    {
+      "timestamp": "2026-03-21T10:22:29.459Z",
+      "elapsed": "103.95s",
+      "type": "success",
+      "message": "NostrNinja_TH replied to tester-003's thread in foodie-thailand",
+      "data": {
+        "event_id": "99caff360d682cbc...",
+        "reply": "I had a similar experience. Would love t..."
+      }
+    },
+    {
+      "timestamp": "2026-03-21T10:22:38.208Z",
+      "elapsed": "112.70s",
+      "type": "success",
+      "message": "CryptoTraveler replied to tester-001's thread in travel-diaries",
+      "data": {
+        "event_id": "360813373edd30c4...",
+        "reply": "Count me in! Let's connect and collabora..."
+      }
+    },
+    {
+      "timestamp": "2026-03-21T10:22:43.517Z",
+      "elapsed": "118.01s",
+      "type": "success",
+      "message": "CryptoTraveler replied to tester-003's thread in crypto-corner",
+      "data": {
+        "event_id": "8d6bc688b8376b03...",
+        "reply": "Great post! I totally agree with your po..."
+      }
+    },
+    {
+      "timestamp": "2026-03-21T10:22:54.209Z",
+      "elapsed": "128.71s",
+      "type": "success",
+      "message": "CryptoTraveler replied to tester-003's thread in tech-hub-thailand",
+      "data": {
+        "event_id": "01add66801833c20...",
+        "reply": "Interesting perspective! Have you consid..."
+      }
+    },
+    {
+      "timestamp": "2026-03-21T10:22:58.958Z",
+      "elapsed": "133.45s",
+      "type": "success",
+      "message": "PrivacyWarrior replied to tester-002's thread in developers-den",
+      "data": {
+        "event_id": "59fba769bf5bfa5b...",
+        "reply": "Interesting perspective! Have you consid..."
+      }
+    },
+    {
+      "timestamp": "2026-03-21T10:23:09.708Z",
+      "elapsed": "144.20s",
+      "type": "success",
+      "message": "PrivacyWarrior replied to tester-002's thread in freedom-of-speech",
+      "data": {
+        "event_id": "eaa31396cd49a327...",
+        "reply": "Interesting perspective! Have you consid..."
+      }
+    },
+    {
+      "timestamp": "2026-03-21T10:23:10.008Z",
+      "elapsed": "144.50s",
+      "type": "success",
+      "message": "Created 6 interactions",
+      "data": null
+    },
+    {
+      "timestamp": "2026-03-21T10:23:10.009Z",
+      "elapsed": "144.50s",
+      "type": "nostr",
+      "message": "\n⚡ Creating reactions (Kind 7)...",
+      "data": null
+    },
+    {
+      "timestamp": "2026-03-21T10:23:14.421Z",
+      "elapsed": "148.92s",
+      "type": "success",
+      "message": "NostrNinja_TH reacted to thread in travel-diaries",
+      "data": {
+        "event_id": "dcb6d59f6e7669f2..."
+      }
+    },
+    {
+      "timestamp": "2026-03-21T10:23:24.717Z",
+      "elapsed": "159.21s",
+      "type": "success",
+      "message": "NostrNinja_TH reacted to thread in developers-den",
+      "data": {
+        "event_id": "d32cb15740fe6eaf..."
+      }
+    },
+    {
+      "timestamp": "2026-03-21T10:23:32.339Z",
+      "elapsed": "166.84s",
+      "type": "success",
+      "message": "NostrNinja_TH reacted to thread in relay-station",
+      "data": {
+        "event_id": "e55a21f458af08ba..."
+      }
+    },
+    {
+      "timestamp": "2026-03-21T10:23:37.352Z",
+      "elapsed": "171.85s",
+      "type": "success",
+      "message": "PrivacyWarrior reacted to thread in zap-zone",
+      "data": {
+        "event_id": "18480accac7b8a7c..."
+      }
+    },
+    {
+      "timestamp": "2026-03-21T10:23:37.352Z",
+      "elapsed": "171.85s",
+      "type": "success",
+      "message": "Created 4 reactions",
+      "data": null
+    },
+    {
+      "timestamp": "2026-03-21T10:23:37.353Z",
+      "elapsed": "171.85s",
+      "type": "test",
+      "message": "\n🔍 Verifying all event signatures...",
+      "data": null
+    },
+    {
+      "timestamp": "2026-03-21T10:23:37.353Z",
+      "elapsed": "171.85s",
+      "type": "success",
+      "message": "Signature verification: 22 valid, 0 invalid",
+      "data": null
+    },
+    {
+      "timestamp": "2026-03-21T10:23:37.353Z",
+      "elapsed": "171.85s",
+      "type": "test",
+      "message": "\n🏷️  Verifying room-specific tag compliance...",
+      "data": null
+    },
+    {
+      "timestamp": "2026-03-21T10:23:37.354Z",
+      "elapsed": "171.85s",
+      "type": "success",
+      "message": "Tag compliance: 13 compliant, 0 non-compliant",
+      "data": null
+    },
+    {
+      "timestamp": "2026-03-21T10:23:37.354Z",
+      "elapsed": "171.85s",
+      "type": "info",
+      "message": "\n📊 Generating test report...",
+      "data": null
+    },
+    {
+      "timestamp": "2026-03-21T10:23:37.356Z",
+      "elapsed": "171.85s",
+      "type": "test",
+      "message": "\n🔍 Verifying all event signatures...",
+      "data": null
+    },
+    {
+      "timestamp": "2026-03-21T10:23:37.356Z",
+      "elapsed": "171.85s",
+      "type": "success",
+      "message": "Signature verification: 22 valid, 0 invalid",
+      "data": null
+    },
+    {
+      "timestamp": "2026-03-21T10:23:37.356Z",
+      "elapsed": "171.85s",
+      "type": "test",
+      "message": "\n🏷️  Verifying room-specific tag compliance...",
+      "data": null
+    },
+    {
+      "timestamp": "2026-03-21T10:23:37.356Z",
+      "elapsed": "171.85s",
+      "type": "success",
+      "message": "Tag compliance: 13 compliant, 0 non-compliant",
+      "data": null
+    }
+  ]
+}
