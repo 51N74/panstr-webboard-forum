@@ -55,6 +55,7 @@ export default function ThreadPage() {
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [newComment, setNewComment] = useState("");
+  const [sortBy, setSortBy] = useState("oldest"); // 'oldest' or 'newest'
 
   // Real-time "New post" banner
   const [newReplyBanner, setNewReplyBanner] = useState(null);
@@ -102,12 +103,11 @@ export default function ThreadPage() {
     (event) => {
       if (!user?.pubkey || isEventSeen(event.id)) return;
       markEventSeen(event.id);
-      // If the mention is within the current thread, we already have it; otherwise, just show a banner
       const mentionsCurrentThread = event.tags?.some(
         (tag) => tag[0] === "e" && tag[1] === params.id,
       );
       if (!mentionsCurrentThread) {
-        setShowNewMentionBanner(true);
+        // Show mention notification
       }
     },
     [user?.pubkey, isEventSeen, params.id],
@@ -116,12 +116,10 @@ export default function ThreadPage() {
   useEffect(() => {
     if (params.id) {
       loadThread(params.id);
-      // Immediately set up subscriptions for real-time updates
       const setupSubscriptions = async () => {
         const pool = await initializePool();
         const subs = [];
 
-        // New replies to this thread (kind 1 with #e tag)
         const replySub = liveSubscribe(
           pool,
           undefined,
@@ -131,7 +129,6 @@ export default function ThreadPage() {
         );
         subs.push(replySub);
 
-        // New mentions of the current user (kind 1 or 30023 with #p tag)
         if (user?.pubkey) {
           const mentionSub = liveSubscribe(
             pool,
@@ -149,7 +146,6 @@ export default function ThreadPage() {
       setupSubscriptions();
     }
 
-    // Cleanup subscriptions on unmount or when params.id/user changes
     return () => {
       threadSubsRef.current.forEach((sub) => {
         try {
@@ -172,7 +168,6 @@ export default function ThreadPage() {
     try {
       const pool = await initializePool();
 
-      // Load main post (Kind 23)
       const mainPostEvents = await queryEvents(pool, undefined, {
         kinds: [23],
         ids: [postId],
@@ -187,14 +182,12 @@ export default function ThreadPage() {
       const post = mainPostEvents[0];
       setMainPost(post);
 
-      // Load comments (Kind 1) with NIP-10 threading
       const commentEvents = await queryEvents(pool, undefined, {
         kinds: [1],
-        "#e": [postId], // NIP-10: Reply to event
+        "#e": [postId],
         limit: 50,
       });
 
-      // Sort comments by timestamp and build thread structure
       const sortedComments = commentEvents.sort(
         (a, b) => a.created_at - b.created_at,
       );
@@ -211,20 +204,18 @@ export default function ThreadPage() {
     const now = new Date();
     const diff = now - date;
 
-    if (diff < 60000) return "เมื่อสักครู่";
-    if (diff < 3600000) return `${Math.floor(diff / 60000)} นาทีที่แล้ว`;
-    if (diff < 86400000) return `${Math.floor(diff / 3600000)} ชั่วโมงที่แล้ว`;
-    return `${Math.floor(diff / 86400000)} วันที่แล้ว`;
+    if (diff < 60000) return "Just now";
+    if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+    return `${Math.floor(diff / 86400000)}d ago`;
   };
 
   const getPostTitle = (event) => {
     const titleMatch = event.content.match(/^#\s+(.+)$/m);
     if (titleMatch) return titleMatch[1];
-
     const titleTag = event.tags?.find((tag) => tag[0] === "title");
     if (titleTag) return titleTag[1];
-
-    return "กระทู้ไม่มีชื่อ";
+    return "Untitled Post";
   };
 
   const getRoomForTag = (tag) => {
@@ -232,7 +223,6 @@ export default function ThreadPage() {
   };
 
   const renderContent = (content) => {
-    // Convert markdown-like formatting to HTML
     return content
       .replace(/^#\s+(.+)$/gm, '<h1 class="text-2xl font-bold mb-4">$1</h1>')
       .replace(
@@ -246,21 +236,31 @@ export default function ThreadPage() {
       .replace(/\n/g, "<br />");
   };
 
+  const handleSortChange = (e) => {
+    const value = e.target.value;
+    setSortBy(value);
+    if (value === "newest") {
+      setComments([...comments].sort((a, b) => b.created_at - a.created_at));
+    } else {
+      setComments([...comments].sort((a, b) => a.created_at - b.created_at));
+    }
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      <div className="min-h-screen bg-surface flex items-center justify-center pt-20">
+        <div className="w-10 h-10 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
       </div>
     );
   }
 
   if (!mainPost) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-surface flex items-center justify-center pt-20">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">ไม่พบกระทู้</h2>
-          <Link href="/" className="text-blue-600 hover:text-blue-800">
-            กลับไปหน้าหลัก
+          <h2 className="text-2xl font-bold text-primary mb-4">Post Not Found</h2>
+          <Link href="/" className="text-tertiary hover:text-primary font-medium">
+            Go to Home
           </Link>
         </div>
       </div>
@@ -271,463 +271,290 @@ export default function ThreadPage() {
   const room = roomTag ? getRoomForTag(roomTag) : OFFICIAL_ROOMS[0];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <Link href="/" className="text-gray-600 hover:text-gray-900">
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 19l-7-7 7-7"
-                  />
-                </svg>
-              </Link>
-              <Link href="/" className="flex items-center space-x-2">
-                <div className="w-6 h-6 bg-gradient-to-br from-blue-600 to-purple-600 rounded"></div>
-                <span className="font-bold text-gray-900">Panstr</span>
-              </Link>
-              {room && (
-                <span className="text-sm text-gray-500">/ {room.name}</span>
-              )}
-            </div>
-            <div className="flex items-center space-x-2">
-              <button className="p-2 text-gray-500 hover:text-gray-700">
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m9.032 4.026a9.001 9.001 0 01-7.432 0m9.032-4.026A9.001 9.001 0 0112 3c-4.474 0-8.268 3.12-9.032 7.326m9.032 4.026A9.001 9.001 0 012.968 10.326m9.032 4.026a9.001 9.001 0 01-9.032-4.026"
-                  />
-                </svg>
-              </button>
-            </div>
+    <div className="min-h-screen bg-surface">
+      {/* Top Navigation Shell */}
+      <nav className="fixed top-0 w-full z-50 bg-surface/70 backdrop-blur-xl shadow-[0px_12px_32px_rgba(24,25,51,0.06)]">
+        <div className="flex justify-between items-center px-6 py-4 w-full max-w-screen-2xl mx-auto">
+          <Link href="/" className="text-2xl font-black text-primary tracking-tighter hover:opacity-80 transition-opacity">
+            <span className="flex items-center gap-2">
+              <span className="text-3xl">🌏</span>
+              <span className="hidden sm:inline">Panstr</span>
+            </span>
+          </Link>
+          <div className="hidden md:flex items-center gap-8 font-['Manrope'] font-bold text-lg tracking-tight">
+            <Link href="/" className="text-tertiary border-b-2 border-tertiary pb-1">Explore</Link>
+            <Link href="/communities" className="text-secondary opacity-80 hover:text-primary hover:opacity-100 transition-colors duration-300">Communities</Link>
+            <Link href="/discovery" className="text-secondary opacity-80 hover:text-primary hover:opacity-100 transition-colors duration-300">Global</Link>
+          </div>
+          <div className="flex items-center gap-4">
+            <button className="material-symbols-outlined text-secondary hover:text-primary active:scale-95 transition-transform">notifications</button>
+            <button className="material-symbols-outlined text-secondary hover:text-primary active:scale-95 transition-transform">post_add</button>
           </div>
         </div>
-      </header>
+      </nav>
 
-      {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Main Post */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
-          <div className="p-6">
-            {/* Post Header */}
-            <div className="flex items-start justify-between mb-6">
-              <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                  <svg
-                    className="w-7 h-7 text-white"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+      <div className="flex max-w-screen-2xl mx-auto pt-20">
+        {/* Side Navigation Shell (Desktop Only) */}
+        <aside className="hidden lg:flex flex-col w-64 sticky top-20 h-screen bg-surface-container-low p-6 gap-4 font-['Inter'] font-medium text-sm">
+          <div className="flex flex-col gap-1 mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary-container flex items-center justify-center text-white font-bold">N</div>
+              <div className="flex flex-col">
+                <span className="font-['Manrope'] font-extrabold text-primary">Nostr Identity</span>
+                <span className="text-xs text-secondary opacity-60">_@protocol.com</span>
+              </div>
+            </div>
+          </div>
+          <nav className="flex flex-col gap-2">
+            <Link href="/" className="flex items-center gap-3 px-4 py-3 text-secondary hover:bg-primary/5 hover:translate-x-1 rounded-lg cursor-pointer active:opacity-80 transition-all duration-200">
+              <span className="material-symbols-outlined">home</span>
+              <span>Home</span>
+            </Link>
+            <Link href="/discovery" className="flex items-center gap-3 px-4 py-3 text-secondary hover:bg-primary/5 hover:translate-x-1 rounded-lg cursor-pointer active:opacity-80 transition-all duration-200">
+              <span className="material-symbols-outlined">trending_up</span>
+              <span>Trending</span>
+            </Link>
+            <Link href="/bookmarks" className="flex items-center gap-3 px-4 py-3 text-secondary hover:bg-primary/5 hover:translate-x-1 rounded-lg cursor-pointer active:opacity-80 transition-all duration-200">
+              <span className="material-symbols-outlined">push_pin</span>
+              <span>Pinned</span>
+            </Link>
+            <Link href="/settings" className="flex items-center gap-3 px-4 py-3 text-secondary hover:bg-primary/5 hover:translate-x-1 rounded-lg cursor-pointer active:opacity-80 transition-all duration-200">
+              <span className="material-symbols-outlined">settings</span>
+              <span>Settings</span>
+            </Link>
+          </nav>
+          <button className="mt-auto bg-gradient-to-br from-primary to-primary-container text-on-primary py-3 rounded-lg font-bold text-sm shadow-lg hover:shadow-xl active:scale-95 transition-all">
+            Create Post
+          </button>
+        </aside>
+
+        {/* Main Content Area */}
+        <main className="flex-1 px-4 md:px-12 py-8 max-w-4xl mx-auto">
+          {/* Original Post (Hero State) */}
+          <article className="mb-12">
+            <header className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-xl bg-surface-container overflow-hidden">
+                  <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-xl">
+                    {room?.icon || "🌏"}
+                  </div>
                 </div>
                 <div>
-                  <div className="flex items-center space-x-2">
-                    <span className="font-semibold text-gray-900">
-                      ผู้เขียนกระทู้
-                    </span>
-                    <div className="flex items-center space-x-1">
-                      <span className="text-xs text-gray-500 font-mono">
-                        {formatPubkey(mainPost.pubkey, "short")}
-                      </span>
-                      {/* NIP-05 Verified Badge */}
-                      <div className="bg-green-100 text-green-800 px-2 py-0.5 rounded-full text-xs font-medium flex items-center space-x-1">
-                        <svg
-                          className="w-3 h-3"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                        <span>NIP-05</span>
-                      </div>
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <h1 className="font-headline font-extrabold text-xl text-on-surface">Author</h1>
+                    <span className="bg-tertiary-container/20 text-tertiary px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider">Curator</span>
                   </div>
-                  <div className="text-sm text-gray-500">
-                    {formatTime(mainPost.created_at)}
-                  </div>
+                  <p className="text-sm font-body text-secondary font-medium">
+                    {formatPubkey(mainPost.pubkey, "short")} • {formatTime(mainPost.created_at)}
+                  </p>
                 </div>
               </div>
+              <button className="text-secondary hover:text-primary material-symbols-outlined">more_horiz</button>
+            </header>
+
+            <div className="space-y-6">
+              <h2 className="text-3xl md:text-4xl font-headline font-black tracking-tight leading-tight text-primary">
+                {getPostTitle(mainPost)}
+              </h2>
+              
+              <div
+                className="text-lg text-on-surface-variant leading-relaxed font-body prose max-w-none"
+                dangerouslySetInnerHTML={{
+                  __html: `<p class="mb-4">${renderContent(mainPost.content)}</p>`,
+                }}
+              />
+
+              {/* Room Badge */}
               {room && (
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    room.color === "blue"
-                      ? "bg-blue-100 text-blue-800"
-                      : room.color === "orange"
-                        ? "bg-orange-100 text-orange-800"
-                        : room.color === "green"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-purple-100 text-purple-800"
-                  }`}
-                >
-                  {room.tag}
-                </span>
+                <div className="flex items-center gap-2 pt-4">
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                    room.color === "blue" ? "bg-blue-100 text-blue-800" :
+                    room.color === "orange" ? "bg-orange-100 text-orange-800" :
+                    room.color === "green" ? "bg-green-100 text-green-800" :
+                    "bg-purple-100 text-purple-800"
+                  }`}>
+                    {room.tag}
+                  </span>
+                  <span className="text-xs text-secondary">{room.name}</span>
+                </div>
               )}
             </div>
 
-            {/* Post Title */}
-            <h1 className="text-3xl font-bold text-gray-900 mb-6">
-              {getPostTitle(mainPost)}
-            </h1>
-
-            {/* Post Content */}
-            <div
-              className="prose max-w-none text-gray-700 mb-8"
-              dangerouslySetInnerHTML={{
-                __html: `<p class="mb-4">${renderContent(mainPost.content)}</p>`,
-              }}
-            />
-
-            {/* Post Actions */}
-            <div className="flex items-center justify-between pt-6 border-t border-gray-200">
-              <div className="flex items-center space-x-6">
-                <button className="flex items-center space-x-2 text-gray-500 hover:text-red-600 transition-colors">
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                    />
-                  </svg>
-                  <span className="text-sm">ถูกใจ</span>
+            <div className="mt-10 flex items-center justify-between py-6 border-y border-outline-variant/15">
+              <div className="flex items-center gap-8">
+                <button className="flex items-center gap-2 text-secondary hover:text-tertiary transition-colors">
+                  <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>bolt</span>
+                  <span className="font-bold text-sm">0 Zaps</span>
                 </button>
-
-                <button className="flex items-center space-x-2 text-gray-500 hover:text-blue-600 transition-colors">
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                    />
-                  </svg>
-                  <span className="text-sm">{comments.length} ความคิดเห็น</span>
+                <button className="flex items-center gap-2 text-secondary hover:text-primary transition-colors">
+                  <span className="material-symbols-outlined">forum</span>
+                  <span className="font-bold text-sm">{comments.length} Replies</span>
                 </button>
-
-                <button className="flex items-center space-x-2 text-gray-500 hover:text-green-600 transition-colors">
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13 10V3L4 14h7v7l9-11h-7z"
-                    />
-                  </svg>
-                  <span className="text-sm font-medium">⚡ Zap</span>
+                <button className="flex items-center gap-2 text-secondary hover:text-primary transition-colors">
+                  <span className="material-symbols-outlined">share</span>
+                  <span className="font-bold text-sm">Share</span>
                 </button>
               </div>
-
-              <button className="text-gray-500 hover:text-gray-700 transition-colors">
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m9.032 4.026a9.001 9.001 0 01-7.432 0m9.032-4.026A9.001 9.001 0 0112 3c-4.474 0-8.268 3.12-9.032 7.326m9.032 4.026A9.001 9.001 0 012.968 10.326m9.032 4.026a9.001 9.001 0 01-9.032-4.026"
-                  />
-                </svg>
-              </button>
+              <div className="flex -space-x-3">
+                <div className="w-8 h-8 rounded-full border-2 border-surface bg-primary-container flex items-center justify-center text-[10px] text-white font-bold">A</div>
+                <div className="w-8 h-8 rounded-full border-2 border-surface bg-secondary flex items-center justify-center text-[10px] text-white font-bold">B</div>
+                <div className="w-8 h-8 rounded-full border-2 border-surface bg-surface-container flex items-center justify-center text-[10px] font-bold text-secondary">+{Math.max(0, comments.length - 2)}</div>
+              </div>
             </div>
-          </div>
-        </div>
+          </article>
 
-        {/* Comments Section */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">
-              ความคิดเห็น ({comments.length})
-            </h2>
-          </div>
-
-          {/* Add Comment */}
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex space-x-3">
-              <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-                <svg
-                  className="w-6 h-6 text-gray-600"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
+          {/* Conversation Section */}
+          <section className="space-y-8">
+            <div className="flex items-center justify-between">
+              <h3 className="font-headline font-bold text-2xl text-primary">Conversation</h3>
+              <div className="flex items-center gap-2 text-sm font-medium text-secondary">
+                <span>Sort by:</span>
+                <select 
+                  value={sortBy}
+                  onChange={handleSortChange}
+                  className="bg-transparent border-none p-0 focus:ring-0 font-bold text-primary cursor-pointer"
                 >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                  <option value="oldest">Oldest</option>
+                  <option value="newest">Newest</option>
+                </select>
               </div>
-              <div className="flex-1">
+            </div>
+
+            {/* Post a Reply Input */}
+            <div className="bg-surface-container-low p-4 rounded-xl flex gap-4 items-start shadow-sm border border-outline-variant/10">
+              <div className="w-10 h-10 rounded-xl bg-surface-container-highest shrink-0 overflow-hidden flex items-center justify-center text-white font-bold">
+                {user?.name?.[0]?.toUpperCase() || "U"}
+              </div>
+              <div className="flex-1 space-y-3">
                 <textarea
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="เขียนความคิดเห็น..."
-                  className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  rows={3}
+                  placeholder="Write a thoughtful reply..."
+                  className="w-full bg-surface-container-highest border-none rounded-lg focus:ring-2 focus:ring-primary/20 resize-none p-3 text-on-surface font-body min-h-[100px] outline-none"
                 />
-                <div className="mt-2 flex justify-end">
-                  <button className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors">
-                    ส่งความคิดเห็น
+                <div className="flex justify-between items-center">
+                  <div className="flex gap-2 text-secondary">
+                    <button className="material-symbols-outlined text-xl hover:text-primary transition-colors">image</button>
+                    <button className="material-symbols-outlined text-xl hover:text-primary transition-colors">alternate_email</button>
+                    <button className="material-symbols-outlined text-xl hover:text-primary transition-colors">sentiment_satisfied</button>
+                  </div>
+                  <button className="bg-primary text-on-primary px-6 py-2 rounded-lg font-bold text-sm active:scale-95 transition-transform hover:bg-primary-container">
+                    Post Reply
                   </button>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* "New post" banner for replies */}
-          {showNewReplyBanner && newReplyBanner && (
-            <div className="sticky top-16 z-40 mx-6 mt-4 mb-2 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg shadow-sm animate-pulse flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <svg
-                  className="w-5 h-5"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6z" />
-                </svg>
-                <span className="font-medium">New reply</span>
-                <span className="text-sm text-blue-600">
-                  {newReplyBanner.content.slice(0, 60)}...
-                </span>
-              </div>
-              <button
-                onClick={() => {
-                  setShowNewReplyBanner(false);
-                  setNewReplyBanner(null);
-                }}
-                className="text-blue-500 hover:text-blue-700"
-                aria-label="Dismiss"
-              >
-                <svg
-                  className="w-4 h-4"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </button>
+            {/* Threaded Replies */}
+            <div className="space-y-8 mt-12">
+              {comments.map((comment, index) => (
+                <Comment
+                  key={comment.id}
+                  comment={comment}
+                  formatTime={formatTime}
+                  isNested={index > 0 && index % 3 === 0}
+                />
+              ))}
+
+              {comments.length === 0 && (
+                <div className="text-center py-12 bg-surface-container-low rounded-xl border border-outline-variant/10">
+                  <span className="material-symbols-outlined text-4xl text-secondary/40 mb-3">chat_bubble</span>
+                  <p className="text-on-surface-variant font-medium">No replies yet</p>
+                  <p className="text-sm text-secondary mt-1">Be the first to reply</p>
+                </div>
+              )}
             </div>
-          )}
+          </section>
+        </main>
 
-          {/* Comments List */}
-          <div className="divide-y divide-gray-200">
-            {comments.map((comment) => (
-              <Comment
-                key={comment.id}
-                comment={comment}
-                isMention={comment.isMention}
-              />
-            ))}
-
-            {comments.length === 0 && (
-              <div className="p-8 text-center text-gray-500">
-                <svg
-                  className="w-12 h-12 mx-auto mb-4 text-gray-300"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                  />
-                </svg>
-                <p>ยังไม่มีความคิดเห็น</p>
-                <p className="text-sm mt-2">
-                  เป็นคนแรกที่แสดงความคิดเห็นในกระทู้นี้
-                </p>
-              </div>
-            )}
+        {/* Right Sidebar (Contextual Info) */}
+        <aside className="hidden xl:block w-80 sticky top-20 h-fit space-y-8 pr-6 pl-4">
+          <div className="bg-surface-container-low p-6 rounded-xl border border-outline-variant/10">
+            <h4 className="font-headline font-bold text-lg text-primary mb-4">About the Author</h4>
+            <p className="text-sm text-on-surface-variant leading-relaxed mb-4">
+              Nostr user sharing thoughts and ideas with the community.
+            </p>
+            <div className="flex items-center justify-between text-xs font-bold text-secondary mb-4">
+              <span>0 Followers</span>
+              <span>0 Following</span>
+            </div>
+            <button className="w-full bg-primary-container text-on-primary py-2 rounded-lg font-bold text-sm hover:opacity-90 transition-opacity">
+              Follow
+            </button>
           </div>
 
-          {/* Invisible element for scroll-to-bottom */}
-          <div ref={commentEndRef} className="h-1" />
-        </div>
-      </main>
+          <div className="space-y-4">
+            <h4 className="font-headline font-bold text-lg px-2 text-primary">Trending in Communities</h4>
+            <div className="space-y-3">
+              <div className="p-3 hover:bg-surface-container-low rounded-lg transition-colors cursor-pointer group">
+                <span className="text-[10px] uppercase tracking-widest font-bold text-tertiary">#Nostr</span>
+                <p className="text-sm font-bold group-hover:text-primary mt-1">Decentralized social protocol</p>
+                <span className="text-xs text-secondary">1.2k notes today</span>
+              </div>
+              <div className="p-3 hover:bg-surface-container-low rounded-lg transition-colors cursor-pointer group">
+                <span className="text-[10px] uppercase tracking-widest font-bold text-tertiary">#Bitcoin</span>
+                <p className="text-sm font-bold group-hover:text-primary mt-1">Digital gold and payments</p>
+                <span className="text-xs text-secondary">890 notes today</span>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      {/* Bottom Navigation Shell (Mobile) */}
+      <nav className="fixed bottom-0 left-0 w-full lg:hidden flex justify-around items-center h-16 px-4 pb-safe bg-surface/80 backdrop-blur-md border-t border-outline-variant/20 z-50 shadow-[0px_-4px_20px_rgba(0,0,0,0.03)] font-['Inter'] text-[10px] uppercase tracking-widest">
+        <Link href="/" className="flex flex-col items-center justify-center text-secondary opacity-60 hover:opacity-100 cursor-pointer active:scale-95 transition-transform">
+          <span className="material-symbols-outlined">dynamic_feed</span>
+          <span>Feed</span>
+        </Link>
+        <Link href="/search" className="flex flex-col items-center justify-center text-secondary opacity-60 hover:opacity-100 cursor-pointer active:scale-95 transition-transform">
+          <span className="material-symbols-outlined">search</span>
+          <span>Search</span>
+        </Link>
+        <Link href="/notifications" className="flex flex-col items-center justify-center text-secondary opacity-60 hover:opacity-100 cursor-pointer active:scale-95 transition-transform">
+          <span className="material-symbols-outlined">notifications</span>
+          <span>Alerts</span>
+        </Link>
+        <Link href="/profile" className="flex flex-col items-center justify-center text-secondary opacity-60 hover:opacity-100 cursor-pointer active:scale-95 transition-transform">
+          <span className="material-symbols-outlined">account_circle</span>
+          <span>Profile</span>
+        </Link>
+      </nav>
     </div>
   );
 }
 
 // Comment Component
-function Comment({ comment, isMention = false }) {
-  const formatTime = (timestamp) => {
-    const date = new Date(timestamp * 1000);
-    const now = new Date();
-    const diff = now - date;
-
-    if (diff < 60000) return "เมื่อสักครู่";
-    if (diff < 3600000) return `${Math.floor(diff / 60000)} นาทีที่แล้ว`;
-    if (diff < 86400000) return `${Math.floor(diff / 3600000)} ชั่วโมงที่แล้ว`;
-    return `${Math.floor(diff / 86400000)} วันที่แล้ว`;
-  };
-
-  // Use the imported formatPubkey function from nostrClient.js
-  // Local formatPubkey function removed to avoid conflicts
-
-  // Check if user is verified (mock implementation)
-  const isVerified = Math.random() > 0.5;
-
+function Comment({ comment, formatTime, isNested }) {
   return (
-    <div className="p-6 hover:bg-gray-50 transition-colors">
-      <div className="flex space-x-3">
-        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-          <svg
-            className="w-6 h-6 text-white"
-            fill="currentColor"
-            viewBox="0 0 20 20"
-          >
-            <path
-              fillRule="evenodd"
-              d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-              clipRule="evenodd"
-            />
-          </svg>
+    <div className={`group relative ${isNested ? "ml-0 md:ml-14 mt-6 flex gap-4 border-l-2 border-surface-container pl-6" : "flex gap-4"}`}>
+      <div className={`rounded-xl bg-surface-container shrink-0 overflow-hidden flex items-center justify-center text-white font-bold ${isNested ? "w-8 h-8 text-sm" : "w-10 h-10 text-base"}`}>
+        {comment.pubkey?.substring(0, 2).toUpperCase() || "U"}
+      </div>
+      <div className="flex-1 space-y-3">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className={`font-bold text-on-surface ${isNested ? "text-sm" : ""}`}>Nostr User</span>
+          <span className={`text-xs text-secondary ${isNested ? "" : ""}`}>
+            {formatPubkey(comment.pubkey, "very-short")} • {formatTime(comment.created_at)}
+          </span>
         </div>
-
-        <div className="flex-1">
-          <div className="flex items-center space-x-2 mb-2">
-            <span className="font-medium text-gray-900">ผู้ใช้ Nostr</span>
-            <div className="flex items-center space-x-1 text-xs">
-              <span className="text-gray-500 font-mono">
-                {formatPubkey(comment.pubkey, "short")}
-              </span>
-              {isMention && (
-                <span className="ml-2 px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">
-                  @mention
-                </span>
-              )}
-              {isVerified ? (
-                <div className="bg-green-100 text-green-800 px-2 py-0.5 rounded-full text-xs font-medium flex items-center space-x-1">
-                  <svg
-                    className="w-3 h-3"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  <span>NIP-05</span>
-                </div>
-              ) : (
-                <div className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs font-medium">
-                  ไม่ยืนยันตัวตน
-                </div>
-              )}
-            </div>
-            <span className="text-gray-500 text-sm">
-              • {formatTime(comment.created_at)}
-            </span>
-          </div>
-
-          <div className="text-gray-700 text-sm leading-relaxed">
-            {comment.content}
-          </div>
-
-          <div className="flex items-center space-x-4 mt-3">
-            <button className="text-gray-500 hover:text-red-600 text-sm transition-colors">
-              <svg
-                className="w-4 h-4 inline mr-1"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                />
-              </svg>
-              ถูกใจ
-            </button>
-
-            <button className="text-gray-500 hover:text-green-600 text-sm transition-colors">
-              <svg
-                className="w-4 h-4 inline mr-1"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 10V3L4 14h7v7l9-11h-7z"
-                />
-              </svg>
-              ⚡ Zap
-            </button>
-
-            <button className="text-gray-500 hover:text-blue-600 text-sm transition-colors">
-              <svg
-                className="w-4 h-4 inline mr-1"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                />
-              </svg>
-              ตอบกลับ
-            </button>
-          </div>
+        <div className={`${isNested ? "bg-surface-container-low p-4 rounded-xl shadow-sm" : "bg-surface-container-lowest p-5 rounded-xl shadow-sm border-l-4 border-tertiary/20"}`}>
+          <p className={`font-body text-on-surface-variant leading-relaxed ${isNested ? "text-sm" : ""}`}>
+            {comment.content?.slice(0, 500)}{comment.content?.length > 500 ? "..." : ""}
+          </p>
+        </div>
+        <div className="flex items-center gap-6 pt-1">
+          <button className="flex items-center gap-1.5 text-secondary hover:text-tertiary text-xs font-bold transition-colors">
+            <span className="material-symbols-outlined text-lg">bolt</span>
+            0
+          </button>
+          <button className="flex items-center gap-1.5 text-secondary hover:text-primary text-xs font-bold transition-colors">
+            <span className="material-symbols-outlined text-lg">reply</span>
+            Reply
+          </button>
+          <button className="flex items-center gap-1.5 text-secondary hover:text-primary text-xs font-bold transition-colors">
+            <span className="material-symbols-outlined text-lg">share</span>
+          </button>
         </div>
       </div>
     </div>

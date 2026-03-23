@@ -128,149 +128,183 @@ export default function CreatePost() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-14 sm:h-16">
-            <div className="flex items-center space-x-2 sm:space-x-4">
-              <Link href="/" className="text-gray-600 hover:text-gray-900">
-                <svg
-                  className="w-5 h-5 sm:w-6 sm:h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 19l-7-7 7-7"
-                  />
-                </svg>
+    <div className="min-h-screen bg-surface">
+      {/* TopNavBar */}
+      <header className="fixed top-0 w-full z-50 bg-surface/70 backdrop-blur-xl shadow-[0px_12px_32px_rgba(24,25,51,0.06)]">
+        <div className="flex justify-between items-center px-6 py-4 w-full max-w-screen-2xl mx-auto">
+          <div className="flex items-center gap-8">
+            <Link href="/" className="text-2xl font-black text-primary tracking-tighter hover:opacity-80 transition-opacity">
+              <span className="flex items-center gap-2">
+                <span className="text-3xl">🌏</span>
+                <span className="hidden sm:inline">Panstr</span>
+              </span>
+            </Link>
+            <nav className="hidden md:flex items-center gap-6 font-['Manrope'] font-bold text-lg tracking-tight">
+              <Link href="/" className="text-secondary opacity-80 hover:text-primary hover:opacity-100 transition-colors duration-300">
+                Explore
               </Link>
-              <Link href="/" className="flex items-center space-x-1.5 sm:space-x-2">
-                <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-br from-blue-600 to-purple-600 rounded"></div>
-                <span className="font-bold text-gray-900 text-sm sm:text-base">Panstr</span>
+              <Link href="/communities" className="text-secondary opacity-80 hover:text-primary hover:opacity-100 transition-colors duration-300">
+                Communities
               </Link>
-              <span className="text-xs sm:text-sm text-gray-500 truncate">/ สร้างกระทู้</span>
-            </div>
-            <div className="flex items-center space-x-1.5 sm:space-x-2">
-              <button
-                onClick={() => setPreviewMode(!previewMode)}
-                className={`px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
-                  previewMode
-                    ? "bg-blue-100 text-blue-700"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                {previewMode ? "แก้ไข" : "ดูตัวอย่าง"}
-              </button>
-            </div>
+              <Link href="/discovery" className="text-secondary opacity-80 hover:text-primary hover:opacity-100 transition-colors duration-300">
+                Global
+              </Link>
+            </nav>
+          </div>
+          <div className="flex items-center gap-4">
+            <button className="material-symbols-outlined text-secondary hover:text-primary active:scale-95 transition-transform">
+              notifications
+            </button>
+            <button className="material-symbols-outlined text-secondary hover:text-primary active:scale-95 transition-transform">
+              post_add
+            </button>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-8">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="p-4 sm:p-6 border-b border-gray-200">
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1 sm:mb-2">
-              สร้างกระทู้ใหม่
-            </h1>
-            <p className="text-sm sm:text-base text-gray-600">แชร์เรื่องราวของคุณกับชุมชน Nostr</p>
+      <div className="flex pt-20 min-h-screen">
+        {/* SideNavBar - Desktop Only */}
+        <aside className="hidden lg:flex flex-col w-64 sticky top-20 h-[calc(100vh-5rem)] p-6 gap-4 bg-surface-container-low">
+          <div className="mb-6">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-xl bg-primary-container flex items-center justify-center text-white font-bold">
+                N
+              </div>
+              <div className="overflow-hidden">
+                <p className="font-['Manrope'] font-extrabold text-primary truncate">Nostr Identity</p>
+                <p className="text-xs text-secondary opacity-70 truncate">_@protocol.com</p>
+              </div>
+            </div>
+          </div>
+          <nav className="flex flex-col gap-2 font-['Inter'] font-medium text-sm">
+            <Link href="/" className="flex items-center gap-3 px-4 py-3 text-secondary hover:bg-primary/5 hover:translate-x-1 transition-all duration-200 rounded-lg">
+              <span className="material-symbols-outlined">home</span> Home
+            </Link>
+            <Link href="/discovery" className="flex items-center gap-3 px-4 py-3 text-secondary hover:bg-primary/5 hover:translate-x-1 transition-all duration-200 rounded-lg">
+              <span className="material-symbols-outlined">trending_up</span> Trending
+            </Link>
+            <Link href="/bookmarks" className="flex items-center gap-3 px-4 py-3 text-secondary hover:bg-primary/5 hover:translate-x-1 transition-all duration-200 rounded-lg">
+              <span className="material-symbols-outlined">push_pin</span> Pinned
+            </Link>
+            <Link href="/settings" className="flex items-center gap-3 px-4 py-3 text-secondary hover:bg-primary/5 hover:translate-x-1 transition-all duration-200 rounded-lg">
+              <span className="material-symbols-outlined">settings</span> Settings
+            </Link>
+          </nav>
+          <div className="mt-auto">
+            <button className="w-full py-3 bg-primary text-on-primary rounded-lg shadow-lg font-bold text-sm active:scale-95 transition-transform">
+              Create Post
+            </button>
+          </div>
+        </aside>
+
+        {/* Main Content Area */}
+        <main className="flex-1 px-4 md:px-12 py-8 max-w-5xl mx-auto">
+          {/* Page Header */}
+          <div className="mb-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-extrabold text-primary tracking-tight mb-2">
+                Drafting New Curated Thought
+              </h1>
+              <p className="text-secondary font-body">Decentralized publishing via Nostr protocol.</p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setPreviewMode(!previewMode)}
+                className={`px-6 py-2.5 rounded-lg font-bold text-sm transition-all ${
+                  previewMode
+                    ? "bg-surface-container-high text-primary"
+                    : "bg-surface-container text-secondary hover:bg-surface-container-high"
+                }`}
+              >
+                {previewMode ? "Edit" : "Preview"}
+              </button>
+              <button
+                onClick={handlePublish}
+                disabled={isPublishing || !title.trim() || !content.trim()}
+                className="px-8 py-2.5 bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-lg font-bold text-sm shadow-lg active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isPublishing ? "Publishing..." : "Publish to Nostr"}
+              </button>
+            </div>
           </div>
 
           {!previewMode ? (
-            <div className="p-6 space-y-6">
+            <div className="space-y-8">
               {/* Room Selection */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  เลือกห้อง
-                  <span className="text-red-500">*</span>
-                </label>
+              <div className="bg-surface-container-low p-6 rounded-xl border border-outline-variant/10">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="material-symbols-outlined text-tertiary text-sm">groups</span>
+                  <span className="text-xs uppercase tracking-widest font-bold text-secondary">Select Room</span>
+                </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {OFFICIAL_ROOMS.map((room) => (
                     <button
                       key={room.tag}
                       onClick={() => setSelectedRoom(room)}
-                      className={`p-3 rounded-lg border-2 transition-all ${
+                      className={`p-4 rounded-xl border-2 transition-all duration-300 ${
                         selectedRoom.tag === room.tag
-                          ? `border-blue-500 ${room.color === "blue" ? "bg-blue-50" : room.color === "orange" ? "bg-orange-50" : room.color === "green" ? "bg-green-50" : "bg-purple-50"}`
-                          : "border-gray-200 hover:border-gray-300"
+                          ? "border-primary bg-surface-container-high shadow-md"
+                          : "border-outline-variant/20 hover:border-outline-variant/40 bg-surface-container-lowest"
                       }`}
                     >
-                      <div className="text-2xl mb-1">{room.icon}</div>
-                      <div className="font-medium text-sm">{room.name}</div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {room.description}
-                      </div>
+                      <div className="text-2xl mb-2">{room.icon}</div>
+                      <div className="font-bold text-sm text-primary mb-1">{room.name}</div>
+                      <div className="text-xs text-secondary line-clamp-2">{room.description}</div>
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Title */}
-              <div>
-                <label
-                  htmlFor="title"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  ชื่อกระทู้
-                  <span className="text-red-500">*</span>
+              {/* Title Input */}
+              <div className="group">
+                <label className="block text-xs uppercase tracking-widest font-bold text-secondary mb-2">
+                  Title <span className="text-error">*</span>
                 </label>
                 <input
-                  id="title"
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="กรอกชื่อกระทู้ที่น่าสนใจ..."
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Entry Title..."
+                  className="w-full bg-surface-container-low border border-outline-variant/20 rounded-xl px-6 py-5 text-xl font-headline font-bold text-primary placeholder:text-secondary/40 focus:ring-2 focus:ring-primary/20 focus:border-transparent transition-all outline-none"
                   maxLength={200}
                 />
-                <div className="mt-1 text-xs text-gray-500 text-right">
-                  {title.length}/200
-                </div>
+                <div className="mt-2 text-xs text-secondary text-right">{title.length}/200</div>
               </div>
 
-              {/* Content */}
-              <div>
-                <label
-                  htmlFor="content"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  เนื้อหากระทู้
-                  <span className="text-red-500">*</span>
+              {/* Content Area */}
+              <div className="relative">
+                <label className="block text-xs uppercase tracking-widest font-bold text-secondary mb-2">
+                  Content <span className="text-error">*</span>
                 </label>
                 <textarea
-                  id="content"
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  placeholder="เขียนเนื้อหากระทู้ของคุณ..."
+                  placeholder="Tell your story or share your discovery..."
                   rows={12}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                ></textarea>
+                  className="w-full min-h-[400px] bg-surface-container-lowest border border-outline-variant/20 rounded-xl px-8 py-8 text-lg font-body leading-relaxed text-on-surface placeholder:text-secondary/30 focus:ring-2 focus:ring-primary/20 focus:border-transparent transition-all outline-none resize-none shadow-sm"
+                />
                 <div className="mt-2 flex items-center justify-between">
-                  <div className="text-xs text-gray-500">
-                    รองรับ Markdown: **ตัวหนา**, *ตัวเอียง*, #หัวข้อ
+                  <div className="text-xs text-secondary">
+                    Markdown supported: **bold**, *italic*, #heading
                   </div>
-                  <div className="text-xs text-gray-500">
-                    {content.length} ตัวอักษร
-                  </div>
+                  <div className="text-xs text-secondary">{content.length} characters</div>
                 </div>
               </div>
 
               {/* Room-Specific Tags */}
               {roomTags.length > 0 && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Tags (Optional)
-                    <span className="text-gray-500 font-normal ml-2">- Select up to 5 tags for this room</span>
-                  </label>
+                <div className="bg-surface-container-low p-6 rounded-xl border border-outline-variant/10">
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="material-symbols-outlined text-sm text-secondary">label</span>
+                    <span className="text-xs uppercase tracking-widest font-bold text-secondary">
+                      Categorization & Tags
+                      <span className="text-secondary font-normal ml-2">- Select up to 5 tags for this room</span>
+                    </span>
+                  </div>
                   
-                  {/* Available tags for this room */}
-                  <div className="mb-3">
-                    <p className="text-xs text-gray-600 mb-2">Available tags for {selectedRoom.name}:</p>
+                  {/* Available tags */}
+                  <div className="mb-4">
+                    <p className="text-xs text-on-surface-variant mb-3">Available tags for {selectedRoom.name}:</p>
                     <div className="flex flex-wrap gap-2">
                       {roomTags.map((tag) => {
                         const isSelected = selectedTags.includes(tag);
@@ -287,104 +321,72 @@ export default function CreatePost() {
                               }
                             }}
                             disabled={isDisabled}
-                            className={`px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all duration-200 ${
+                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
                               isSelected
-                                ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md'
+                                ? "bg-secondary-container text-on-secondary-container shadow-md"
                                 : isDisabled
-                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                ? "bg-surface-container-high text-secondary/40 cursor-not-allowed"
+                                : "bg-surface-container-high text-secondary hover:bg-surface-container"
                             }`}
                           >
-                            {tag.replace(/-/g, ' ')}
+                            {tag.replace(/-/g, " ")}
                           </button>
                         );
                       })}
                     </div>
                   </div>
 
-                  {/* Selected tags display */}
+                  {/* Selected tags */}
                   {selectedTags.length > 0 && (
-                    <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                      <span className="text-xs font-medium text-blue-700">Selected:</span>
-                      <div className="flex flex-wrap gap-1">
-                        {selectedTags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="inline-flex items-center gap-1 px-2 py-1 bg-blue-200 text-blue-800 rounded-full text-xs font-medium"
+                    <div className="flex flex-wrap gap-2 pt-4 border-t border-outline-variant/15">
+                      <span className="text-xs font-bold text-secondary uppercase tracking-wider self-center">Selected:</span>
+                      {selectedTags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="inline-flex items-center gap-1 px-4 py-2 bg-secondary-container text-on-secondary-container rounded-full text-sm font-medium"
+                        >
+                          {tag.replace(/-/g, " ")}
+                          <button
+                            type="button"
+                            onClick={() => setSelectedTags(selectedTags.filter(t => t !== tag))}
+                            className="material-symbols-outlined text-xs hover:scale-110 transition-transform"
                           >
-                            {tag.replace(/-/g, ' ')}
-                            <button
-                              type="button"
-                              onClick={() => setSelectedTags(selectedTags.filter(t => t !== tag))}
-                              className="hover:text-blue-900"
-                            >
-                              ×
-                            </button>
-                          </span>
-                        ))}
-                      </div>
+                            close
+                          </button>
+                        </span>
+                      ))}
                     </div>
                   )}
                 </div>
               )}
-
-              {/* Actions */}
-              <div className="flex items-center justify-between pt-6 border-t border-gray-200">
-                <Link
-                  href="/"
-                  className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  ยกเลิก
-                </Link>
-                <button
-                  onClick={handlePublish}
-                  disabled={isPublishing || !title.trim() || !content.trim()}
-                  className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-                    isPublishing || !title.trim() || !content.trim()
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      : `bg-gradient-to-r ${selectedRoom.gradient} text-white hover:opacity-90`
-                  }`}
-                >
-                  {isPublishing ? (
-                    <div className="flex items-center space-x-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      <span>กำลังเผยแพร่...</span>
-                    </div>
-                  ) : (
-                    "เผยแพร่กระทู้"
-                  )}
-                </button>
-              </div>
             </div>
           ) : (
-            <div className="p-6">
-              <div className="bg-gray-50 rounded-lg p-6 mb-6">
-                <div className="flex items-center space-x-2 mb-4">
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      selectedRoom.color === "blue"
-                        ? "bg-blue-100 text-blue-800"
-                        : selectedRoom.color === "orange"
-                          ? "bg-orange-100 text-orange-800"
-                          : selectedRoom.color === "green"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-purple-100 text-purple-800"
-                    }`}
-                  >
-                    {selectedRoom.tag}
-                  </span>
-                  <span className="text-sm text-gray-500">ตัวอย่างกระทู้</span>
+            <div className="bg-surface-container-low p-8 rounded-xl border border-outline-variant/10">
+              <div className="flex items-center gap-3 mb-6">
+                <span className="material-symbols-outlined text-tertiary">visibility</span>
+                <h2 className="text-xl font-bold text-primary">Post Preview</h2>
+              </div>
+              
+              <div className="bg-surface-container-lowest rounded-xl p-6 mb-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-primary-container flex items-center justify-center text-white font-bold">
+                    {selectedRoom.icon}
+                  </div>
+                  <div>
+                    <div className="font-bold text-primary">{selectedRoom.name}</div>
+                    <div className="text-xs text-secondary">{selectedRoom.tag}</div>
+                  </div>
                 </div>
 
                 {title && (
-                  <h1 className="text-3xl font-bold text-gray-900 mb-6">
+                  <h1 className="text-2xl md:text-3xl font-black text-primary mb-6 leading-tight">
                     {title}
                   </h1>
                 )}
 
                 {content && (
                   <div
-                    className="prose max-w-none text-gray-700"
+                    className="prose max-w-none text-on-surface-variant font-body leading-relaxed"
                     dangerouslySetInnerHTML={{
                       __html: `<p class="mb-4">${formatContent(content)}</p>`,
                     }}
@@ -392,59 +394,80 @@ export default function CreatePost() {
                 )}
 
                 {!title && !content && (
-                  <div className="text-center py-12 text-gray-500">
-                    <div className="text-lg mb-2">ยังไม่มีเนื้อหา</div>
-                    <div className="text-sm">
-                      กรุณากรอกชื่อกระทู้และเนื้อหาเพื่อดูตัวอย่าง
-                    </div>
+                  <div className="text-center py-12 text-secondary">
+                    <span className="material-symbols-outlined text-4xl mb-3 opacity-40">post_add</span>
+                    <div className="text-lg font-medium mb-2">No content yet</div>
+                    <div className="text-sm">Please enter title and content to preview</div>
                   </div>
                 )}
               </div>
 
-              <div className="flex justify-end space-x-3">
-                <button
-                  onClick={() => setPreviewMode(false)}
-                  className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  กลับไปแก้ไข
-                </button>
-                <button
-                  onClick={handlePublish}
-                  disabled={isPublishing || !title.trim() || !content.trim()}
-                  className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-                    isPublishing || !title.trim() || !content.trim()
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      : `bg-gradient-to-r ${selectedRoom.gradient} text-white hover:opacity-90`
-                  }`}
-                >
-                  {isPublishing ? (
-                    <div className="flex items-center space-x-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      <span>กำลังเผยแพร่...</span>
-                    </div>
-                  ) : (
-                    "เผยแพร่กระทู้"
-                  )}
-                </button>
-              </div>
+              {selectedTags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-6">
+                  {selectedTags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="px-3 py-1 bg-secondary-container text-on-secondary-container rounded-full text-xs font-bold"
+                    >
+                      #{tag.replace(/-/g, " ")}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           )}
-        </div>
 
-        {/* Tips */}
-        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="font-semibold text-blue-900 mb-3">
-            💡 เคล็ดลับสำหรับกระทู้ที่ดี
-          </h3>
-          <ul className="space-y-2 text-sm text-blue-800">
-            <li>• เลือกห้องที่เหมาะสมกับเนื้อหาของคุณ</li>
-            <li>• ใช้ชื่อกระทู้ที่กระชับและน่าสนใจ</li>
-            <li>• แบ่งเนื้อหาเป็นย่อหน้าให้อ่านง่าย</li>
-            <li>• ใช้ Markdown เพื่อจัดรูปแบบข้อความให้สวยงาม</li>
-            <li>• ตรวจสอบข้อมูลก่อนเผยแพร่</li>
-          </ul>
-        </div>
-      </main>
+          {/* Tips Section */}
+          <div className="mt-8 bg-surface-container-low p-6 rounded-xl border border-outline-variant/10">
+            <h3 className="font-bold text-primary mb-4 flex items-center gap-2">
+              <span className="material-symbols-outlined text-tertiary text-sm">lightbulb</span>
+              Tips for Great Posts
+            </h3>
+            <ul className="space-y-2 text-sm text-on-surface-variant">
+              <li className="flex items-start gap-2">
+                <span className="material-symbols-outlined text-tertiary text-sm mt-0.5">check_circle</span>
+                <span>Choose the room that best fits your content topic</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="material-symbols-outlined text-tertiary text-sm mt-0.5">check_circle</span>
+                <span>Use clear, concise titles that capture attention</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="material-symbols-outlined text-tertiary text-sm mt-0.5">check_circle</span>
+                <span>Break content into paragraphs for readability</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="material-symbols-outlined text-tertiary text-sm mt-0.5">check_circle</span>
+                <span>Use Markdown formatting for emphasis and structure</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="material-symbols-outlined text-tertiary text-sm mt-0.5">check_circle</span>
+                <span>Review your content before publishing to Nostr</span>
+              </li>
+            </ul>
+          </div>
+        </main>
+      </div>
+
+      {/* BottomNavBar (Mobile Only) */}
+      <nav className="fixed bottom-0 left-0 w-full flex justify-around items-center h-16 px-4 pb-safe bg-surface/80 backdrop-blur-md lg:hidden z-50 border-t border-outline-variant/20 shadow-[0px_-4px_20px_rgba(0,0,0,0.03)]">
+        <Link href="/" className="flex flex-col items-center justify-center text-secondary opacity-60 hover:opacity-100 transition-all">
+          <span className="material-symbols-outlined">dynamic_feed</span>
+          <span className="font-['Inter'] text-[10px] uppercase tracking-widest">Feed</span>
+        </Link>
+        <Link href="/search" className="flex flex-col items-center justify-center text-secondary opacity-60 hover:opacity-100 transition-all">
+          <span className="material-symbols-outlined">search</span>
+          <span className="font-['Inter'] text-[10px] uppercase tracking-widest">Search</span>
+        </Link>
+        <Link href="/_create" className="flex flex-col items-center justify-center text-tertiary font-bold scale-110 transition-all">
+          <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>post_add</span>
+          <span className="font-['Inter'] text-[10px] uppercase tracking-widest">Post</span>
+        </Link>
+        <Link href="/profile" className="flex flex-col items-center justify-center text-secondary opacity-60 hover:opacity-100 transition-all">
+          <span className="material-symbols-outlined">account_circle</span>
+          <span className="font-['Inter'] text-[10px] uppercase tracking-widest">Profile</span>
+        </Link>
+      </nav>
     </div>
   );
 }
