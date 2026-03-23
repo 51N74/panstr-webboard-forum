@@ -4,7 +4,7 @@ import {
   SparklesIcon,
   StarIcon,
   ArrowDownTrayIcon,
-  ExternalLinkIcon
+  ArrowTopRightOnSquareIcon
 } from "@heroicons/react/24/outline";
 import { useState, useEffect } from "react";
 import { useNostr } from "../../context/NostrContext";
@@ -215,7 +215,7 @@ const AppRecommender = ({ apps, onAppSelect }) => {
                   className="btn btn-ghost btn-sm"
                   title="Visit Website"
                 >
-                  <ExternalLinkIcon className="w-4 h-4" />
+                  <ArrowTopRightOnSquareIcon className="w-4 h-4" />
                 </button>
               )}
             </div>

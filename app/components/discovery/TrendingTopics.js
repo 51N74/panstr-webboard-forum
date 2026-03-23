@@ -2,12 +2,11 @@
 
 import {
   FireIcon,
-  TrendingUpIcon,
+  ArrowTrendingUpIcon,
   ChartBarIcon,
   EyeIcon,
   ClockIcon,
   TagIcon,
-  ArrowTrendingUpIcon,
   ChatBubbleLeftIcon,
   UserGroupIcon
 } from "@heroicons/react/24/outline";
@@ -42,7 +41,7 @@ const TrendingTopics = ({ topics, onTopicClick }) => {
     if (trend === "exploding") return { icon: FireIcon, color: "text-error", label: "Exploding" };
     if (trend === "rising") return { icon: ArrowTrendingUpIcon, color: "text-success", label: "Rising" };
     if (trend === "stable") return { icon: ChartBarIcon, color: "text-warning", label: "Stable" };
-    return { icon: TrendingUpIcon, color: "text-info", label: "Growing" };
+    return { icon: ArrowTrendingUpIcon, color: "text-info", label: "Growing" };
   };
 
   if (!topics || topics.length === 0) {
@@ -54,7 +53,7 @@ const TrendingTopics = ({ topics, onTopicClick }) => {
           Start participating in discussions to see trending topics appear here.
         </p>
         <button
-          onClick={() => window.location.href = "/_create"}
+          onClick={() => (window.location.href = "/_create")}
           className="btn btn-primary"
         >
           Start a Discussion
@@ -74,9 +73,7 @@ const TrendingTopics = ({ topics, onTopicClick }) => {
               <FireIcon className="w-5 h-5 text-error mr-2" />
               Top Topics
             </h3>
-            <span className="text-sm text-base-content/50">
-              Last 7 days
-            </span>
+            <span className="text-sm text-base-content/50">Last 7 days</span>
           </div>
 
           <div className="space-y-3">
@@ -93,7 +90,9 @@ const TrendingTopics = ({ topics, onTopicClick }) => {
                 >
                   <div className="flex items-center space-x-3">
                     {/* Rank Badge */}
-                    <div className={`w-6 h-6 rounded-full ${trendLevel.color} flex items-center justify-center text-xs font-bold text-base-content`}>
+                    <div
+                      className={`w-6 h-6 rounded-full ${trendLevel.color} flex items-center justify-center text-xs font-bold text-base-content`}
+                    >
                       {index + 1}
                     </div>
 
@@ -104,7 +103,9 @@ const TrendingTopics = ({ topics, onTopicClick }) => {
                       </div>
                       <div className="flex items-center space-x-2 text-xs text-base-content/60">
                         <div className="flex items-center space-x-1">
-                          <VelocityIcon className={`w-3 h-3 ${velocity.color}`} />
+                          <VelocityIcon
+                            className={`w-3 h-3 ${velocity.color}`}
+                          />
                           <span>{velocity.label}</span>
                         </div>
                         <span>•</span>
@@ -115,8 +116,14 @@ const TrendingTopics = ({ topics, onTopicClick }) => {
 
                   {/* Trending Indicator */}
                   <div className="flex items-center space-x-1">
-                    <TrendingUpIcon className={`w-4 h-4 ${getTrendColor(topic.count)}`} />
-                    <span className={`text-sm font-medium ${getTrendColor(topic.count)}`}>
+                    <ArrowTrendingUpIcon
+                      className={`w-4 h-4 ${getTrendColor(topic.count)}`}
+                    />
+                    <span
+                      className={`text-sm font-medium ${getTrendColor(
+                        topic.count,
+                      )}`}
+                    >
                       {topic.count}
                     </span>
                   </div>
@@ -137,7 +144,10 @@ const TrendingTopics = ({ topics, onTopicClick }) => {
 
             <div className="space-y-2">
               {topics
-                .filter(topic => topic.trend === "rising" || topic.trend === "exploding")
+                .filter(
+                  (topic) =>
+                    topic.trend === "rising" || topic.trend === "exploding",
+                )
                 .slice(0, 5)
                 .map((topic) => (
                   <div
@@ -173,7 +183,7 @@ const TrendingTopics = ({ topics, onTopicClick }) => {
 
             <div className="space-y-2">
               {topics
-                .filter(topic => topic.trend === "stable")
+                .filter((topic) => topic.trend === "stable")
                 .slice(0, 5)
                 .map((topic) => (
                   <div
@@ -199,7 +209,9 @@ const TrendingTopics = ({ topics, onTopicClick }) => {
 
       {/* Topic Statistics */}
       <div className="bg-base-100 rounded-lg border border-base-300 p-6">
-        <h3 className="text-lg font-semibold text-base-content mb-4">Topic Analytics</h3>
+        <h3 className="text-lg font-semibold text-base-content mb-4">
+          Topic Analytics
+        </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="text-center p-4 bg-base-200 rounded-lg">
@@ -211,7 +223,11 @@ const TrendingTopics = ({ topics, onTopicClick }) => {
 
           <div className="text-center p-4 bg-base-200 rounded-lg">
             <div className="text-2xl font-bold text-success">
-              {topics.filter(t => t.trend === "rising" || t.trend === "exploding").length}
+              {
+                topics.filter(
+                  (t) => t.trend === "rising" || t.trend === "exploding",
+                ).length
+              }
             </div>
             <div className="text-sm text-base-content/70">Rising Topics</div>
           </div>
@@ -226,12 +242,18 @@ const TrendingTopics = ({ topics, onTopicClick }) => {
 
         {/* Topic Distribution Chart */}
         <div className="mt-6 p-4 bg-base-200 rounded-lg">
-          <h4 className="text-sm font-medium text-base-content mb-3">Topic Distribution</h4>
+          <h4 className="text-sm font-medium text-base-content mb-3">
+            Topic Distribution
+          </h4>
           <div className="space-y-2">
             {topics.slice(0, 5).map((topic) => {
-              const percentage = (topic.count / Math.max(...topics.map(t => t.count))) * 100;
+              const percentage =
+                (topic.count / Math.max(...topics.map((t) => t.count))) * 100;
               return (
-                <div key={`chart-${topic.topic}`} className="flex items-center space-x-3">
+                <div
+                  key={`chart-${topic.topic}`}
+                  className="flex items-center space-x-3"
+                >
                   <span className="text-xs text-base-content/70 w-20 truncate">
                     #{topic.topic}
                   </span>
@@ -253,28 +275,38 @@ const TrendingTopics = ({ topics, onTopicClick }) => {
 
       {/* Related Actions */}
       <div className="bg-base-100 rounded-lg border border-base-300 p-6">
-        <h3 className="text-lg font-semibold text-base-content mb-4">Explore Related</h3>
+        <h3 className="text-lg font-semibold text-base-content mb-4">
+          Explore Related
+        </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <button
-            onClick={() => window.location.href = "/search"}
+            onClick={() => (window.location.href = "/search")}
             className="flex items-center space-x-3 p-4 rounded-lg border border-base-300 hover:border-primary hover:bg-primary/5 transition-all text-left"
           >
             <EyeIcon className="w-6 h-6 text-primary" />
             <div>
-              <div className="font-medium text-base-content">Browse All Content</div>
-              <div className="text-sm text-base-content/70">Search posts and threads</div>
+              <div className="font-medium text-base-content">
+                Browse All Content
+              </div>
+              <div className="text-sm text-base-content/70">
+                Search posts and threads
+              </div>
             </div>
           </button>
 
           <button
-            onClick={() => window.location.href = "/apps"}
+            onClick={() => (window.location.href = "/apps")}
             className="flex items-center space-x-3 p-4 rounded-lg border border-base-300 hover:border-primary hover:bg-primary/5 transition-all text-left"
           >
             <ChatBubbleLeftIcon className="w-6 h-6 text-primary" />
             <div>
-              <div className="font-medium text-base-content">Join Discussions</div>
-              <div className="text-sm text-base-content/70">Find relevant communities</div>
+              <div className="font-medium text-base-content">
+                Join Discussions
+              </div>
+              <div className="text-sm text-base-content/70">
+                Find relevant communities
+              </div>
             </div>
           </button>
         </div>

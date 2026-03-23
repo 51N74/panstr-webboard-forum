@@ -4,7 +4,7 @@ import {
   StarIcon,
   ArrowDownTrayIcon,
   ShareIcon,
-  ExternalLinkIcon,
+  ArrowTopRightOnSquareIcon,
   CalendarIcon,
   TagIcon,
   CogIcon,
@@ -179,7 +179,7 @@ const AppCard = ({ app, onAction }) => {
                 className="btn btn-sm btn-ghost"
                 title="Visit Website"
               >
-                <ExternalLinkIcon className="w-4 h-4" />
+                <ArrowTopRightOnSquareIcon className="w-4 h-4" />
               </button>
             )}
             <button

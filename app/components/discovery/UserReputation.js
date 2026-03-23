@@ -11,7 +11,6 @@ import {
   TagIcon,
   SparklesIcon,
   AcademicCapIcon,
-  LightningBoltIcon,
   HeartIcon,
   EyeIcon
 } from "@heroicons/react/24/outline";
@@ -95,7 +94,7 @@ const UserReputation = ({ reputation, user }) => {
     { id: "overview", label: "Overview", icon: ChartBarIcon },
     { id: "expertise", label: "Expertise", icon: AcademicCapIcon },
     { id: "activity", label: "Activity", icon: ClockIcon },
-    { id: "impact", label: "Impact", icon: LightningBoltIcon }
+    { id: "impact", label: "Impact", icon: BoltIcon }
   ];
 
   return (
@@ -403,7 +402,7 @@ const UserReputation = ({ reputation, user }) => {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="text-center p-4 bg-success/10 border border-success/20 rounded-lg">
-                  <LightningBoltIcon className="w-8 h-8 mx-auto text-success mb-2" />
+                  <BoltIcon className="w-8 h-8 mx-auto text-success mb-2" />
                   <div className="text-2xl font-bold text-success">{formatNumber(totalScore)}</div>
                   <div className="text-sm text-base-content/70">Total Impact Score</div>
                 </div>
@@ -435,7 +434,7 @@ const UserReputation = ({ reputation, user }) => {
                   <span className="text-sm text-base-content">React to and comment on others' content</span>
                 </div>
                 <div className="flex items-center space-x-3 p-2 rounded-lg hover:bg-primary/5 transition-colors">
-                  <LightningBoltIcon className="w-5 h-5 text-accent" />
+                  <BoltIcon className="w-5 h-5 text-accent" />
                   <span className="text-sm text-base-content">Support creators with zaps and tips</span>
                 </div>
                 <div className="flex items-center space-x-3 p-2 rounded-lg hover:bg-primary/5 transition-colors">

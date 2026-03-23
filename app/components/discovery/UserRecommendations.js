@@ -3,7 +3,7 @@
 import {
   UserIcon,
   UserPlusIcon,
-  MessageIcon,
+  ChatBubbleLeftIcon,
   StarIcon,
   CalendarIcon,
   TagIcon,
@@ -198,7 +198,7 @@ const UserRecommendations = ({ recommendations, onUserAction }) => {
                   className="btn btn-ghost btn-sm"
                   title="Send Message"
                 >
-                  <MessageIcon className="w-4 h-4" />
+                  <ChatBubbleLeftIcon className="w-4 h-4" />
                 </button>
               </div>
 

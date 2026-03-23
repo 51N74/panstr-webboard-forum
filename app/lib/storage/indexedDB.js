@@ -627,18 +627,20 @@ class ForumDatabase extends Dexie {
 // Create and export database instance
 const db = new ForumDatabase();
 
-// Initialize database and cleanup expired cache on app start
-db.open()
-  .then(() => {
-    console.log("Database opened successfully");
-    // Cleanup expired cache entries
-    db.cleanupExpiredCache().then((result) => {
-      console.log("Cache cleanup completed:", result);
+// Initialize database and cleanup expired cache on client side only
+if (typeof window !== "undefined") {
+  db.open()
+    .then(() => {
+      console.log("Database opened successfully");
+      // Cleanup expired cache entries
+      db.cleanupExpiredCache().then((result) => {
+        console.log("Cache cleanup completed:", result);
+      });
+    })
+    .catch((error) => {
+      console.error("Database failed to open:", error);
     });
-  })
-  .catch((error) => {
-    console.error("Database failed to open:", error);
-  });
+}
 
 export default db;
 

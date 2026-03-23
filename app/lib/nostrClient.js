@@ -694,7 +694,7 @@ export function verifyAuthToken(token, publicKey) {
   }
 }
 
-export { getPublicKey, bytesToHex, hexToBytes };
+export { getPublicKey, bytesToHex, hexToBytes, finalizeEvent };
 
 // Default relay URLs for the pool
 const DEFAULT_RELAYS = [
