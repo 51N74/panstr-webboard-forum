@@ -55,6 +55,7 @@ const Notifications = ({ compact = false }) => {
   }, [user?.pubkey]);
 
   const loadNotificationSettings = async () => {
+    if (!db || !db.getNotificationSettings) return;
     try {
       const settings = await db.getNotificationSettings(user.pubkey);
       setNotificationSettings(
@@ -71,7 +72,7 @@ const Notifications = ({ compact = false }) => {
   };
 
   const checkNostrNotifications = async () => {
-    if (!user?.pubkey) return;
+    if (!user?.pubkey || !db || !db.getNotifications) return;
 
     try {
       setLoading(true);
@@ -227,8 +228,9 @@ const Notifications = ({ compact = false }) => {
   };
 
   const markAsRead = async (notifId) => {
+    if (!db || !db.markNotificationAsRead) return;
     try {
-      await db.markNotificationAsRead(notifId);
+      await db.markNotificationAsRead(user.pubkey, notifId);
       // The live query will automatically update the unread count
     } catch (error) {
       console.error("Error marking notification as read:", error);
@@ -236,6 +238,7 @@ const Notifications = ({ compact = false }) => {
   };
 
   const markAllAsRead = async () => {
+    if (!db || !db.markAllNotificationsAsRead) return;
     try {
       await db.markAllNotificationsAsRead(user.pubkey);
       // The live query will automatically update the unread count
@@ -245,8 +248,9 @@ const Notifications = ({ compact = false }) => {
   };
 
   const deleteNotification = async (notifId) => {
+    if (!db || !db.deleteNotification) return;
     try {
-      await db.deleteNotification(notifId);
+      await db.deleteNotification(user.pubkey, notifId);
     } catch (error) {
       console.error("Error deleting notification:", error);
     }

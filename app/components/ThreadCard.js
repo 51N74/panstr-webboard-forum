@@ -42,8 +42,10 @@ export default function ThreadCard({ thread, roomId }) {
 
       // Initial read of zap totals from local DB cache (fast)
       try {
-        const summary = await db.getZapTotalForEvent(thread.id);
-        if (mounted) setZapTotal(summary?.totalAmount || 0);
+        if (db && db.getZapTotalForEvent) {
+          const summary = await db.getZapTotalForEvent(thread.id);
+          if (mounted) setZapTotal(summary?.totalAmount || 0);
+        }
       } catch (err) {
         // ignore DB read errors
       }
@@ -56,10 +58,12 @@ export default function ThreadCard({ thread, roomId }) {
           } catch (e) {}
           zapDbSubRef.current = null;
         }
+        
+        // liveZapsForEvent already has its own internal db check
         const dbSub = liveZapsForEvent(thread.id).subscribe((zaps) => {
           try {
             const sum = (zaps || []).reduce((s, z) => s + (z.amount || 0), 0);
-            setZapTotal(sum);
+            if (mounted) setZapTotal(sum);
           } catch (e) {
             console.error("Error computing live zap total:", e);
           }
@@ -82,7 +86,7 @@ export default function ThreadCard({ thread, roomId }) {
             try {
               // Basic verification and extraction
               const verification = verifyZapReceipt(event);
-              if (verification && verification.isValid) {
+              if (verification && verification.isValid && db && db.addZapReceipt) {
                 // Persist to local DB for aggregation and UI
                 await db.addZapReceipt({
                   eventId: verification.eventId || thread.id,

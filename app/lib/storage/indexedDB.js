@@ -464,7 +464,11 @@ class ForumDatabase extends Dexie {
     return query.reverse().limit(limit).toArray();
   }
 
-  async markNotificationAsRead(notifId) {
+  async markNotificationAsRead(userId, notifId) {
+    // Check if notifId is provided, if not mark all as read for user
+    if (!notifId) {
+      return this.markAllNotificationsAsRead(userId);
+    }
     return this.notifications.update(notifId, { isRead: true });
   }
 
@@ -479,8 +483,36 @@ class ForumDatabase extends Dexie {
       .count();
   }
 
-  async deleteNotification(notifId) {
+  async deleteNotification(userId, notifId) {
+    // If no notifId, clear all for user
+    if (!notifId) {
+      return this.clearNotifications(userId);
+    }
     return this.notifications.delete(notifId);
+  }
+
+  async clearNotifications(userId) {
+    return this.notifications.where({ userId }).delete();
+  }
+
+  async getNotificationSettings(userId) {
+    const settings = await this.notificationSettings.where({ userId }).first();
+    return settings || null;
+  }
+
+  async updateNotificationSettings(userId, settings) {
+    const existing = await this.notificationSettings.where({ userId }).first();
+    const payload = {
+      userId,
+      ...settings,
+      timestamp: Date.now(),
+    };
+
+    if (existing) {
+      return this.notificationSettings.update(existing.id, payload);
+    } else {
+      return this.notificationSettings.add(payload);
+    }
   }
 
   // Search cache methods
@@ -624,43 +656,54 @@ class ForumDatabase extends Dexie {
   }
 }
 
-// Create and export database instance
-const db = new ForumDatabase();
+// Create database instance only on client side
+// Using a proxy or empty object to prevent destructuring errors on SSR
+const db = typeof window !== "undefined" ? new ForumDatabase() : {};
 
-// Initialize database and cleanup expired cache on app start
-db.open()
-  .then(() => {
-    console.log("Database opened successfully");
-    // Cleanup expired cache entries
-    db.cleanupExpiredCache().then((result) => {
-      console.log("Cache cleanup completed:", result);
+// Initialize database and cleanup expired cache on app start (client-side only)
+if (typeof window !== "undefined" && db instanceof Dexie) {
+  db.open()
+    .then(() => {
+      console.log("Database opened successfully");
+      // Cleanup expired cache entries
+      db.cleanupExpiredCache().then((result) => {
+        console.log("Cache cleanup completed:", result);
+      });
+    })
+    .catch((error) => {
+      console.error("Database failed to open:", error);
     });
-  })
-  .catch((error) => {
-    console.error("Database failed to open:", error);
-  });
+}
 
 export default db;
 
-// Export live queries for reactive updates
+// Export live queries with safety checks for SSR
 export const liveBookmarks = (userId) =>
-  liveQuery(() => db.bookmarks.where({ userId }).reverse().limit(20).toArray());
+  liveQuery(() => {
+    if (!db || !db.bookmarks) return [];
+    return db.bookmarks.where({ userId }).reverse().limit(20).toArray();
+  });
 
 export const liveNotifications = (userId) =>
-  liveQuery(() =>
-    db.notifications
+  liveQuery(() => {
+    if (!db || !db.notifications) return [];
+    return db.notifications
       .where({ userId })
       .filter((notif) => !notif.isRead)
-      .toArray(),
-  );
+      .toArray();
+  });
 
 export const liveZapsForEvent = (eventId) =>
-  liveQuery(() => db.zapReceipts.where({ eventId }).toArray());
+  liveQuery(() => {
+    if (!db || !db.zapReceipts) return [];
+    return db.zapReceipts.where({ eventId }).toArray();
+  });
 
 export const liveUnreadCount = (userId) =>
-  liveQuery(() =>
-    db.notifications
+  liveQuery(() => {
+    if (!db || !db.notifications) return 0;
+    return db.notifications
       .where({ userId })
       .filter((notif) => !notif.isRead)
-      .count(),
-  );
+      .count();
+  });
