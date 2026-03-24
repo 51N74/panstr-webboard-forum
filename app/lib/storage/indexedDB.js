@@ -624,43 +624,53 @@ class ForumDatabase extends Dexie {
   }
 }
 
-// Create and export database instance
-const db = new ForumDatabase();
+// Create database instance only on client side
+const db = typeof window !== "undefined" ? new ForumDatabase() : null;
 
-// Initialize database and cleanup expired cache on app start
-db.open()
-  .then(() => {
-    console.log("Database opened successfully");
-    // Cleanup expired cache entries
-    db.cleanupExpiredCache().then((result) => {
-      console.log("Cache cleanup completed:", result);
+// Initialize database and cleanup expired cache on app start (client-side only)
+if (db) {
+  db.open()
+    .then(() => {
+      console.log("Database opened successfully");
+      // Cleanup expired cache entries
+      db.cleanupExpiredCache().then((result) => {
+        console.log("Cache cleanup completed:", result);
+      });
+    })
+    .catch((error) => {
+      console.error("Database failed to open:", error);
     });
-  })
-  .catch((error) => {
-    console.error("Database failed to open:", error);
-  });
+}
 
 export default db;
 
-// Export live queries for reactive updates
+// Export live queries with safety checks for SSR
 export const liveBookmarks = (userId) =>
-  liveQuery(() => db.bookmarks.where({ userId }).reverse().limit(20).toArray());
+  liveQuery(() => {
+    if (!db) return [];
+    return db.bookmarks.where({ userId }).reverse().limit(20).toArray();
+  });
 
 export const liveNotifications = (userId) =>
-  liveQuery(() =>
-    db.notifications
+  liveQuery(() => {
+    if (!db) return [];
+    return db.notifications
       .where({ userId })
       .filter((notif) => !notif.isRead)
-      .toArray(),
-  );
+      .toArray();
+  });
 
 export const liveZapsForEvent = (eventId) =>
-  liveQuery(() => db.zapReceipts.where({ eventId }).toArray());
+  liveQuery(() => {
+    if (!db) return [];
+    return db.zapReceipts.where({ eventId }).toArray();
+  });
 
 export const liveUnreadCount = (userId) =>
-  liveQuery(() =>
-    db.notifications
+  liveQuery(() => {
+    if (!db) return 0;
+    return db.notifications
       .where({ userId })
       .filter((notif) => !notif.isRead)
-      .count(),
-  );
+      .count();
+  });

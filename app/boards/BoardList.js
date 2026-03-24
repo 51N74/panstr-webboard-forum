@@ -124,15 +124,25 @@ export default function BoardList() {
           <div className="bg-surface-container-low p-6 rounded-xl h-full flex flex-col">
             {/* User Identity */}
             <div className="flex items-center gap-3 mb-6 pb-4 border-b border-outline-variant/15">
-              <div className="w-12 h-12 rounded-xl bg-primary-container flex items-center justify-center text-white font-bold text-xl">
-                {user?.name?.[0]?.toUpperCase() || user?.npub?.substring(0, 2).toUpperCase() || "N"}
+              <div className="w-12 h-12 rounded-xl bg-primary-container flex items-center justify-center overflow-hidden">
+                {user?.picture ? (
+                  <img 
+                    src={user.picture} 
+                    alt={user?.display_name || user?.name || "User"} 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-white font-bold text-xl">
+                    {user?.name?.[0]?.toUpperCase() || user?.npub?.substring(0, 2).toUpperCase() || "N"}
+                  </span>
+                )}
               </div>
               <div className="overflow-hidden">
                 <h3 className="font-['Manrope'] font-extrabold text-primary truncate">
                   {user?.display_name || user?.name || "Nostr Identity"}
                 </h3>
                 <p className="text-xs text-secondary opacity-70 truncate">
-                  {user?.nip05 || "_@protocol.com"}
+                  {user?.nip05 || "Not verified"}
                 </p>
               </div>
             </div>
@@ -160,13 +170,13 @@ export default function BoardList() {
                 <span className="material-symbols-outlined">push_pin</span>
                 <span>Pinned</span>
               </Link>
-              <Link
+              {/* <Link
                 href="/communities"
                 className="flex items-center gap-3 p-3 text-secondary hover:bg-primary/5 hover:translate-x-1 rounded-lg cursor-pointer transition-all duration-200"
               >
                 <span className="material-symbols-outlined">groups</span>
                 <span>Communities</span>
-              </Link>
+              </Link> */}
               <Link
                 href="/settings"
                 className="flex items-center gap-3 p-3 text-secondary hover:bg-primary/5 hover:translate-x-1 rounded-lg cursor-pointer transition-all duration-200"
