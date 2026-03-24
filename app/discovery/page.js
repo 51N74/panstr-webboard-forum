@@ -8,7 +8,7 @@ import {
   ChartBarIcon,
   SparklesIcon,
   UserIcon,
-  TrendingUpIcon,
+  ArrowTrendingUpIcon,
   ClockIcon,
   StarIcon,
   EyeIcon,
@@ -59,7 +59,7 @@ export default function DiscoveryPage() {
     {
       id: "explore",
       label: "Explore",
-      icon: TrendingUpIcon,
+      icon: ArrowTrendingUpIcon,
       description: "Discover new connections"
     }
   ];
@@ -160,7 +160,7 @@ export default function DiscoveryPage() {
                 {loading ? (
                   <span className="loading loading-spinner loading-sm"></span>
                 ) : (
-                  <TrendingUpIcon className="w-5 h-5" />
+                  <ArrowTrendingUpIcon className="w-5 h-5" />
                 )}
                 Refresh
               </button>
@@ -188,7 +188,7 @@ export default function DiscoveryPage() {
                 <div className="text-2xl font-bold text-success">{data.stats.activeUsers.toLocaleString()}</div>
                 <div className="text-sm text-base-content/70">Active Today</div>
               </div>
-              <TrendingUpIcon className="w-8 h-8 text-success/20" />
+              <ArrowTrendingUpIcon className="w-8 h-8 text-success/20" />
             </div>
           </div>
 

@@ -464,7 +464,11 @@ class ForumDatabase extends Dexie {
     return query.reverse().limit(limit).toArray();
   }
 
-  async markNotificationAsRead(notifId) {
+  async markNotificationAsRead(userId, notifId) {
+    // Check if notifId is provided, if not mark all as read for user
+    if (!notifId) {
+      return this.markAllNotificationsAsRead(userId);
+    }
     return this.notifications.update(notifId, { isRead: true });
   }
 
@@ -479,8 +483,36 @@ class ForumDatabase extends Dexie {
       .count();
   }
 
-  async deleteNotification(notifId) {
+  async deleteNotification(userId, notifId) {
+    // If no notifId, clear all for user
+    if (!notifId) {
+      return this.clearNotifications(userId);
+    }
     return this.notifications.delete(notifId);
+  }
+
+  async clearNotifications(userId) {
+    return this.notifications.where({ userId }).delete();
+  }
+
+  async getNotificationSettings(userId) {
+    const settings = await this.notificationSettings.where({ userId }).first();
+    return settings || null;
+  }
+
+  async updateNotificationSettings(userId, settings) {
+    const existing = await this.notificationSettings.where({ userId }).first();
+    const payload = {
+      userId,
+      ...settings,
+      timestamp: Date.now(),
+    };
+
+    if (existing) {
+      return this.notificationSettings.update(existing.id, payload);
+    } else {
+      return this.notificationSettings.add(payload);
+    }
   }
 
   // Search cache methods
@@ -625,10 +657,11 @@ class ForumDatabase extends Dexie {
 }
 
 // Create database instance only on client side
-const db = typeof window !== "undefined" ? new ForumDatabase() : null;
+// Using a proxy or empty object to prevent destructuring errors on SSR
+const db = typeof window !== "undefined" ? new ForumDatabase() : {};
 
 // Initialize database and cleanup expired cache on app start (client-side only)
-if (db) {
+if (typeof window !== "undefined" && db instanceof Dexie) {
   db.open()
     .then(() => {
       console.log("Database opened successfully");
@@ -647,13 +680,13 @@ export default db;
 // Export live queries with safety checks for SSR
 export const liveBookmarks = (userId) =>
   liveQuery(() => {
-    if (!db) return [];
+    if (!db || !db.bookmarks) return [];
     return db.bookmarks.where({ userId }).reverse().limit(20).toArray();
   });
 
 export const liveNotifications = (userId) =>
   liveQuery(() => {
-    if (!db) return [];
+    if (!db || !db.notifications) return [];
     return db.notifications
       .where({ userId })
       .filter((notif) => !notif.isRead)
@@ -662,13 +695,13 @@ export const liveNotifications = (userId) =>
 
 export const liveZapsForEvent = (eventId) =>
   liveQuery(() => {
-    if (!db) return [];
+    if (!db || !db.zapReceipts) return [];
     return db.zapReceipts.where({ eventId }).toArray();
   });
 
 export const liveUnreadCount = (userId) =>
   liveQuery(() => {
-    if (!db) return 0;
+    if (!db || !db.notifications) return 0;
     return db.notifications
       .where({ userId })
       .filter((notif) => !notif.isRead)

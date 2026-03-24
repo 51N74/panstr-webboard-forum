@@ -2,12 +2,11 @@
 
 import {
   FireIcon,
-  TrendingUpIcon,
+  ArrowTrendingUpIcon,
   ChartBarIcon,
   EyeIcon,
   ClockIcon,
   TagIcon,
-  ArrowTrendingUpIcon,
   ChatBubbleLeftIcon,
   UserGroupIcon
 } from "@heroicons/react/24/outline";
@@ -42,7 +41,7 @@ const TrendingTopics = ({ topics, onTopicClick }) => {
     if (trend === "exploding") return { icon: FireIcon, color: "text-error", label: "Exploding" };
     if (trend === "rising") return { icon: ArrowTrendingUpIcon, color: "text-success", label: "Rising" };
     if (trend === "stable") return { icon: ChartBarIcon, color: "text-warning", label: "Stable" };
-    return { icon: TrendingUpIcon, color: "text-info", label: "Growing" };
+    return { icon: ArrowTrendingUpIcon, color: "text-info", label: "Growing" };
   };
 
   if (!topics || topics.length === 0) {
@@ -115,7 +114,7 @@ const TrendingTopics = ({ topics, onTopicClick }) => {
 
                   {/* Trending Indicator */}
                   <div className="flex items-center space-x-1">
-                    <TrendingUpIcon className={`w-4 h-4 ${getTrendColor(topic.count)}`} />
+                    <ArrowTrendingUpIcon className={`w-4 h-4 ${getTrendColor(topic.count)}`} />
                     <span className={`text-sm font-medium ${getTrendColor(topic.count)}`}>
                       {topic.count}
                     </span>
