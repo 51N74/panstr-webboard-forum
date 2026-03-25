@@ -18,8 +18,11 @@ import db from "../../../lib/storage/indexedDB";
 import ReactionButton from "../reactions/ReactionButton";
 import ZapButton from "../zaps/ZapButton";
 import RichTextEditor from "../../RichTextEditor";
+import ReportModal from "../../ReportModal";
+import Toast, { useToast } from "../../Toast";
 
 const EnhancedThreadView = ({ events, onReply, currentPubkey, threadId }) => {
+  const { success: showSuccess, error: showError, toasts, removeToast } = useToast();
   const [expandedThreads, setExpandedThreads] = useState(new Set());
   const [profiles, setProfiles] = useState(new Map());
   const [loadingMore, setLoadingMore] = useState(false);
@@ -32,6 +35,11 @@ const EnhancedThreadView = ({ events, onReply, currentPubkey, threadId }) => {
   const editorApiRef = useRef(null);
   const [images, setImages] = useState([]);
   const [uploading, setUploading] = useState(false);
+  
+  // Report state
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportingEvent, setReportingEvent] = useState(null);
+  const [lastReportTime, setLastReportTime] = useState(null);
 
   // Optimize thread structure and sort chronologically (Oldest first)
   const optimizedThreads = useMemo(() => {
@@ -292,6 +300,50 @@ const EnhancedThreadView = ({ events, onReply, currentPubkey, threadId }) => {
     }
   };
 
+  // Report handlers
+  const handleReportClick = (e, event) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+    
+    // Rate limiting: prevent spam reports
+    const now = Date.now();
+    if (lastReportTime && now - lastReportTime < 60000) {
+      showError('กรุณารอ 1 นาทีก่อนส่งรายงานอีกครั้ง');
+      return;
+    }
+    
+    if (!currentPubkey) {
+      showError('กรุณาเชื่อมต่อ Nostr เพื่อส่งรายงาน');
+      return;
+    }
+    
+    setReportingEvent(event);
+    setShowReportModal(true);
+  };
+
+  const handleReportSubmit = async ({ eventId, eventType, reason, evidence }) => {
+    try {
+      const now = Date.now();
+      
+      // Submit report to IndexedDB
+      await db.addReport({
+        eventId,
+        reporterPubkey: currentPubkey,
+        reason,
+        evidence,
+        createdAt: now,
+      });
+      
+      setLastReportTime(now);
+      setShowReportModal(false);
+      setReportingEvent(null);
+      showSuccess('ส่งรายงานเรียบร้อยแล้ว');
+    } catch (error) {
+      console.error('Failed to submit report:', error);
+      showError('ไม่สามารถส่งรายงานได้ กรุณาลองใหม่อีกครั้ง');
+    }
+  };
+
   // Format time ago helper (Thai)
   const formatThaiTimeAgo = (timestamp) => {
     const now = Math.floor(Date.now() / 1000);
@@ -422,8 +474,8 @@ const EnhancedThreadView = ({ events, onReply, currentPubkey, threadId }) => {
               </div>
             </div>
 
-            {/* Right: Reply Action */}
-            <div className="flex items-center space-x-4">
+            {/* Right: Reply & Report Actions */}
+            <div className="flex items-center space-x-3">
               {onReply && (
                 <button
                   onClick={() => {
@@ -456,6 +508,14 @@ const EnhancedThreadView = ({ events, onReply, currentPubkey, threadId }) => {
                   <span>{replyingTo === event.id ? "ยกเลิก" : "ตอบกลับ"}</span>
                 </button>
               )}
+              <button
+                onClick={(e) => handleReportClick(e, event)}
+                className="text-sm font-medium flex items-center space-x-1.5 transition-colors px-3 py-1.5 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50"
+                title="รายงานเนื้อหาที่ไม่เหมาะสม"
+              >
+                <span className="material-symbols-outlined text-base">flag</span>
+                <span>รายงาน</span>
+              </button>
             </div>
           </div>
 
@@ -645,6 +705,30 @@ const EnhancedThreadView = ({ events, onReply, currentPubkey, threadId }) => {
             กำลังโหลด...
           </p>
         </div>
+      )}
+
+      {/* Report Modal */}
+      {reportingEvent && (
+        <ReportModal
+          isOpen={showReportModal}
+          onClose={() => {
+            setShowReportModal(false);
+            setReportingEvent(null);
+          }}
+          onSubmit={handleReportSubmit}
+          eventId={reportingEvent.id}
+          eventType="reply"
+        />
+      )}
+
+      {/* Toast Notifications */}
+      {toasts.length > 0 && (
+        <Toast
+          message={toasts[0]?.message || ''}
+          type={toasts[0]?.type || 'info'}
+          isOpen={true}
+          onClose={() => removeToast(toasts[0]?.id)}
+        />
       )}
     </div>
   );
