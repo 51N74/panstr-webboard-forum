@@ -116,14 +116,8 @@ const TrendingTopics = ({ topics, onTopicClick }) => {
 
                   {/* Trending Indicator */}
                   <div className="flex items-center space-x-1">
-                    <ArrowTrendingUpIcon
-                      className={`w-4 h-4 ${getTrendColor(topic.count)}`}
-                    />
-                    <span
-                      className={`text-sm font-medium ${getTrendColor(
-                        topic.count,
-                      )}`}
-                    >
+                    <ArrowTrendingUpIcon className={`w-4 h-4 ${getTrendColor(topic.count)}`} />
+                    <span className={`text-sm font-medium ${getTrendColor(topic.count)}`}>
                       {topic.count}
                     </span>
                   </div>

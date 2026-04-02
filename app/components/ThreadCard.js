@@ -12,13 +12,20 @@ import {
   verifyZapReceipt,
 } from "../lib/nostrClient";
 import db, { liveZapsForEvent } from "../lib/storage/indexedDB";
+import ReportModal from "./ReportModal";
+import Toast, { useToast } from "./Toast";
 
 export default function ThreadCard({ thread, roomId }) {
   const { getProfile } = useNostr();
   const { user } = useNostrAuth();
   const { isMuted, isBookmarked, updateMuteList, updateBookmarkList } = useNostrLists();
+  const { success: showSuccess, error: showError, toasts, removeToast } = useToast();
   const [author, setAuthor] = useState(null);
   const [loading, setLoading] = useState(true);
+  
+  // Report modal state
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [lastReportTime, setLastReportTime] = useState(null);
 
   // Zap totals (sats) for this thread and subscription refs
   const [zapTotal, setZapTotal] = useState(0);
@@ -42,8 +49,10 @@ export default function ThreadCard({ thread, roomId }) {
 
       // Initial read of zap totals from local DB cache (fast)
       try {
-        const summary = await db.getZapTotalForEvent(thread.id);
-        if (mounted) setZapTotal(summary?.totalAmount || 0);
+        if (db && db.getZapTotalForEvent) {
+          const summary = await db.getZapTotalForEvent(thread.id);
+          if (mounted) setZapTotal(summary?.totalAmount || 0);
+        }
       } catch (err) {
         // ignore DB read errors
       }
@@ -56,10 +65,12 @@ export default function ThreadCard({ thread, roomId }) {
           } catch (e) {}
           zapDbSubRef.current = null;
         }
+        
+        // liveZapsForEvent already has its own internal db check
         const dbSub = liveZapsForEvent(thread.id).subscribe((zaps) => {
           try {
             const sum = (zaps || []).reduce((s, z) => s + (z.amount || 0), 0);
-            setZapTotal(sum);
+            if (mounted) setZapTotal(sum);
           } catch (e) {
             console.error("Error computing live zap total:", e);
           }
@@ -82,7 +93,7 @@ export default function ThreadCard({ thread, roomId }) {
             try {
               // Basic verification and extraction
               const verification = verifyZapReceipt(event);
-              if (verification && verification.isValid) {
+              if (verification && verification.isValid && db && db.addZapReceipt) {
                 // Persist to local DB for aggregation and UI
                 await db.addZapReceipt({
                   eventId: verification.eventId || thread.id,
@@ -239,6 +250,47 @@ export default function ThreadCard({ thread, roomId }) {
     }
   };
 
+  const handleReportClick = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Rate limiting: prevent spam reports
+    const now = Date.now();
+    if (lastReportTime && now - lastReportTime < 60000) {
+      showError('กรุณารอ 1 นาทีก่อนส่งรายงานอีกครั้ง');
+      return;
+    }
+    
+    if (!user) {
+      showError('กรุณาเชื่อมต่อ Nostr เพื่อส่งรายงาน');
+      return;
+    }
+    
+    setShowReportModal(true);
+  };
+
+  const handleReportSubmit = async ({ eventId, eventType, reason, evidence }) => {
+    try {
+      const now = Date.now();
+      
+      // Submit report to IndexedDB
+      await db.addReport({
+        eventId,
+        reporterPubkey: user.pubkey,
+        reason,
+        evidence,
+        createdAt: now,
+      });
+      
+      setLastReportTime(now);
+      setShowReportModal(false);
+      showSuccess('ส่งรายงานเรียบร้อยแล้ว');
+    } catch (error) {
+      console.error('Failed to submit report:', error);
+      showError('ไม่สามารถส่งรายงานได้ กรุณาลองใหม่อีกครั้ง');
+    }
+  };
+
   return (
     <Link href={`/room/${roomId}/thread/${thread.id}`}>
       <div className="block modern-card modern-card-hover p-7 border border-gray-200/50 hover:border-blue-300/70 cursor-pointer group/thread">
@@ -304,8 +356,8 @@ export default function ThreadCard({ thread, roomId }) {
             <button
               onClick={handleBookmark}
               className={`p-2 rounded-full transition-all duration-200 ${
-                isBookmarked('e', thread.id) 
-                  ? "bg-yellow-100 text-yellow-600" 
+                isBookmarked('e', thread.id)
+                  ? "bg-yellow-100 text-yellow-600"
                   : "bg-gray-100 text-gray-400 hover:text-yellow-500"
               }`}
               title={isBookmarked('e', thread.id) ? "Remove Bookmark" : "Bookmark Thread"}
@@ -313,6 +365,13 @@ export default function ThreadCard({ thread, roomId }) {
               <svg className="w-5 h-5" fill={isBookmarked('e', thread.id) ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
               </svg>
+            </button>
+            <button
+              onClick={handleReportClick}
+              className="p-2 rounded-full bg-gray-100 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all duration-200"
+              title="รายงานเนื้อหาที่ไม่เหมาะสม"
+            >
+              <span className="material-symbols-outlined text-lg">flag</span>
             </button>
             {isPinned() && (
               <span className="modern-badge-warning animate-pulse">
@@ -446,6 +505,23 @@ export default function ThreadCard({ thread, roomId }) {
           </div>
         </div>
       </div>
+
+      {/* Report Modal */}
+      <ReportModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        onSubmit={handleReportSubmit}
+        eventId={thread.id}
+        eventType="thread"
+      />
+
+      {/* Toast Notifications */}
+      <Toast
+        message={toasts[0]?.message || ''}
+        type={toasts[0]?.type || 'info'}
+        isOpen={toasts.length > 0}
+        onClose={() => removeToast(toasts[0]?.id)}
+      />
     </Link>
   );
 }

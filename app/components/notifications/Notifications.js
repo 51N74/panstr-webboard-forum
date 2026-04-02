@@ -66,6 +66,7 @@ const Notifications = ({ compact = false }) => {
   }, [user?.pubkey]);
 
   const checkNostrNotifications = async () => {
+    if (!db || !db.getNotifications) return;
     try {
       setLoading(true);
       const now = Math.floor(Date.now() / 1000);
@@ -231,6 +232,7 @@ const Notifications = ({ compact = false }) => {
   };
 
   const loadNotificationSettings = async () => {
+    if (!db || !db.getNotificationSettings) return;
     try {
       const settings = await db.getNotificationSettings(user.pubkey);
       setNotificationSettings(
@@ -247,6 +249,7 @@ const Notifications = ({ compact = false }) => {
   };
 
   const markAsRead = async (notificationId) => {
+    if (!db || !db.markNotificationAsRead) return;
     try {
       await db.markNotificationAsRead(user.pubkey, notificationId);
       setNotifications((prev) =>
@@ -261,6 +264,7 @@ const Notifications = ({ compact = false }) => {
   };
 
   const markAllAsRead = async () => {
+    if (!db || !db.markAllNotificationsAsRead) return;
     try {
       await db.markAllNotificationsAsRead(user.pubkey);
       setNotifications((prev) =>
@@ -273,6 +277,7 @@ const Notifications = ({ compact = false }) => {
   };
 
   const clearAllNotifications = async () => {
+    if (!db || !db.clearNotifications) return;
     try {
       await db.clearNotifications(user.pubkey);
       setNotifications([]);
@@ -283,6 +288,7 @@ const Notifications = ({ compact = false }) => {
   };
 
   const deleteNotification = async (notificationId) => {
+    if (!db || !db.deleteNotification) return;
     try {
       await db.deleteNotification(user.pubkey, notificationId);
       setNotifications((prev) =>

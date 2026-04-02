@@ -10,42 +10,7 @@ import {
   liveSubscribe,
 } from "../../lib/nostrClient";
 import { useNostrAuth } from "../../context/NostrAuthContext";
-
-// Official Room Configuration
-const OFFICIAL_ROOMS = [
-  {
-    tag: "#BluePlanet",
-    name: "Travel Diaries - เที่ยวไทย",
-    description: "การท่องเที่ยว",
-    icon: "🌍",
-    color: "blue",
-    gradient: "from-blue-500 to-cyan-600",
-  },
-  {
-    tag: "#KlaoKrua",
-    name: "Foodie Thailand - ครัว",
-    description: "อาหาร, ทำอาหาร",
-    icon: "🍳",
-    color: "orange",
-    gradient: "from-orange-500 to-red-600",
-  },
-  {
-    tag: "#SinThorn",
-    name: "Crypto Corner - การเงิน",
-    description: "การเงิน, หุ้น",
-    icon: "💰",
-    color: "green",
-    gradient: "from-green-500 to-emerald-600",
-  },
-  {
-    tag: "#Mbk",
-    name: "Tech Hub Thailand - MBK",
-    description: "เทคโนโลยี, มือถือ",
-    icon: "📱",
-    color: "purple",
-    gradient: "from-purple-500 to-pink-600",
-  },
-];
+import { OFFICIAL_ROOMS } from "../../data/boardsConfig";
 
 export default function ThreadPage() {
   const params = useParams();
@@ -219,7 +184,7 @@ export default function ThreadPage() {
   };
 
   const getRoomForTag = (tag) => {
-    return OFFICIAL_ROOMS.find((room) => room.tag === `#${tag}`);
+    return OFFICIAL_ROOMS.find((room) => room.tag === tag);
   };
 
   const renderContent = (content) => {

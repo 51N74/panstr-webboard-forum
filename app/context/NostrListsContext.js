@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { useNostrAuth } from "./NostrAuthContext";
-import { getPool, finalizeEvent, publishToPool, createMuteListEvent, createBookmarkListEvent } from "../lib/nostrClient";
+import { getPool, finalizeEvent, publishToPool, createMuteListEvent, createBookmarkListEvent, getEvents } from "../lib/nostrClient";
 
 const NostrListsContext = createContext();
 
