@@ -43,38 +43,65 @@ export default function RoomPage({ roomId }) {
   const fetchThreads = async () => {
     setLoading(true);
     try {
-      // STRICT ROOM ISOLATION: Use only the room tag filter
-      // Primary filter: ["room", roomId] tag
-      const strictFilters = {
-        kinds: [30023], // Long-form posts
-        "#room": [roomId], // STRICT: Filter by mandatory room tag
-        limit: 100,
-      };
-      
-      let events = await getEvents(strictFilters);
-      console.log(`[RoomIsolation] Strict filter found ${events.length} events for room ${roomId}`);
-
-      // VALIDATION: Double-check all events belong to this room
-      if (events.length > 0) {
-        const { validateEventRoom, filterEventsByRoom } = await import('../lib/rooms/roomIsolation');
-        
-        // Filter out any events that don't pass strict validation
-        const validatedEvents = filterEventsByRoom(events, roomId);
-        
-        console.log(`[RoomIsolation] After validation: ${validatedEvents.length}/${events.length} events kept`);
-        
-        // Log any filtered-out events for debugging
-        if (validatedEvents.length < events.length) {
-          const filteredOut = events.filter(e => !validatedEvents.find(v => v.id === e.id));
-          console.warn(`[RoomIsolation] ${filteredOut.length} events filtered out due to validation failures`);
-          filteredOut.forEach(e => {
-            const validation = validateEventRoom(e, roomId);
-            console.warn(`[RoomIsolation] Event ${e.id.slice(0, 8)}... failed: ${validation.reason}`);
-          });
+      // Try multiple filter approaches for maximum compatibility
+      const filterStrategies = [
+        // Strategy 1: Strict Room Isolation (Primary)
+        {
+          kinds: [30023],
+          "#room": [roomId],
+          limit: 100,
+        },
+        // Strategy 2: Legacy Board Tag
+        {
+          kinds: [30023],
+          "#board": [roomId],
+          limit: 100,
+        },
+        // Strategy 3: Standard Tag Filter
+        {
+          kinds: [30023],
+          "#t": [roomId],
+          limit: 100,
         }
-        
-        events = validatedEvents;
+      ];
+      
+      let events = [];
+      let foundStrategy = -1;
+
+      // Try each strategy until we find events
+      for (let i = 0; i < filterStrategies.length; i++) {
+        const results = await getEvents(filterStrategies[i]);
+        if (results && results.length > 0) {
+          events = results;
+          foundStrategy = i;
+          console.log(`[RoomIsolation] Strategy ${i+1} found ${events.length} events for room ${roomId}`);
+          break;
+        }
       }
+
+      if (events.length === 0) {
+        console.log(`[RoomIsolation] No events found for room ${roomId} using any primary strategy`);
+      }
+
+      // VALIDATION: Strict client-side filtering to ensure room isolation
+      const { filterEventsByRoom } = await import('../lib/rooms/roomIsolation');
+      
+      // Even if we got events from #t or #board, we validate them strictly
+      // But we allow a fallback if the event is clearly intended for this room
+      const validatedEvents = events.filter(event => {
+        // 1. Check for explicit "room" tag
+        const roomTag = event.tags.find(t => t[0] === 'room')?.[1];
+        if (roomTag === roomId) return true;
+        
+        // 2. Fallback for legacy events: check board or t tag
+        const boardTag = event.tags.find(t => t[0] === 'board')?.[1];
+        const tTag = event.tags.find(t => t[0] === 't' && t[1] === roomId);
+        
+        return boardTag === roomId || !!tTag;
+      });
+      
+      console.log(`[RoomIsolation] After validation: ${validatedEvents.length}/${events.length} events kept`);
+      events = validatedEvents;
 
       // Apply tag filter if selected
       if (selectedTag) {

@@ -3547,10 +3547,16 @@ export async function publishThread(
   // Use custom tags if provided (from room isolation), otherwise use legacy format
   if (customTags && Array.isArray(customTags)) {
     tags = [...tags, ...customTags];
+    
+    // Safety check: Ensure "room" tag is present for RoomPage filters
+    if (!tags.some(t => t[0] === 'room')) {
+      tags.push(["room", roomId]);
+    }
   } else {
     // Legacy format (backward compatibility)
     const board = opts.board || roomId;
     tags.push(
+      ["room", roomId], // ALWAYS add room tag for modern filters
       ["board", board],
       ["t", "forum"],
       ["t", "webboard"],

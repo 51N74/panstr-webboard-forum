@@ -74,28 +74,26 @@ export default function CreatePost() {
           : null;
       const privKey = storedPriv || null;
 
-      // Determine board identifier (normalize tag). OFFICIAL_ROOMS currently uses tags like "#BluePlanet"
-      const rawTag = selectedRoom?.tag || "";
-      const board = String(rawTag)
-        .replace(/^#/, "")
-        .toLowerCase()
-        .replace(/\s+/g, "-")
-        .replace(/[^a-z0-9-]/g, "");
+      // Determine roomId from selectedRoom.tag
+      const roomId = selectedRoom?.tag || "";
+      const normalizedRoomId = String(roomId).replace(/^#/, "").toLowerCase();
 
       // Generate deterministic thread id (d-tag). Use title-based slug + short hash.
       const threadId = generateThreadId(title);
 
-      // Format tags for Nostr event
-      const tags = formatTagsForEvent(selectedTags);
+      // Format tags for Nostr event - ensure room and category tags are present
+      // for strict room isolation filtering in RoomPage.js
+      const { createRoomTags } = await import('../lib/rooms/roomIsolation');
+      const roomTags = createRoomTags(normalizedRoomId, selectedTags);
 
       // Publish the thread as kind:30023 with required tags
       const signedEvent = await publishThread(pool, undefined, privKey, {
         threadId,
         title,
-        board,
+        roomId: normalizedRoomId, // Pass roomId for isolation
         content,
         published_at: Math.floor(Date.now() / 1000),
-        tags, // Include room-specific tags
+        tags: roomTags, // Use room-specific isolation tags
       });
 
       if (signedEvent && signedEvent.id) {

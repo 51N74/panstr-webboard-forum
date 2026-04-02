@@ -143,7 +143,7 @@ export default function Header() {
                     {OFFICIAL_ROOMS.map((room) => (
                       <Link
                         key={room.tag}
-                        href={`/room/${room.tag.substring(1)}`}
+                        href={`/room/${room.tag}`}
                         className="group/room flex items-start gap-4 p-4 rounded-xl hover:bg-surface-container-high transition-all duration-300 border border-transparent hover:border-outline-variant/30"
                       >
                         <span className="text-2xl group-hover/room:scale-125 transition-transform duration-300">
