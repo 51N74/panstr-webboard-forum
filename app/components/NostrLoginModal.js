@@ -2,15 +2,22 @@
 
 import React, { useState } from "react";
 import { useNostrAuth } from "../context/NostrAuthContext";
-import { formatPubkey, privateKeyToHex, nip19Encode } from "../lib/nostrClient";
+import { privateKeyToHex, nip19Encode } from "../lib/nostrClient";
+
+/**
+ * NostrLoginModal - Panstr Minimal
+ * Standardized layering: z-modal for the card, z-overlay for backdrop.
+ * Precision-centered authentication interface using fixed positioning and flexbox.
+ */
 
 export default function NostrLoginModal({ isOpen, onClose }) {
-  const { loginWithExtension, loginWithPrivateKey, generateNewKey, isLoading } =
-    useNostrAuth();
+  const { loginWithExtension, loginWithPrivateKey, generateNewKey, isLoading } = useNostrAuth();
   const [privateKeyInput, setPrivateKeyInput] = useState("");
   const [showPrivateKey, setShowPrivateKey] = useState(false);
   const [generatedKey, setGeneratedKey] = useState(null);
   const [error, setError] = useState("");
+
+  if (!isOpen) return null;
 
   const handleExtensionLogin = async () => {
     try {
@@ -29,10 +36,8 @@ export default function NostrLoginModal({ isOpen, onClose }) {
         setError("Please enter a private key");
         return;
       }
-
       await loginWithPrivateKey(privateKeyInput.trim());
       onClose();
-      setPrivateKeyInput("");
     } catch (err) {
       setError(err.message);
     }
@@ -42,269 +47,164 @@ export default function NostrLoginModal({ isOpen, onClose }) {
     try {
       setError("");
       const { user, privateKey } = await generateNewKey();
-
-      // Convert to nsec for display using proper NIP-19 encoding
       const nsec = nip19Encode.nsec(privateKey);
-      // Also get hex version for backup purposes
       const privateKeyHex = privateKeyToHex(privateKey);
-      setGeneratedKey({
-        nsec,
-        hex: privateKeyHex,
-        npub: user.npub,
-        privateKey: privateKey,
-      });
+      setGeneratedKey({ nsec, hex: privateKeyHex, npub: user.npub });
     } catch (err) {
       setError(err.message);
     }
   };
 
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text);
-    // You could add a toast notification here
-  };
-
-  const closeModal = () => {
-    onClose();
-    setError("");
-    setPrivateKeyInput("");
-    setShowPrivateKey(false);
-    setGeneratedKey(null);
-  };
-
-  if (!isOpen) return null;
+  const copy = (txt) => navigator.clipboard.writeText(txt);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold text-gray-900">Connect to Nostr</h2>
-          <button
-            onClick={closeModal}
-            className="text-gray-400 hover:text-gray-600"
+    <div className="fixed inset-0 z-modal flex items-center justify-center p-4 overflow-hidden">
+      {/* 
+        Standardized Overlay (z-overlay) 
+        Escapes parent clipping and dims background properly.
+      */}
+      <div 
+        className="absolute inset-0 bg-black/70 backdrop-blur-md animate-fade-in z-overlay" 
+        onClick={onClose}
+      />
+
+      {/* Modal Card - Precision Centering and Constrained width */}
+      <div className="relative bg-white border border-surface-border rounded-xl shadow-2xl w-full max-w-[440px] overflow-hidden animate-slide-up z-modal">
+        <header className="px-10 py-6 border-b border-surface-border flex justify-between items-center bg-white">
+          <h2 className="text-[11px] font-black uppercase tracking-[0.2em] text-primary">Connect Identity</h2>
+          <button 
+            onClick={onClose} 
+            className="text-secondary hover:text-primary transition-colors focus:outline-none p-1 -mr-2"
+            aria-label="Close modal"
           >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <span className="material-symbols-outlined text-2xl">close</span>
           </button>
-        </div>
+        </header>
 
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {error}
-          </div>
-        )}
-
-        {!generatedKey ? (
-          <div className="space-y-4">
-            {/* Browser Extension Option */}
-            <div className="border rounded-lg p-4">
-              <h3 className="font-semibold mb-2 flex items-center">
-                <svg
-                  className="w-5 h-5 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                Browser Extension
-              </h3>
-              <p className="text-sm text-gray-600 mb-3">
-                Use your Nostr browser extension (nos2x, Alby, Flamingo, etc.)
-              </p>
-              <button
-                onClick={handleExtensionLogin}
-                disabled={isLoading}
-                className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
-              >
-                {isLoading ? "Connecting..." : "Connect Extension"}
-              </button>
+        <div className="p-10">
+          {error && (
+            <div className="mb-8 p-4 bg-error/5 border border-error/20 rounded text-[11px] font-bold text-error animate-fade-in flex items-center gap-3">
+              <span className="material-symbols-outlined text-lg">error</span>
+              {error}
             </div>
+          )}
 
-            {/* Private Key Option */}
-            <div className="border rounded-lg p-4">
-              <h3 className="font-semibold mb-2 flex items-center">
-                <svg
-                  className="w-5 h-5 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+          {!generatedKey ? (
+            <div className="space-y-8">
+              {/* Browser Extension Section */}
+              <section>
+                <button 
+                  onClick={handleExtensionLogin}
+                  disabled={isLoading}
+                  className="w-full btn-primary h-14 flex items-center justify-center gap-4 mb-4 text-[11px] font-black uppercase tracking-[0.1em] transition-all hover:shadow-lg"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
-                  />
-                </svg>
-                Private Key
-              </h3>
-              <p className="text-sm text-gray-600 mb-3">
-                Enter your nsec or hex private key
-              </p>
-              <div className="space-y-2">
-                <div className="relative">
-                  <input
+                  <span className="material-symbols-outlined text-xl">extension</span>
+                  {isLoading ? "Connecting..." : "Use Extension"}
+                </button>
+                <p className="text-[9px] text-secondary text-center uppercase tracking-widest font-bold opacity-50">
+                  Recommended: Alby, nos2x, or Flamingo
+                </p>
+              </section>
+
+              {/* Visual Divider */}
+              <div className="relative py-2 flex items-center justify-center">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-surface-border"></div>
+                </div>
+                <span className="relative px-6 bg-white text-[9px] font-black text-secondary uppercase tracking-[0.3em] opacity-40">or</span>
+              </div>
+
+              {/* Private Key Section */}
+              <section className="space-y-6">
+                <div className="relative flex items-center">
+                  <input 
                     type={showPrivateKey ? "text" : "password"}
                     value={privateKeyInput}
                     onChange={(e) => setPrivateKeyInput(e.target.value)}
-                    placeholder="nsec1... or hex key"
-                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter nsec or hex key"
+                    className="input h-14 pr-14 text-sm font-medium tracking-tight border-surface-border focus:border-accent focus:ring-0"
                   />
-                  <button
+                  <button 
                     type="button"
                     onClick={() => setShowPrivateKey(!showPrivateKey)}
-                    className="absolute right-2 top-2 text-gray-500 hover:text-gray-700"
+                    className="absolute right-0 h-14 w-14 flex items-center justify-center text-secondary hover:text-primary transition-colors"
                   >
-                    {showPrivateKey ? "Hide" : "Show"}
+                    <span className="material-symbols-outlined text-xl">
+                      {showPrivateKey ? 'visibility_off' : 'visibility'}
+                    </span>
                   </button>
                 </div>
-                <button
+                <button 
                   onClick={handlePrivateKeyLogin}
                   disabled={isLoading || !privateKeyInput.trim()}
-                  className="w-full bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:opacity-50"
+                  className="w-full btn-outline h-14 text-[11px] font-black uppercase tracking-[0.1em] transition-all"
                 >
-                  {isLoading ? "Connecting..." : "Login with Private Key"}
+                  Sign In
                 </button>
-              </div>
-            </div>
+              </section>
 
-            {/* Generate New Key Option */}
-            <div className="border rounded-lg p-4">
-              <h3 className="font-semibold mb-2 flex items-center">
-                <svg
-                  className="w-5 h-5 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+              {/* Footer Action */}
+              <section className="pt-6 border-t border-surface-border/50 text-center">
+                <button 
+                  onClick={handleGenerateKey}
+                  disabled={isLoading}
+                  className="py-2 text-[10px] font-black text-secondary hover:text-accent uppercase tracking-widest transition-colors flex items-center justify-center gap-2 mx-auto group"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-                Create New Identity
-              </h3>
-              <p className="text-sm text-gray-600 mb-3">
-                Generate a new Nostr identity
-              </p>
-              <button
-                onClick={handleGenerateKey}
-                disabled={isLoading}
-                className="w-full bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 disabled:opacity-50"
+                  New to Nostr? Generate a key 
+                  <span className="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                </button>
+              </section>
+            </div>
+          ) : (
+            /* Backup Keys Section */
+            <div className="space-y-8 animate-fade-in">
+              <div className="p-5 bg-success/5 border border-success/20 rounded flex items-start gap-4">
+                <span className="material-symbols-outlined text-success text-2xl">check_circle</span>
+                <div>
+                  <p className="text-[11px] text-success font-black uppercase tracking-widest">Identity Created</p>
+                  <p className="text-[10px] text-secondary mt-1 leading-relaxed font-medium">Copy and save your keys securely. You won't see them again.</p>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div className="space-y-3">
+                  <label className="text-[9px] font-black text-secondary uppercase tracking-[0.2em] opacity-60">Public Key (npub)</label>
+                  <div className="flex gap-2">
+                    <input type="text" readOnly value={generatedKey.npub} className="input h-12 text-[10px] font-mono bg-surface-muted border-transparent" />
+                    <button 
+                      onClick={() => copy(generatedKey.npub)} 
+                      className="w-12 h-12 flex items-center justify-center btn-secondary rounded flex-shrink-0"
+                      title="Copy Public Key"
+                    >
+                      <span className="material-symbols-outlined text-lg">content_copy</span>
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="space-y-3">
+                  <label className="text-[9px] font-black text-error uppercase tracking-[0.2em] opacity-80">Private Key (nsec) — DO NOT LOSE</label>
+                  <div className="flex gap-2">
+                    <input type="text" readOnly value={generatedKey.nsec} className="input h-12 text-[10px] font-mono bg-error/5 border-error/20" />
+                    <button 
+                      onClick={() => copy(generatedKey.nsec)} 
+                      className="w-12 h-12 flex items-center justify-center btn-secondary text-error rounded flex-shrink-0 border-error/10"
+                      title="Copy Private Key"
+                    >
+                      <span className="material-symbols-outlined text-lg">content_copy</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <button 
+                onClick={onClose} 
+                className="w-full btn-primary h-14 text-[11px] font-black uppercase tracking-widest mt-4 shadow-xl"
               >
-                {isLoading ? "Generating..." : "Generate New Key"}
+                Start Using Panstr
               </button>
             </div>
-          </div>
-        ) : (
-          /* Generated Key Display */
-          <div className="space-y-4">
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <h3 className="font-semibold text-green-800 mb-2">
-                New Identity Created!
-              </h3>
-              <p className="text-sm text-green-700 mb-4">
-                Save your private key securely. This is your only way to access
-                your account.
-              </p>
-            </div>
-
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Public Key (npub)
-                </label>
-                <div className="flex">
-                  <input
-                    type="text"
-                    value={generatedKey.npub}
-                    readOnly
-                    className="flex-1 px-3 py-2 border rounded-l-lg bg-gray-50"
-                  />
-                  <button
-                    onClick={() => copyToClipboard(generatedKey.npub)}
-                    className="px-3 py-2 bg-gray-200 border rounded-r-lg hover:bg-gray-300"
-                  >
-                    Copy
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-red-700 mb-1">
-                  Private Key (nsec) - SAVE THIS SECURELY
-                </label>
-                <div className="flex">
-                  <input
-                    type="text"
-                    value={generatedKey.nsec}
-                    readOnly
-                    className="flex-1 px-3 py-2 border rounded-l-lg bg-red-50 font-mono text-sm"
-                  />
-                  <button
-                    onClick={() => copyToClipboard(generatedKey.nsec)}
-                    className="px-3 py-2 bg-red-200 border rounded-r-lg hover:bg-red-300"
-                  >
-                    Copy
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-orange-700 mb-1">
-                  Private Key (hex) - Alternative backup format
-                </label>
-                <div className="flex">
-                  <input
-                    type="text"
-                    value={generatedKey.hex}
-                    readOnly
-                    className="flex-1 px-3 py-2 border rounded-l-lg bg-orange-50 font-mono text-sm"
-                  />
-                  <button
-                    onClick={() => copyToClipboard(generatedKey.hex)}
-                    className="px-3 py-2 bg-orange-200 border rounded-r-lg hover:bg-orange-300"
-                  >
-                    Copy
-                  </button>
-                </div>
-              </div>
-
-              <div className="bg-yellow-50 border border-yellow-200 rounded p-3">
-                <p className="text-xs text-yellow-800">
-                  <strong>Important:</strong> Store your private key in a secure
-                  location. If you lose it, you will lose access to your account
-                  permanently.
-                </p>
-              </div>
-            </div>
-
-            <button
-              onClick={closeModal}
-              className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-            >
-              Get Started
-            </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

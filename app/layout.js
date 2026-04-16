@@ -1,10 +1,11 @@
+"use client";
+
 import { Inter } from "next/font/google";
-import { Manrope } from "next/font/google";
 import "./globals.css";
-import Link from "next/link";
-import Footer from "./components/Footer.js";
 import Header from "./components/Header.js";
-import { NostrAuthProvider } from "./context/NostrAuthContext";
+import Footer from "./components/Footer.js";
+import NostrLoginModal from "./components/NostrLoginModal.js";
+import { NostrAuthProvider, useNostrAuth } from "./context/NostrAuthContext";
 import { NostrProvider } from "./context/NostrContext";
 import { NostrListsProvider } from "./context/NostrListsContext";
 
@@ -13,34 +14,49 @@ const inter = Inter({
   variable: "--font-inter",
 });
 
-const manrope = Manrope({ 
-  subsets: ["latin"],
-  variable: "--font-manrope",
-});
-
-export const metadata = {
-  title: "Panstr - Decentralized Nostr Forum",
-  description: "A fully decentralized forum platform built with Nostr protocol",
-};
+function AppContent({ children }) {
+  const { isLoginModalOpen, setShowLoginModal } = useNostrAuth();
+  
+  return (
+    <div className="flex flex-col min-h-screen">
+      <Header />
+      {/* 
+        Standardized Layout Padding 
+        Using pt-20 to ensure content is never hidden behind the fixed Navbar (h-14)
+      */}
+      <main className="flex-1 pt-20">
+        {children}
+      </main>
+      <Footer />
+      
+      {/* 
+        Root-level Modal Rendering
+        Escapes parent CSS constraints for perfect centering and layering
+      */}
+      {isLoginModalOpen && (
+        <NostrLoginModal
+          isOpen={isLoginModalOpen}
+          onClose={() => setShowLoginModal(false)}
+        />
+      )}
+    </div>
+  );
+}
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${inter.variable} ${manrope.variable}`}>
+    <html lang="en" className={`${inter.variable}`}>
       <head>
         <link
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
           rel="stylesheet"
         />
       </head>
-      <body className={`${inter.className} ${manrope.variable} bg-surface text-on-surface`}>
+      <body className="font-sans antialiased text-primary bg-background selection:bg-accent/10 selection:text-accent">
         <NostrAuthProvider>
           <NostrProvider>
             <NostrListsProvider>
-              <div className="min-h-screen bg-surface">
-                <Header />
-                <main className="flex-1 pt-16">{children}</main>
-                <Footer />
-              </div>
+              <AppContent>{children}</AppContent>
             </NostrListsProvider>
           </NostrProvider>
         </NostrAuthProvider>

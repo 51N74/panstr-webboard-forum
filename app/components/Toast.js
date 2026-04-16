@@ -3,12 +3,8 @@
 import React, { useEffect, useState } from "react";
 
 /**
- * Toast - การแจ้งเตือนแบบ Pop-up
- * @param {Object} props
- * @param {string} props.message - ข้อความที่จะแสดง
- * @param {'success' | 'error' | 'info' | 'warning'} props.type - ประเภทของการแจ้งเตือน
- * @param {boolean} props.isOpen - เปิดหรือไม่
- * @param {Function} props.onClose - ฟังก์ชันปิด
+ * Toast - Panstr Minimal Pop-up Notifications
+ * Refined layering: z-toast for global priority.
  */
 export default function Toast({ message, type = "info", isOpen, onClose }) {
   const [isAnimating, setIsAnimating] = useState(false);
@@ -25,7 +21,7 @@ export default function Toast({ message, type = "info", isOpen, onClose }) {
           onClose?.();
         }, 300);
         return () => clearTimeout(animationTimer);
-      }, 3000); // Auto-close after 3 seconds
+      }, 3000);
       return () => clearTimeout(timer);
     }
   }, [isOpen, onClose]);
@@ -33,33 +29,17 @@ export default function Toast({ message, type = "info", isOpen, onClose }) {
   if (!isAnimating && !visible) return null;
 
   const typeStyles = {
-    success: {
-      bg: "bg-green-500",
-      icon: "check_circle",
-      iconColor: "text-green-500",
-    },
-    error: {
-      bg: "bg-error",
-      icon: "error",
-      iconColor: "text-error",
-    },
-    warning: {
-      bg: "bg-amber-500",
-      icon: "warning",
-      iconColor: "text-amber-500",
-    },
-    info: {
-      bg: "bg-primary",
-      icon: "info",
-      iconColor: "text-primary",
-    },
+    success: { bg: "bg-success", icon: "check_circle" },
+    error: { bg: "bg-error", icon: "error" },
+    warning: { bg: "bg-warning", icon: "warning" },
+    info: { bg: "bg-accent", icon: "info" },
   };
 
   const style = typeStyles[type] || typeStyles.info;
 
   return (
     <div
-      className={`fixed bottom-20 left-1/2 transform -translate-x-1/2 z-[100] transition-all duration-300 ${
+      className={`fixed bottom-10 left-1/2 transform -translate-x-1/2 z-toast transition-all duration-300 ${
         visible && isOpen
           ? "opacity-100 translate-y-0"
           : "opacity-0 translate-y-4"
@@ -67,16 +47,16 @@ export default function Toast({ message, type = "info", isOpen, onClose }) {
       role="alert"
     >
       <div
-        className={`${style.bg} text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 min-w-[300px]`}
+        className={`${style.bg} text-white px-6 py-3 rounded-lg shadow-xl flex items-center gap-3 min-w-[280px] sm:min-w-[320px]`}
       >
         <span className="material-symbols-outlined text-xl">
           {style.icon}
         </span>
-        <span className="font-medium text-sm flex-1">{message}</span>
+        <span className="font-bold text-[11px] uppercase tracking-widest flex-1">{message}</span>
         <button
           onClick={onClose}
           className="text-white/80 hover:text-white transition-colors"
-          aria-label="ปิด"
+          aria-label="Close"
         >
           <span className="material-symbols-outlined text-lg">close</span>
         </button>
@@ -86,40 +66,32 @@ export default function Toast({ message, type = "info", isOpen, onClose }) {
 }
 
 /**
- * ToastContainer - Container สำหรับจัดการ multiple toasts
+ * ToastContainer - Container for multiple toasts with z-toast priority
  */
 export function ToastContainer({ toasts, onRemove }) {
   return (
-    <div className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-[100] space-y-2">
+    <div className="fixed bottom-10 left-1/2 transform -translate-x-1/2 z-toast space-y-2 pointer-events-none">
       {toasts.map((toast) => (
-        <Toast
-          key={toast.id}
-          message={toast.message}
-          type={toast.type}
-          isOpen={true}
-          onClose={() => onRemove(toast.id)}
-        />
+        <div key={toast.id} className="pointer-events-auto">
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            isOpen={true}
+            onClose={() => onRemove(toast.id)}
+          />
+        </div>
       ))}
     </div>
   );
 }
 
-/**
- * useToast - Hook สำหรับใช้งาน Toast
- * @returns {Object} methods สำหรับแสดง toast
- */
 export function useToast() {
   const [toasts, setToasts] = useState([]);
 
   const addToast = (message, type = "info") => {
     const id = Date.now().toString();
     setToasts((prev) => [...prev, { id, message, type }]);
-
-    // Auto-remove after 3.5 seconds
-    setTimeout(() => {
-      removeToast(id);
-    }, 3500);
-
+    setTimeout(() => removeToast(id), 3500);
     return id;
   };
 
@@ -132,13 +104,5 @@ export function useToast() {
   const warning = (message) => addToast(message, "warning");
   const info = (message) => addToast(message, "info");
 
-  return {
-    toasts,
-    addToast,
-    removeToast,
-    success,
-    error,
-    warning,
-    info,
-  };
+  return { toasts, addToast, removeToast, success, error, warning, info };
 }

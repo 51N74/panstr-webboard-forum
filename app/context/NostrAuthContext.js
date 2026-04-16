@@ -32,6 +32,7 @@ export function NostrAuthProvider({ children }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [authMethod, setAuthMethod] = useState(null); // 'extension' | 'privatekey' | null
+  const [isLoginModalOpen, setShowLoginModal] = useState(false);
 
   // Convert Uint8Array to hex string for localStorage storage
   const uint8ArrayToHex = (uint8Array) => {
@@ -298,6 +299,8 @@ export function NostrAuthProvider({ children }) {
     logout,
     updateProfile,
     refreshProfile: checkExistingAuth,
+    isLoginModalOpen,
+    setShowLoginModal,
   };
 
   return (
