@@ -21,23 +21,23 @@ module.exports = {
       colors: {
         // Panstr Minimal Design System
         primary: {
-          DEFAULT: "#111111",
-          foreground: "#FFFFFF",
+          DEFAULT: "rgb(var(--primary))",
+          foreground: "rgb(var(--foreground))",
         },
         secondary: {
-          DEFAULT: "#666666",
-          foreground: "#111111",
+          DEFAULT: "rgb(var(--secondary))",
+          foreground: "rgb(var(--primary))",
         },
         accent: {
-          DEFAULT: "#007AFF", // iOS/Apple Blue
+          DEFAULT: "rgb(var(--accent))",
           foreground: "#FFFFFF",
         },
         surface: {
-          DEFAULT: "#FFFFFF",
-          muted: "#F5F5F7",
-          border: "#E5E5E7",
+          DEFAULT: "rgb(var(--surface))",
+          muted: "rgb(var(--surface-muted))",
+          border: "rgb(var(--border))",
         },
-        background: "#FFFFFF",
+        background: "rgb(var(--background))",
         error: "#FF3B30",
         success: "#34C759",
         warning: "#FF9500",

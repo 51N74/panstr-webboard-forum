@@ -14,6 +14,17 @@
     --border: 229, 229, 231;
   }
 
+  .dark {
+    --background: 17, 17, 17;
+    --foreground: 255, 255, 255;
+    --primary: 255, 255, 255;
+    --secondary: 161, 161, 170;
+    --accent: 10, 132, 255;
+    --surface: 17, 17, 17;
+    --surface-muted: 24, 24, 27;
+    --border: 39, 39, 42;
+  }
+
   html {
     @apply antialiased scroll-smooth;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
@@ -36,7 +47,7 @@
   }
 
   .btn-primary {
-    @apply btn bg-primary text-white hover:bg-black/90;
+    @apply btn bg-primary text-white hover:bg-black/90 dark:text-black dark:hover:bg-white/90;
   }
 
   .btn-secondary {
@@ -53,7 +64,7 @@
 
   /* Minimal Card */
   .card {
-    @apply bg-white border border-surface-border rounded-lg transition-all duration-200;
+    @apply bg-surface border border-surface-border rounded-lg transition-all duration-200;
   }
 
   .card-hover {

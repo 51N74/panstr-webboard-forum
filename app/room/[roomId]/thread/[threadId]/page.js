@@ -270,16 +270,16 @@ export default function ThreadDetailPage() {
 
   if (!room) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 flex items-center justify-center">
-        <div className="text-center glass-morphism p-12 rounded-2xl">
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center p-12">
           <div className="text-6xl mb-6">🚫</div>
-          <h2 className="text-3xl font-bold mb-4 text-gray-800">
+          <h2 className="text-3xl font-bold mb-4 text-primary">
             Room Not Found
           </h2>
-          <p className="text-gray-600 mb-8">
+          <p className="text-secondary mb-8">
             This room doesn't exist or has been removed.
           </p>
-          <Link href="/" className="modern-button-primary px-8 py-3">
+          <Link href="/" className="btn-primary px-8 py-3">
             Back to Forums
           </Link>
         </div>
@@ -289,10 +289,10 @@ export default function ThreadDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 flex items-center justify-center">
-        <div className="glass-morphism p-8 rounded-2xl text-center">
-          <div className="loading loading-spinner loading-lg text-blue-600 mb-4"></div>
-          <p className="text-gray-800 font-medium">
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="p-8 text-center">
+          <div className="w-10 h-10 border-4 border-accent border-t-transparent animate-spin rounded-full mx-auto mb-4"></div>
+          <p className="text-primary font-medium">
             Loading amazing discussion...
           </p>
         </div>
@@ -302,18 +302,18 @@ export default function ThreadDetailPage() {
 
   if (!thread) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 flex items-center justify-center">
-        <div className="text-center glass-morphism p-12 rounded-2xl">
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center p-12">
           <div className="text-6xl mb-6">📄</div>
-          <h2 className="text-3xl font-bold mb-4 text-gray-800">
+          <h2 className="text-3xl font-bold mb-4 text-primary">
             Thread Not Found
           </h2>
-          <p className="text-gray-600 mb-8">
+          <p className="text-secondary mb-8">
             This thread doesn't exist or has been removed.
           </p>
           <Link
             href={`/room/${roomId}`}
-            className="modern-button-primary px-8 py-3"
+            className="btn-primary px-8 py-3"
           >
             Back to {room.name}
           </Link>
@@ -323,275 +323,136 @@ export default function ThreadDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100">
-      {/* Enhanced Header */}
-      <div
-        className={`relative bg-gradient-to-br ${room.gradient} text-white overflow-hidden`}
-      >
-        {/* Background decoration */}
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute -right-20 -top-20 w-64 h-64 rounded-full bg-white/30 animate-pulse"></div>
-          <div className="absolute -left-32 -bottom-32 w-96 h-96 rounded-full bg-white/20 animate-pulse-slow"></div>
-        </div>
-
-        <div className="relative container mx-auto px-4 py-6 sm:py-12">
-          {/* Enhanced Breadcrumb */}
-          <nav className="flex items-center space-x-1.5 sm:space-x-2 text-xs sm:text-sm mb-4 sm:mb-6 opacity-90 overflow-x-auto pb-2">
-            <Link href="/" className="hover:text-white/80 transition-colors whitespace-nowrap">
-              🏠 Home
-            </Link>
-            <span className="opacity-60 flex-shrink-0">›</span>
-            <Link
-              href={`/category/${category.id}`}
-              className="hover:text-white/80 transition-colors whitespace-nowrap"
-            >
-              {category.name}
-            </Link>
-            <span className="opacity-60 flex-shrink-0">›</span>
-            <Link
-              href={`/room/${roomId}`}
-              className="hover:text-white/80 transition-colors whitespace-nowrap"
-            >
-              {room.icon} {room.name}
-            </Link>
-            <span className="opacity-60 flex-shrink-0">›</span>
-            <span className="font-medium truncate">{getThreadTitle(thread)}</span>
+    <div className="min-h-screen bg-background">
+      {/* Room Header - Standardized */}
+      <div className="bg-surface-muted border-b border-surface-border">
+        <div className="max-w-screen-xl mx-auto px-4 md:px-6 py-8 lg:py-12">
+          <nav className="flex items-center gap-2 text-[10px] font-bold text-secondary uppercase tracking-widest mb-6 overflow-x-auto whitespace-nowrap">
+            <Link href="/" className="hover:text-primary">Home</Link>
+            <span className="text-surface-border">/</span>
+            <Link href={`/room/${roomId}`} className="hover:text-primary">{room.name}</Link>
+            <span className="text-surface-border">/</span>
+            <span className="text-primary truncate max-w-[200px]">{getThreadTitle(thread)}</span>
           </nav>
 
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center space-x-3 sm:space-x-6">
-              <span className="text-4xl sm:text-5xl md:text-6xl animate-float">{room.icon}</span>
-              <div>
-                <h1 className="text-xl sm:text-3xl md:text-4xl font-bold mb-1 sm:mb-2">{room.name}</h1>
-                <p className="text-white/90 text-xs sm:text-sm md:text-lg">{room.description}</p>
-              </div>
+          <div className="flex items-center gap-4 lg:gap-6">
+            <div className="w-12 h-12 lg:w-16 lg:h-16 bg-surface border border-surface-border rounded-xl flex items-center justify-center text-2xl lg:text-3xl shadow-sm">
+              {room.icon}
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-xl lg:text-3xl font-black tracking-tighter mb-1 lg:mb-2 truncate">{room.name}</h1>
+              <p className="text-[11px] lg:text-sm text-secondary max-w-xl line-clamp-1">{room.description}</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 max-w-4xl">
-        {/* Enhanced Error/Success Messages */}
+      <div className="max-w-4xl mx-auto px-4 md:px-6 py-8 lg:py-12">
+        {/* Error/Success Messages */}
         {error && (
-          <div className="glass-morphism border-2 border-red-300 bg-red-50/90 text-red-800 p-6 rounded-xl mb-8 animate-slide-up">
-            <div className="flex items-center space-x-4">
-              <div className="flex-shrink-0">
-                <svg
-                  className="w-6 h-6 text-red-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
-                  />
-                </svg>
-              </div>
-              <span className="font-medium">{error}</span>
-            </div>
+          <div className="bg-error/5 border border-error/20 text-error p-4 rounded-lg mb-8 text-xs font-bold uppercase tracking-wide animate-fade-in flex items-center gap-3">
+            <span className="material-symbols-outlined text-lg">error</span>
+            {error}
           </div>
         )}
 
         {success && (
-          <div className="glass-morphism border-2 border-green-300 bg-green-50/90 text-green-800 p-6 rounded-xl mb-8 animate-slide-up">
-            <div className="flex items-center space-x-4">
-              <div className="flex-shrink-0">
-                <svg
-                  className="w-6 h-6 text-green-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <span className="font-medium">{success}</span>
-            </div>
+          <div className="bg-success/5 border border-success/20 text-success p-4 rounded-lg mb-8 text-xs font-bold uppercase tracking-wide animate-fade-in flex items-center gap-3">
+            <span className="material-symbols-outlined text-lg">check_circle</span>
+            {success}
           </div>
         )}
 
-        {/* Enhanced Thread Content */}
-        <div className="modern-card modern-card-hover mb-8 animate-slide-up">
-          <div className="p-8">
-            {/* Enhanced Thread Header */}
-            <div className="flex items-start justify-between mb-8">
-              <div className="flex-1">
-                <h2 className="text-3xl font-bold gradient-text mb-4 leading-tight">
-                  {getThreadTitle(thread)}
-                </h2>
-                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                  <div className="flex items-center space-x-2 px-3 py-1 bg-gray-100/80 rounded-full">
-                    <svg
-                      className="w-4 h-4 text-gray-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-                      />
-                    </svg>
-                    <span className="font-mono">
-                      {thread.id.substring(0, 16)}...
+        {/* Main Thread Content */}
+        <article className="mb-12 animate-slide-up">
+          <header className="mb-8">
+            <h1 className="text-3xl lg:text-5xl font-black tracking-tight text-primary mb-6 leading-[1.1]">
+              {getThreadTitle(thread)}
+            </h1>
+            
+            <div className="flex flex-wrap items-center gap-4 text-[10px] font-black uppercase tracking-widest text-secondary pb-6 border-b border-surface-border">
+              <div className="flex items-center gap-2 bg-surface-muted px-2 py-1 rounded">
+                <span className="material-symbols-outlined text-sm">schedule</span>
+                <span>{new Date(thread.created_at * 1000).toLocaleDateString()}</span>
+              </div>
+              <div className="flex items-center gap-2 bg-surface-muted px-2 py-1 rounded">
+                <span className="material-symbols-outlined text-sm">visibility</span>
+                <span>{viewCount} Views</span>
+              </div>
+              <div className="flex items-center gap-2 bg-surface-muted px-2 py-1 rounded">
+                <span className="material-symbols-outlined text-sm">chat</span>
+                <span>{replyCount} Replies</span>
+              </div>
+              <div className="flex items-center gap-2 bg-surface-muted px-2 py-1 rounded font-mono lowercase tracking-normal text-[9px] opacity-70">
+                <span>{thread.id.substring(0, 12)}...</span>
+              </div>
+            </div>
+          </header>
+
+          <div className="prose prose-lg dark:prose-invert max-w-none mb-10">
+            <div
+              className="animate-fade-in text-primary leading-relaxed"
+              dangerouslySetInnerHTML={{
+                __html: markdownToHtml(thread.content),
+              }}
+            />
+          </div>
+
+          <footer className="pt-8 border-t border-surface-border">
+            <div className="flex flex-wrap gap-2 mb-8">
+              {thread.tags.map((tag, index) => {
+                if (tag[0] === "t" && tag[1]) {
+                  return (
+                    <span key={index} className="px-2 py-1 bg-accent/5 text-accent text-[9px] font-black uppercase tracking-widest rounded border border-accent/10">
+                      #{tag[1]}
                     </span>
-                  </div>
-                  <div className="flex items-center space-x-2 px-3 py-1 bg-blue-100/80 rounded-full">
-                    <svg
-                      className="w-4 h-4 text-blue-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
-                    <span>
-                      {new Date(thread.created_at * 1000).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-2 px-3 py-1 bg-purple-100/80 rounded-full">
-                    <svg
-                      className="w-4 h-4 text-purple-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                      />
-                    </svg>
-                    <span className="font-medium">{viewCount} views</span>
-                  </div>
-                  <div className="flex items-center space-x-2 px-3 py-1 bg-green-100/80 rounded-full">
-                    <svg
-                      className="w-4 h-4 text-green-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                      />
-                    </svg>
-                    <span className="font-medium">
-                      {replyCount} {replyCount === 1 ? "reply" : "replies"}
-                    </span>
-                  </div>
+                  );
+                }
+                return null;
+              })}
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 py-6 bg-surface-muted/50 rounded-xl px-6 border border-surface-border">
+              <div className="flex items-center gap-8">
+                <div className="flex flex-col gap-2">
+                  <span className="text-[9px] font-black text-secondary uppercase tracking-[0.2em]">Reaction</span>
+                  <ReactionButton event={thread} currentPubkey={user?.pubkey} />
+                </div>
+                <div className="w-px h-8 bg-surface-border"></div>
+                <div className="flex flex-col gap-2">
+                  <span className="text-[9px] font-black text-secondary uppercase tracking-[0.2em]">Support</span>
+                  <ZapButton targetEvent={thread} recipientPubkey={thread.pubkey} currentPubkey={user?.pubkey} />
                 </div>
               </div>
 
-              {/* Enhanced Author Profile Link */}
               <button
                 onClick={() => setShowProfileModal(thread.pubkey)}
-                className="modern-button-secondary px-4 py-2 flex items-center space-x-2 group"
+                className="flex items-center gap-3 group text-left"
               >
-                <span>View Author</span>
-                <svg
-                  className="w-4 h-4 transform group-hover:scale-110 transition-transform"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
+                <div className="text-right hidden sm:block">
+                  <div className="text-[10px] font-black text-primary uppercase tracking-widest">Thread Author</div>
+                  <div className="text-xs text-secondary font-medium">View Profile →</div>
+                </div>
+                <div className="w-10 h-10 rounded-full bg-surface-muted border border-surface-border flex items-center justify-center text-lg shadow-sm group-hover:border-accent transition-colors overflow-hidden">
+                  <span className="material-symbols-outlined text-secondary group-hover:text-accent transition-colors">person</span>
+                </div>
               </button>
             </div>
 
-            {/* Enhanced Thread Body */}
-            <div className="prose prose-lg max-w-none leading-relaxed text-gray-700">
-              <div
-                className="animate-fade-in"
-                dangerouslySetInnerHTML={{
-                  __html: markdownToHtml(thread.content),
-                }}
-              />
-            </div>
+            <ZapReceiptList eventId={threadId} zaps={zapReceipts} />
+          </footer>
+        </article>
 
-            <div className="mt-8 pt-8 border-t border-gray-200/50">
-              <div className="flex flex-wrap gap-3 mb-6">
-                {thread.tags.map((tag, index) => {
-                  if (
-                    tag[0] &&
-                    tag[1] &&
-                    !["d", "title", "board", "published_at"].includes(tag[0])
-                  ) {
-                    return (
-                      <span key={index} className="modern-badge-primary">
-                        {tag[0]}: {tag[1]}
-                      </span>
-                    );
-                  }
-                  return null;
-                })}
-              </div>
-
-              {/* Main Thread Actions */}
-              <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                <div className="flex items-center gap-6">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-500">Reactions:</span>
-                    <ReactionButton
-                      event={thread}
-                      currentPubkey={user?.pubkey}
-                    />
-                  </div>
-
-                  <div className="h-6 w-px bg-gray-200"></div>
-
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-500">Support:</span>
-                    <ZapButton
-                      targetEvent={thread}
-                      recipientPubkey={thread.pubkey}
-                      currentPubkey={user?.pubkey}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Zap Receipts List */}
-              <ZapReceiptList eventId={threadId} zaps={zapReceipts} />
-            </div>
+        {/* Reply Section */}
+        <section className="mb-12">
+          <div className="flex items-center gap-4 mb-8">
+            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-primary">Discussion</h3>
+            <div className="flex-1 h-px bg-surface-border"></div>
           </div>
-        </div>
 
-        {/* Enhanced Reply Form */}
-        {user && (
-          <div className="modern-card mb-8 animate-slide-up">
-            <div className="p-8">
-              <h3 className="text-2xl font-bold gradient-text mb-6">
-                💬 Post a Reply
-              </h3>
+          {user ? (
+            <div className="mb-12 bg-surface border border-surface-border rounded-xl p-6 lg:p-8 shadow-soft">
+              <h4 className="text-lg font-bold text-primary mb-6">Post a Reply</h4>
               <div className="mb-4">
                 <RichTextEditor
                   ref={editorApiRef}
@@ -601,93 +462,53 @@ export default function ThreadDetailPage() {
                   onUpload={handleUploadFromEditor}
                 />
               </div>
-              <div className="flex items-center justify-between mt-2 px-1">
-                <div className="text-xs text-gray-400">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-6">
+                <div className="text-[9px] font-bold text-secondary uppercase tracking-widest opacity-50">
                   Supported: JPG, PNG, GIF, WebP
                 </div>
-                {uploading && (
-                  <div className="flex items-center space-x-2 text-xs text-blue-600 font-medium animate-pulse">
-                    <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" />
-                    <span>Uploading image...</span>
-                  </div>
-                )}
-              </div>
-              <div className="flex justify-end mt-6">
                 <button
                   onClick={() => handleReply(thread)}
                   disabled={isSubmittingReply || !hasValidContent(replyContent)}
-                  className="modern-button-primary px-8 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="btn-primary px-8 h-12 text-[11px] font-black uppercase tracking-widest shadow-xl disabled:opacity-50"
                 >
-                  {isSubmittingReply ? (
-                    <div className="flex items-center space-x-3">
-                      <div className="loading loading-spinner loading-sm"></div>
-                      <span>Posting Reply...</span>
-                    </div>
-                  ) : (
-                    "🚀 Post Reply"
-                  )}
+                  {isSubmittingReply ? "Publishing..." : "Post Reply"}
                 </button>
               </div>
             </div>
-          </div>
-        )}
-
-        {!user && (
-          <div className="glass-morphism p-8 rounded-xl mb-8 text-center animate-slide-up">
-            <div className="text-6xl mb-6">🔐</div>
-            <h3 className="text-2xl font-bold text-gray-800 mb-4">
-              Join the Conversation
-            </h3>
-            <p className="text-gray-600 mb-8 text-lg">
-              You need to connect your Nostr account to reply to this thread and
-              join the decentralized discussion.
-            </p>
-            <Link href="/" className="modern-button-primary px-8 py-3">
-              🔗 Connect Nostr Account
-            </Link>
-          </div>
-        )}
-
-        {/* Enhanced Replies Section */}
-        {replies.length > 0 && (
-          <div className="modern-card animate-slide-up">
-            <div className="p-8">
-              <div className="flex items-center space-x-3 mb-6">
-                <h3 className="text-2xl font-bold gradient-text">
-                  💬 Discussion ({replyCount})
-                </h3>
-                <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
-              </div>
-              <EnhancedThreadView
-                events={replies}
-                onReply={handleReply}
-                currentPubkey={user?.pubkey}
-                threadId={threadId}
-              />
+          ) : (
+            <div className="bg-surface-muted border border-dashed border-surface-border p-10 rounded-xl text-center mb-12">
+              <div className="text-4xl mb-4">🔐</div>
+              <h3 className="text-lg font-bold text-primary mb-2">Join the Conversation</h3>
+              <p className="text-sm text-secondary mb-6">You need to connect your Nostr account to participate.</p>
+              <button 
+                onClick={() => setShowLoginModal(true)}
+                className="btn-primary px-8 h-12 text-[11px] font-black uppercase tracking-widest shadow-lg"
+              >
+                Connect Identity
+              </button>
             </div>
-          </div>
-        )}
+          )}
 
-        {replies.length === 0 && !loading && (
-          <div className="glass-morphism p-12 rounded-xl text-center animate-slide-up">
-            <div className="text-8xl mb-6 opacity-60 animate-pulse">💭</div>
-            <h3 className="text-3xl font-bold text-gray-800 mb-4">
-              No replies yet
-            </h3>
-            <p className="text-gray-600 text-lg mb-8">
-              Be the first to share your thoughts on this interesting
-              discussion!
-            </p>
-            <div className="text-center">
-              <span className="text-2xl">✨</span>
+          {replies.length > 0 ? (
+            <EnhancedThreadView
+              events={replies}
+              onReply={handleReply}
+              currentPubkey={user?.pubkey}
+              threadId={threadId}
+            />
+          ) : !loading && (
+            <div className="py-20 text-center">
+              <div className="text-5xl mb-6 opacity-20">💬</div>
+              <h3 className="text-lg font-bold text-primary mb-2">No replies yet</h3>
+              <p className="text-sm text-secondary">Be the first to share your thoughts!</p>
             </div>
-          </div>
-        )}
+          )}
+        </section>
 
-        {/* Enhanced Profile Modal */}
+        {/* Profile Modal */}
         {showProfileModal && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden animate-fade-in shadow-2xl">
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-modal p-4">
+            <div className="bg-surface rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden animate-fade-in shadow-2xl border border-surface-border">
               <UserProfile
                 pubkey={showProfileModal}
                 onClose={() => setShowProfileModal(null)}

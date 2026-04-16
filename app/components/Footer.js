@@ -16,8 +16,8 @@ export default function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-12 mb-12">
           <div className="col-span-2">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-5 h-5 bg-primary rounded-sm flex items-center justify-center text-[8px] text-white font-black">P</div>
-              <span className="text-sm font-bold tracking-tighter">Panstr</span>
+              <div className="w-5 h-5 bg-primary rounded-sm flex items-center justify-center text-[8px] text-surface font-black">P</div>
+              <span className="text-sm font-bold tracking-tighter text-primary">Panstr</span>
             </div>
             <p className="text-xs text-secondary leading-relaxed max-w-sm">
               Censorship-resistant forum protocol built on Nostr. 

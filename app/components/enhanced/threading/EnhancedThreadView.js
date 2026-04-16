@@ -344,17 +344,17 @@ const EnhancedThreadView = ({ events, onReply, currentPubkey, threadId }) => {
     }
   };
 
-  // Format time ago helper (Thai)
-  const formatThaiTimeAgo = (timestamp) => {
+  // Format time ago helper
+  const formatTimeAgo = (timestamp) => {
     const now = Math.floor(Date.now() / 1000);
     const diff = now - timestamp;
 
-    if (diff < 60) return "เมื่อสักครู่";
-    if (diff < 3600) return `${Math.floor(diff / 60)} นาทีที่แล้ว`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)} ชั่วโมงที่แล้ว`;
-    if (diff < 604800) return `${Math.floor(diff / 86400)} วันที่แล้ว`;
+    if (diff < 60) return "just now";
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
 
-    return new Date(timestamp * 1000).toLocaleDateString("th-TH");
+    return new Date(timestamp * 1000).toLocaleDateString();
   };
 
   const renderEvent = (
@@ -378,104 +378,90 @@ const EnhancedThreadView = ({ events, onReply, currentPubkey, threadId }) => {
     return (
       <div
         key={event.id}
-        className={`relative ${depth > 0 ? "mt-4" : "mb-6"}`}
+        className={`relative ${depth > 0 ? "mt-4" : "mb-8"}`}
       >
         {/* Thread line connector for nested replies */}
         {depth > 0 && (
-          <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gray-200 -ml-4" />
+          <div className="absolute left-0 top-0 bottom-0 w-px bg-surface-border -ml-4" />
         )}
 
         {/* Event card */}
         <div
           className={`
-          modern-card p-6
-          ${depth > 0 ? "ml-8 bg-gray-50/50" : "bg-white"}
-          transition-all duration-200
-          ${currentPubkey === event.pubkey ? "ring-2 ring-blue-500/20" : ""}
+          p-5 rounded-xl border border-surface-border transition-all duration-200
+          ${depth > 0 ? "ml-8 bg-surface-muted/30" : "bg-surface shadow-soft"}
+          ${currentPubkey === event.pubkey ? "border-accent/30 shadow-minimal" : ""}
         `}
         >
-          {/* Comment Number - Only for top level */}
-          {depth === 0 && (
-            <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
-              <span className="text-sm font-semibold text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
-                ความคิดเห็นที่ {index + 1}
-              </span>
-            </div>
-          )}
-
-          {/* Content */}
-          <div className="prose prose-lg max-w-none mb-6 text-gray-800">
-            <p className="whitespace-pre-wrap break-words leading-relaxed">
-              {parseMentions(event.content, profiles)}
-            </p>
-          </div>
-
-          {/* Footer: User Info & Actions */}
-          <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-            {/* Left: Actions & User Info */}
-            <div className="flex items-center gap-6">
-              {/* Reactions */}
-              <ReactionButton
-                event={event}
-                currentPubkey={currentPubkey}
-              />
-
-              {/* Zap Button */}
-              <ZapButton
-                targetEvent={event}
-                recipientPubkey={event.pubkey}
-                currentPubkey={currentPubkey}
-              />
-
-              <div className="h-4 w-px bg-gray-200"></div>
-
-              {/* User Info */}
-              <div className="flex items-center space-x-3">
-                <div className="avatar">
-                  <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-white shadow-sm">
-                    {profile.picture ? (
-                      <img
-                        src={profile.picture}
-                        alt={profile.name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="bg-gradient-to-br from-blue-500 to-purple-600 text-white flex items-center justify-center h-full text-sm font-bold">
-                        {profile.name?.[0]?.toUpperCase() ||
-                          event.pubkey.substring(0, 2).toUpperCase()}
-                      </div>
-                    )}
+          {/* Header: User Info & Time */}
+          <div className="flex items-center justify-between mb-4 pb-3 border-b border-surface-border/50">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 rounded-full overflow-hidden bg-surface-muted border border-surface-border flex-shrink-0">
+                {profile.picture ? (
+                  <img
+                    src={profile.picture}
+                    alt={profile.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="bg-surface-muted text-secondary flex items-center justify-center h-full text-[10px] font-black uppercase">
+                    {profile.name?.[0]?.toUpperCase() || "?"}
                   </div>
-                </div>
+                )}
+              </div>
 
-                <div className="flex flex-col">
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => {
-                        if (window.showUserProfile) {
-                          window.showUserProfile(event.pubkey);
-                        }
-                      }}
-                      className="font-bold text-gray-900 hover:text-blue-600 transition-colors text-sm"
-                    >
-                      {profile.display_name || profile.name || "Anonymous"}
-                    </button>
-                    {/* Verified Icon Placeholder */}
-                    {profile.nip05 && (
-                      <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                    )}
-                  </div>
-                  <div className="text-xs text-gray-500 font-medium">
-                    {formatThaiTimeAgo(event.created_at)}
-                  </div>
+              <div className="flex flex-col">
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => {
+                      if (window.showUserProfile) {
+                        window.showUserProfile(event.pubkey);
+                      }
+                    }}
+                    className="font-bold text-primary hover:text-accent transition-colors text-xs"
+                  >
+                    {profile.display_name || profile.name || "Anonymous"}
+                  </button>
+                  {profile.nip05 && (
+                    <span className="material-symbols-outlined text-accent text-sm">verified</span>
+                  )}
+                  <span className="text-[10px] text-secondary font-medium uppercase tracking-tight">
+                    • {formatTimeAgo(event.created_at)}
+                  </span>
                 </div>
               </div>
             </div>
 
-            {/* Right: Reply & Report Actions */}
-            <div className="flex items-center space-x-3">
+            <div className="text-[9px] font-black text-secondary/40 uppercase tracking-widest hidden sm:block">
+              #{index + 1}
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="prose prose-sm dark:prose-invert max-w-none mb-6 text-primary leading-relaxed">
+            <p className="whitespace-pre-wrap break-words">
+              {parseMentions(event.content, profiles)}
+            </p>
+          </div>
+
+          {/* Footer Actions */}
+          <div className="flex items-center justify-between pt-3 border-t border-surface-border/50">
+            <div className="flex items-center gap-4 sm:gap-6">
+              <ReactionButton
+                event={event}
+                currentPubkey={currentPubkey}
+                compact={true}
+              />
+
+              <ZapButton
+                targetEvent={event}
+                recipientPubkey={event.pubkey}
+                currentPubkey={currentPubkey}
+                compact={true}
+              />
+            </div>
+
+            <div className="flex items-center space-x-1 sm:space-x-2">
               {onReply && (
                 <button
                   onClick={() => {
@@ -488,40 +474,27 @@ const EnhancedThreadView = ({ events, onReply, currentPubkey, threadId }) => {
                     }
                   }}
                   className={`
-                    text-sm font-medium flex items-center space-x-1.5 transition-colors px-3 py-1.5 rounded-lg
-                    ${replyingTo === event.id ? "bg-blue-100 text-blue-700" : "text-gray-500 hover:text-blue-600 hover:bg-blue-50"}
+                    text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-colors px-3 py-1.5 rounded
+                    ${replyingTo === event.id ? "bg-accent text-white" : "text-secondary hover:text-primary hover:bg-surface-muted"}
                   `}
                 >
-                  <svg
-                    className="w-4 h-4 transform scale-x-[-1]"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
-                    />
-                  </svg>
-                  <span>{replyingTo === event.id ? "ยกเลิก" : "ตอบกลับ"}</span>
+                  <span className="material-symbols-outlined text-sm">{replyingTo === event.id ? "close" : "reply"}</span>
+                  <span className="hidden xs:inline">{replyingTo === event.id ? "Cancel" : "Reply"}</span>
                 </button>
               )}
               <button
                 onClick={(e) => handleReportClick(e, event)}
-                className="text-sm font-medium flex items-center space-x-1.5 transition-colors px-3 py-1.5 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50"
-                title="รายงานเนื้อหาที่ไม่เหมาะสม"
+                className="text-secondary hover:text-error transition-colors p-1.5 rounded hover:bg-error/5"
+                title="Report content"
               >
-                <span className="material-symbols-outlined text-base">flag</span>
-                <span>รายงาน</span>
+                <span className="material-symbols-outlined text-lg">flag</span>
               </button>
             </div>
           </div>
 
           {/* Inline Reply Form */}
           {isReplying && (
-            <div className="mt-4 pt-4 border-t border-gray-100 animate-fade-in">
+            <div className="mt-4 pt-6 border-t border-surface-border animate-fade-in">
               <div className="space-y-4">
                 <RichTextEditor
                   ref={editorApiRef}
@@ -529,43 +502,30 @@ const EnhancedThreadView = ({ events, onReply, currentPubkey, threadId }) => {
                   onChange={setReplyContent}
                   disabled={isSubmitting}
                   onUpload={handleUploadFromEditor}
-                  placeholder="เขียนความคิดเห็นของคุณ..."
+                  placeholder="Share your thoughts..."
                 />
-                <div className="flex items-center justify-between mt-2 px-1">
-                  <div className="text-xs text-gray-400">
-                    Supported: JPG, PNG, GIF, WebP
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-4">
+                  <div className="text-[9px] font-black text-secondary/50 uppercase tracking-widest">
+                    Images supported
                   </div>
-                  {uploading && (
-                    <div className="flex items-center space-x-2 text-xs text-blue-600 font-medium animate-pulse">
-                      <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" />
-                      <span>Uploading image...</span>
-                    </div>
-                  )}
-                </div>
-                <div className="flex justify-end space-x-2">
-                  <button
-                    onClick={() => {
-                      setReplyingTo(null);
-                      setReplyContent("");
-                    }}
-                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-sm font-medium transition-colors"
-                  >
-                    ยกเลิก
-                  </button>
-                  <button
-                    onClick={() => handleInlineReplySubmit(event)}
-                    disabled={isSubmitting || !hasValidContent(replyContent)}
-                    className="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <div className="loading loading-spinner loading-xs"></div>
-                        <span>กำลังส่ง...</span>
-                      </>
-                    ) : (
-                      <span>ส่งความคิดเห็น</span>
-                    )}
-                  </button>
+                  <div className="flex justify-end gap-2">
+                    <button
+                      onClick={() => {
+                        setReplyingTo(null);
+                        setReplyContent("");
+                      }}
+                      className="px-4 py-2 text-secondary hover:bg-surface-muted rounded text-[10px] font-black uppercase tracking-widest transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => handleInlineReplySubmit(event)}
+                      disabled={isSubmitting || !hasValidContent(replyContent)}
+                      className="px-6 py-2 bg-primary text-surface rounded text-[10px] font-black uppercase tracking-widest hover:bg-primary/90 transition-colors disabled:opacity-50"
+                    >
+                      {isSubmitting ? "Posting..." : "Post Reply"}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -573,7 +533,7 @@ const EnhancedThreadView = ({ events, onReply, currentPubkey, threadId }) => {
 
           {/* Expand/Collapse Replies */}
           {(event.replies?.length > 0 || replyCount > 0) && (
-            <div className="mt-4 pt-2 border-t border-gray-50">
+            <div className="mt-2">
               <button
                 onClick={() => {
                   toggleThread(event.id);
@@ -584,24 +544,10 @@ const EnhancedThreadView = ({ events, onReply, currentPubkey, threadId }) => {
                     loadMoreReplies(event.id);
                   }
                 }}
-                className="text-blue-600 hover:text-blue-700 text-xs font-medium flex items-center space-x-1 transition-colors mt-2"
+                className="text-accent hover:underline text-[10px] font-black uppercase tracking-widest flex items-center gap-1 transition-colors mt-2"
               >
-                <span>
-                  {isExpanded ? "ซ่อน" : "ดู"} {replyCount} ความคิดเห็นย่อย
-                </span>
-                <svg
-                  className={`w-3 h-3 transform transition-transform ${isExpanded ? "rotate-180" : ""}`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
+                <span className="material-symbols-outlined text-sm">{isExpanded ? "expand_less" : "expand_more"}</span>
+                {isExpanded ? "Hide" : "Show"} {replyCount} {replyCount === 1 ? "Reply" : "Replies"}
               </button>
             </div>
           )}
@@ -609,14 +555,10 @@ const EnhancedThreadView = ({ events, onReply, currentPubkey, threadId }) => {
 
         {/* Loading indicator for more replies */}
         {isExpanded && loadingMore && parentEventId === event.id && (
-          <div className="ml-8 mb-3">
-            <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-              <div className="flex items-center space-x-2">
-                <div className="loading loading-spinner loading-sm text-blue-500"></div>
-                <span className="text-sm text-gray-500">
-                  กำลังโหลด...
-                </span>
-              </div>
+          <div className="ml-8 mt-4">
+            <div className="flex items-center gap-2 p-3 text-[10px] font-bold text-secondary uppercase tracking-widest">
+              <div className="w-3 h-3 border-2 border-accent border-t-transparent animate-spin rounded-full"></div>
+              Loading...
             </div>
           </div>
         )}
@@ -627,7 +569,7 @@ const EnhancedThreadView = ({ events, onReply, currentPubkey, threadId }) => {
             {event.replies.map((reply, replyIndex) =>
               renderEvent(
                 reply,
-                replyIndex, // Nested index
+                replyIndex,
                 depth + 1,
                 replyIndex === event.replies.length - 1,
                 event.id,
@@ -638,12 +580,12 @@ const EnhancedThreadView = ({ events, onReply, currentPubkey, threadId }) => {
 
         {/* Load more replies button */}
         {isExpanded && hasMoreReplies && !loadingMore && (
-          <div className="ml-8 mb-3">
+          <div className="ml-8 mt-4">
             <button
               onClick={() => loadMoreReplies(event.id)}
-              className="bg-white hover:bg-gray-50 border border-gray-200 rounded-lg p-3 w-full text-center text-sm text-blue-600 hover:text-blue-700 transition-colors shadow-sm font-medium"
+              className="w-full py-3 bg-surface-muted hover:bg-surface-border text-secondary text-[10px] font-black uppercase tracking-widest rounded-lg transition-colors border border-surface-border/50"
             >
-              โหลดเพิ่มเติม...
+              Load more...
             </button>
           </div>
         )}
@@ -653,9 +595,7 @@ const EnhancedThreadView = ({ events, onReply, currentPubkey, threadId }) => {
 
   // Helper function to parse mentions in content
   const parseMentions = (content, profileMap) => {
-    // Simple mention parsing - replace #[0] with profile names
     return content.replace(/#\[(\d+)\]/g, (match, index) => {
-      // This would need to be enhanced to properly map to the actual p-tags
       const profile = Array.from(profileMap.values())[parseInt(index)];
       return profile ? `@${profile.display_name || profile.name}` : match;
     });
@@ -663,46 +603,32 @@ const EnhancedThreadView = ({ events, onReply, currentPubkey, threadId }) => {
 
   if (!events || events.length === 0) {
     return (
-      <div className="text-center py-12 text-gray-400">
-        <div className="bg-white p-8 rounded-2xl shadow-sm inline-block">
-          <svg
-            className="w-12 h-12 mx-auto mb-4 opacity-50 text-gray-300"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-            />
-          </svg>
-          <p className="text-lg font-medium text-gray-500">ยังไม่มีความคิดเห็น</p>
-          <p className="text-sm text-gray-400 mt-1">เป็นคนแรกที่เริ่มบทสนทนานี้!</p>
-        </div>
+      <div className="text-center py-20 border border-dashed border-surface-border rounded-xl bg-surface-muted/30">
+        <span className="material-symbols-outlined text-4xl text-surface-border mb-4">forum</span>
+        <p className="text-secondary text-sm font-bold uppercase tracking-widest">No replies yet</p>
+        <p className="text-[10px] text-secondary/60 uppercase tracking-tight mt-1">Be the first to join the conversation!</p>
       </div>
     );
   }
 
   return (
     <div className="enhanced-thread-view">
-      <div className="mb-6 flex items-center space-x-2 text-gray-600 bg-white px-4 py-3 rounded-xl shadow-sm border border-gray-100">
-        <svg className="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-        </svg>
-        <span className="font-semibold">{optimizedThreads.length} ความคิดเห็น</span>
+      <div className="mb-8 flex items-center justify-between">
+        <div className="flex items-center gap-3 text-[11px] font-black uppercase tracking-[0.2em] text-primary">
+          <span className="material-symbols-outlined text-lg text-accent">chat</span>
+          {replyCount || events.length} Replies
+        </div>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-4">
         {optimizedThreads.map((thread, index) => renderEvent(thread, index))}
       </div>
 
       {loadingMore && (
-        <div className="text-center py-8">
-          <div className="loading loading-spinner loading-md text-blue-500"></div>
-          <p className="text-sm text-gray-500 mt-2 font-medium">
-            กำลังโหลด...
+        <div className="text-center py-12">
+          <div className="w-8 h-8 border-3 border-accent border-t-transparent animate-spin rounded-full mx-auto mb-4"></div>
+          <p className="text-[10px] font-black text-secondary uppercase tracking-widest">
+            Loading...
           </p>
         </div>
       )}

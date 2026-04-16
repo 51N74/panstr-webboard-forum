@@ -56,11 +56,11 @@ export default function Header() {
 
   if (isLoading) {
     return (
-      <header className="fixed top-0 w-full z-fixed bg-white/80 backdrop-blur-md border-b border-surface-border">
+      <header className="fixed top-0 w-full z-fixed bg-surface/80 backdrop-blur-md border-b border-surface-border">
         <div className="flex justify-between items-center px-4 md:px-6 h-14 mx-auto">
           <div className="flex items-center space-x-2">
             <div className="w-6 h-6 bg-primary rounded-sm animate-pulse"></div>
-            <span className="text-lg font-bold tracking-tighter">Panstr</span>
+            <span className="text-lg font-bold tracking-tighter text-primary">Panstr</span>
           </div>
         </div>
       </header>
@@ -68,15 +68,15 @@ export default function Header() {
   }
 
   return (
-    <header className="fixed top-0 w-full z-fixed bg-white/90 backdrop-blur-md border-b border-surface-border">
+    <header className="fixed top-0 w-full z-fixed bg-surface/90 backdrop-blur-md border-b border-surface-border">
       <div className="flex justify-between items-center px-4 md:px-6 h-14 mx-auto">
         {/* Brand & Desktop Nav */}
         <div className="flex items-center gap-4 lg:gap-8">
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-6 h-6 bg-primary rounded-sm flex items-center justify-center text-[10px] text-white font-black group-hover:bg-accent transition-colors">
+            <div className="w-6 h-6 bg-primary rounded-sm flex items-center justify-center text-[10px] text-surface font-black group-hover:bg-accent transition-colors">
               P
             </div>
-            <span className="text-lg font-bold tracking-tighter">Panstr</span>
+            <span className="text-lg font-bold tracking-tighter text-primary">Panstr</span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-6">
@@ -89,7 +89,7 @@ export default function Header() {
                 <span className="material-symbols-outlined text-sm">expand_more</span>
               </button>
               
-              <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-surface-border rounded-lg shadow-mid opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-modal p-2">
+              <div className="absolute top-full left-0 mt-1 w-64 bg-surface border border-surface-border rounded-lg shadow-mid opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-modal p-2">
                 <div className="max-h-[320px] overflow-y-auto custom-scrollbar">
                   {OFFICIAL_ROOMS.map((room) => (
                     <Link
@@ -118,7 +118,7 @@ export default function Header() {
             <input 
               type="text" 
               placeholder="Search..." 
-              className="bg-transparent border-none focus:ring-0 text-xs w-48 p-0 ml-2 placeholder:text-secondary/50"
+              className="bg-transparent border-none focus:ring-0 text-xs w-48 p-0 ml-2 placeholder:text-secondary/50 text-primary"
             />
           </div>
 
@@ -140,14 +140,14 @@ export default function Header() {
                   {user.picture ? (
                     <img src={user.picture} alt="" className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full bg-surface-muted flex items-center justify-center text-[10px] font-bold">
+                    <div className="w-full h-full bg-surface-muted flex items-center justify-center text-[10px] font-bold text-primary">
                       {user.name?.[0] || "?"}
                     </div>
                   )}
                 </button>
 
                 {isProfileDropdownOpen && (
-                  <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-surface-border rounded-lg shadow-mid p-1 z-modal">
+                  <div className="absolute top-full right-0 mt-2 w-56 bg-surface border border-surface-border rounded-lg shadow-mid p-1 z-modal">
                     <div className="px-3 py-2 mb-1 border-b border-surface-border">
                       <div className="text-xs font-bold text-primary truncate">{user.display_name || user.name || "Anonymous"}</div>
                       <div className="text-[10px] font-mono text-secondary truncate">{user.npub?.substring(0, 16)}...</div>
@@ -189,10 +189,10 @@ export default function Header() {
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
-        <div className="md:hidden fixed top-14 left-0 w-full bg-white border-b border-surface-border shadow-mid z-fixed animate-fade-in max-h-[calc(100vh-3.5rem)] overflow-y-auto">
+        <div className="md:hidden fixed top-14 left-0 w-full bg-surface border-b border-surface-border shadow-mid z-fixed animate-fade-in max-h-[calc(100vh-3.5rem)] overflow-y-auto">
           <nav className="flex flex-col p-4 space-y-2">
-            <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="px-4 py-3 text-sm font-bold rounded-md hover:bg-surface-muted transition-colors border border-transparent hover:border-surface-border/50">Forums</Link>
-            <Link href="/discovery" onClick={() => setIsMobileMenuOpen(false)} className="px-4 py-3 text-sm font-bold rounded-md hover:bg-surface-muted transition-colors border border-transparent hover:border-surface-border/50">Discovery</Link>
+            <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="px-4 py-3 text-sm font-bold rounded-md hover:bg-surface-muted transition-colors border border-transparent hover:border-surface-border/50 text-primary">Forums</Link>
+            <Link href="/discovery" onClick={() => setIsMobileMenuOpen(false)} className="px-4 py-3 text-sm font-bold rounded-md hover:bg-surface-muted transition-colors border border-transparent hover:border-surface-border/50 text-primary">Discovery</Link>
             
             <div className="pt-4 border-t border-surface-border mt-4">
               <h4 className="text-[10px] font-black text-secondary uppercase tracking-widest px-4 mb-2">Relay Status</h4>

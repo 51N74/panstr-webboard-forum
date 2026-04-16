@@ -123,13 +123,13 @@ export default function BoardList() {
             <div className="flex bg-surface-muted p-1 rounded-md border border-surface-border self-start">
               <button 
                 onClick={() => setViewMode("categories")}
-                className={`px-3 py-1.5 text-xs font-bold rounded ${viewMode === "categories" ? "bg-white shadow-sm text-primary" : "text-secondary hover:text-primary"}`}
+                className={`px-3 py-1.5 text-xs font-bold rounded transition-all ${viewMode === "categories" ? "bg-surface shadow-sm text-primary" : "text-secondary hover:text-primary"}`}
               >
                 Categories
               </button>
               <button 
                 onClick={() => setViewMode("all")}
-                className={`px-3 py-1.5 text-xs font-bold rounded ${viewMode === "all" ? "bg-white shadow-sm text-primary" : "text-secondary hover:text-primary"}`}
+                className={`px-3 py-1.5 text-xs font-bold rounded transition-all ${viewMode === "all" ? "bg-surface shadow-sm text-primary" : "text-secondary hover:text-primary"}`}
               >
                 All Rooms
               </button>

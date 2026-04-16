@@ -140,7 +140,7 @@ export default function RoomPage({ roomId }) {
                   <div className="flex flex-wrap lg:flex-col gap-1 lg:gap-1">
                     <button 
                       onClick={() => setSelectedTag(null)}
-                      className={`text-left px-2 py-1 text-[10px] font-bold uppercase rounded border transition-colors ${!selectedTag ? "bg-primary text-white border-primary" : "bg-transparent text-secondary border-surface-border hover:border-secondary"}`}
+                      className={`text-left px-2 py-1 text-[10px] font-bold uppercase rounded border transition-colors ${!selectedTag ? "bg-primary text-surface border-primary" : "bg-transparent text-secondary border-surface-border hover:border-secondary"}`}
                     >
                       All
                     </button>

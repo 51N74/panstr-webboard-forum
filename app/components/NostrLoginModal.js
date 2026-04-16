@@ -69,8 +69,8 @@ export default function NostrLoginModal({ isOpen, onClose }) {
       />
 
       {/* Modal Card - Precision Centering and Constrained width */}
-      <div className="relative bg-white border border-surface-border rounded-xl shadow-2xl w-full max-w-[440px] overflow-hidden animate-slide-up z-modal">
-        <header className="px-10 py-6 border-b border-surface-border flex justify-between items-center bg-white">
+      <div className="relative bg-surface border border-surface-border rounded-xl shadow-2xl w-full max-w-[440px] overflow-hidden animate-slide-up z-modal">
+        <header className="px-10 py-6 border-b border-surface-border flex justify-between items-center bg-surface">
           <h2 className="text-[11px] font-black uppercase tracking-[0.2em] text-primary">Connect Identity</h2>
           <button 
             onClick={onClose} 
@@ -111,7 +111,7 @@ export default function NostrLoginModal({ isOpen, onClose }) {
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-surface-border"></div>
                 </div>
-                <span className="relative px-6 bg-white text-[9px] font-black text-secondary uppercase tracking-[0.3em] opacity-40">or</span>
+                <span className="relative px-6 bg-surface text-[9px] font-black text-secondary uppercase tracking-[0.3em] opacity-40">or</span>
               </div>
 
               {/* Private Key Section */}
@@ -122,7 +122,7 @@ export default function NostrLoginModal({ isOpen, onClose }) {
                     value={privateKeyInput}
                     onChange={(e) => setPrivateKeyInput(e.target.value)}
                     placeholder="Enter nsec or hex key"
-                    className="input h-14 pr-14 text-sm font-medium tracking-tight border-surface-border focus:border-accent focus:ring-0"
+                    className="input h-14 pr-14 text-sm font-medium tracking-tight border-surface-border focus:border-accent focus:ring-0 text-primary bg-surface-muted"
                   />
                   <button 
                     type="button"

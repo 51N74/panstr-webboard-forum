@@ -111,7 +111,7 @@ export default function ReportModal({
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-300 ${
+      className={`fixed inset-0 z-modal flex items-center justify-center transition-opacity duration-300 ${
         isOpen ? "opacity-100" : "opacity-0"
       }`}
       role="dialog"
@@ -120,37 +120,37 @@ export default function ReportModal({
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/60 backdrop-blur-md"
         onClick={onClose}
       />
 
       {/* Modal Content */}
       <div
-        className={`relative bg-surface-container-lowest rounded-2xl shadow-2xl max-w-lg w-full mx-4 overflow-hidden transform transition-all duration-300 max-h-[90vh] flex flex-col ${
+        className={`relative bg-surface border border-surface-border rounded-xl shadow-2xl max-w-lg w-full mx-4 overflow-hidden transform transition-all duration-300 max-h-[90vh] flex flex-col ${
           isOpen ? "scale-100 translate-y-0" : "scale-95 translate-y-4"
         }`}
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-error to-error-container px-6 py-4 flex-shrink-0">
+        <div className="bg-error px-6 py-5 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className="text-3xl">🚩</span>
+              <span className="material-symbols-outlined text-white text-2xl">flag</span>
               <div>
                 <h2
                   id="report-modal-title"
-                  className="text-xl font-bold text-white"
+                  className="text-sm font-black uppercase tracking-widest text-white"
                 >
-                  รายงานเนื้อหา
+                  Report Content
                 </h2>
-                <p className="text-white/90 text-sm">
-                  แจ้งเนื้อหาที่ไม่เหมาะสมให้เราทราบ
+                <p className="text-white/80 text-[10px] font-bold uppercase tracking-tight">
+                  Help us keep the community safe
                 </p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="text-white/80 hover:text-white transition-colors p-1"
-              aria-label="ปิด"
+              className="text-white/80 hover:text-white transition-colors p-1 -mr-2"
+              aria-label="Close"
             >
               <span className="material-symbols-outlined text-2xl">
                 close
@@ -160,21 +160,21 @@ export default function ReportModal({
         </div>
 
         {/* Content - Scrollable */}
-        <div className="p-6 overflow-y-auto flex-1">
+        <div className="p-6 overflow-y-auto flex-1 bg-surface">
           {/* Reason Selection */}
           <div className="mb-6">
-            <h3 className="text-sm font-bold text-on-surface mb-3">
-              เลือกเหตุผลในการรายงาน
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-secondary mb-4">
+              Select Reason
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {reportReasons.map((reason) => (
                 <button
                   key={reason.value}
                   onClick={() => setSelectedReason(reason.value)}
-                  className={`p-3 rounded-lg border-2 text-left transition-all ${
+                  className={`p-3 rounded-lg border text-left transition-all ${
                     selectedReason === reason.value
-                      ? "border-error bg-error-container/10"
-                      : "border-outline-variant/20 hover:border-outline-variant/40 bg-surface-container-high"
+                      ? "border-error bg-error/5"
+                      : "border-surface-border hover:border-accent/30 bg-surface-muted"
                   }`}
                 >
                   <div className="flex items-start gap-2">
@@ -182,10 +182,10 @@ export default function ReportModal({
                       {reason.icon}
                     </span>
                     <div>
-                      <div className="font-semibold text-sm text-on-surface">
+                      <div className={`font-bold text-xs ${selectedReason === reason.value ? 'text-error' : 'text-primary'}`}>
                         {reason.label}
                       </div>
-                      <div className="text-xs text-secondary mt-0.5">
+                      <div className="text-[10px] text-secondary mt-0.5 leading-tight">
                         {reason.description}
                       </div>
                     </div>
@@ -197,63 +197,63 @@ export default function ReportModal({
 
           {/* Evidence Input */}
           <div className="mb-4">
-            <h3 className="text-sm font-bold text-on-surface mb-2">
-              รายละเอียดเพิ่มเติม (ไม่บังคับ)
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-secondary mb-2">
+              Additional Details (Optional)
             </h3>
             <textarea
               value={evidence}
               onChange={(e) => setEvidence(e.target.value)}
-              placeholder="อธิบายเพิ่มเติมเกี่ยวกับปัญหาที่พบ..."
+              placeholder="Describe the issue in more detail..."
               rows={3}
               maxLength={500}
-              className="w-full px-4 py-3 bg-surface-container-high border border-outline-variant/30 rounded-lg text-on-surface placeholder-secondary text-sm focus:outline-none focus:ring-2 focus:ring-error/50 focus:border-error transition-all resize-none"
+              className="input bg-surface-muted border-transparent text-primary text-xs focus:ring-1 focus:ring-error focus:border-error transition-all resize-none"
             />
-            <div className="text-xs text-secondary mt-1 text-right">
-              {evidence.length}/500 ตัวอักษร
+            <div className="text-[9px] text-secondary mt-1 text-right font-bold uppercase">
+              {evidence.length}/500 characters
             </div>
           </div>
 
           {/* Warning */}
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+          <div className="bg-warning/5 border border-warning/20 rounded-lg p-3">
             <div className="flex items-start gap-2">
-              <span className="text-lg">⚠️</span>
-              <p className="text-xs text-amber-800 leading-relaxed">
-                การรายงานเท็จหรือรายงานในทางที่ผิดอาจส่งผลให้บัญชีของคุณถูกจำกัดการใช้งาน
+              <span className="material-symbols-outlined text-warning text-lg">warning</span>
+              <p className="text-[10px] text-warning font-bold uppercase leading-tight tracking-tight">
+                False reporting may result in account restrictions.
               </p>
             </div>
           </div>
         </div>
 
         {/* Footer - Fixed */}
-        <div className="px-6 py-4 bg-surface-container border-t border-outline-variant/20 flex-shrink-0">
+        <div className="px-6 py-4 bg-surface-muted border-t border-surface-border flex-shrink-0">
           <div className="flex gap-3">
             <button
               onClick={onClose}
               disabled={isSubmitting}
-              className="flex-1 px-4 py-2.5 text-secondary font-semibold border border-outline-variant/30 rounded-lg hover:bg-surface-container-high transition-colors disabled:opacity-50"
+              className="flex-1 btn-outline h-12 text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
             >
-              ยกเลิก
+              Cancel
             </button>
             <button
               onClick={handleSubmit}
               disabled={!selectedReason || isSubmitting}
-              className={`flex-1 px-4 py-2.5 font-semibold rounded-lg transition-all flex items-center justify-center gap-2 ${
+              className={`flex-1 h-12 text-[10px] font-black uppercase tracking-widest rounded-md transition-all flex items-center justify-center gap-2 ${
                 selectedReason && !isSubmitting
-                  ? "bg-error text-white hover:bg-error-container shadow-lg hover:shadow-xl"
-                  : "bg-surface-container-high text-secondary cursor-not-allowed"
+                  ? "bg-error text-white hover:bg-error/90 shadow-lg"
+                  : "bg-surface-border text-secondary cursor-not-allowed"
               }`}
             >
               {isSubmitting ? (
                 <>
                   <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  กำลังส่ง...
+                  Sending...
                 </>
               ) : (
                 <>
                   <span className="material-symbols-outlined text-sm">
                     flag
                   </span>
-                  ส่งรายงาน
+                  Submit Report
                 </>
               )}
             </button>
