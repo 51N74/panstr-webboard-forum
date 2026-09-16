@@ -1,127 +1,120 @@
 # Panstr
 
-> A client-side decentralized forum built on the Nostr protocol.
+> A forum-style discussion platform built without a traditional backend database.
 
-Panstr is a forum-style web application that uses **Nostr relays as its primary data layer**, without a traditional backend database.
+Panstr is a web-based discussion platform that explores a different approach to building a forum.
 
-Instead of building a conventional CRUD forum with a centralized API and database, Panstr handles Nostr events directly in the browser, reconstructing posts and threaded discussions from decentralized event streams.
+Instead of the conventional:
 
-The project explores what a traditional discussion-board experience can look like on top of a decentralized protocol.
+```text
+Browser → API → Database
+```
 
-## Highlights
+Panstr uses a **decentralized event network as its primary data layer**, with the application handling event processing, thread reconstruction, local caching, and search on the client.
 
-* **Decentralized data architecture** — Nostr relays act as the primary data layer
-* **Traditional forum structure** — discussions are organized into Rooms rather than an algorithmic social feed
-* **Nested discussions** — NIP-10 reply relationships are reconstructed into hierarchical threads
-* **Client-side data layer** — IndexedDB/Dexie caches Nostr events locally for faster access and local queries
-* **Nostr authentication** — supports browser-based Nostr extensions and Nostr private-key authentication
-* **Relay management** — monitor and manage Nostr relays from the client
-* **Nostr protocol integration** — works directly with Nostr events, tags, relay subscriptions, and protocol-specific event structures
+The underlying protocol is **Nostr**.
 
 ## Why I Built It
 
-Most forum applications follow a familiar architecture:
+Traditional forums rely on a central database to store posts, users, replies, and relationships.
 
-```text
-Browser
-   ↓
-Backend API
-   ↓
-Database
-```
+I wanted to explore what happens when that database is replaced by an event-based network.
 
-Panstr experiments with a different model:
+This introduced a different set of engineering problems:
 
-```text
-Browser
-   ↓
-Nostr Relays
-   ↓
-Nostr Events
+* How do you retrieve and organize distributed events?
+* How do you reconstruct threaded discussions from event relationships?
+* How do you maintain useful local state without a backend?
+* How do you deal with multiple data sources and relay availability?
+* How do you turn an event-oriented data model into a familiar forum experience?
 
-        ↕
-   IndexedDB / Dexie
-   (local cache & queries)
-```
-
-This changes where application logic lives.
-
-Instead of relying on a central database to provide structured posts and relationships, the client has to retrieve Nostr events, interpret their tags, reconstruct relationships, maintain local state, and turn those events into a usable forum interface.
-
-That became the main engineering challenge of the project.
+Panstr is my exploration of those problems.
 
 ## Architecture
 
-Panstr is primarily a **client-side application**.
-
-There is no traditional application database or central API responsible for storing forum content.
-
-### Data layer
-
-Nostr relays provide the primary persistence layer for forum events.
-
-The application communicates with relays directly through `nostr-tools` and manages subscriptions, event publishing, and event retrieval in the browser.
-
-### Local storage
-
-Panstr uses **Dexie.js / IndexedDB** as a local cache.
-
-This allows the application to:
-
-* cache retrieved Nostr events
-* query previously loaded data locally
-* reduce repeated relay requests
-* support local search and filtering
-* maintain client-side application state
-
-IndexedDB is a local client-side data layer, not a replacement for the Nostr relay network.
-
-### Event → Forum Model
-
-Nostr provides an event-oriented data model rather than a traditional relational forum schema.
-
-Panstr therefore has to transform events such as:
-
 ```text
-Nostr Events
-     ↓
-Tag / relationship parsing
-     ↓
-Post & reply relationships
-     ↓
-Thread hierarchy
-     ↓
-Forum UI
+                    ┌─────────────────┐
+                    │   Panstr Web UI │
+                    │   Next.js/React │
+                    └────────┬────────┘
+                             │
+                 ┌───────────┴───────────┐
+                 │                       │
+                 ▼                       ▼
+        ┌─────────────────┐    ┌─────────────────┐
+        │  Event Network  │    │  Local Storage  │
+        │  Nostr Relays   │    │ IndexedDB/Dexie │
+        └─────────────────┘    └─────────────────┘
+                 │                       │
+                 └───────────┬───────────┘
+                             ▼
+                    ┌─────────────────┐
+                    │ Event Processing│
+                    │ & Thread Model  │
+                    └─────────────────┘
 ```
 
-This is particularly important for threaded discussions, where reply relationships need to be reconstructed from Nostr event metadata.
+### No Traditional Backend
+
+Panstr does not use a conventional application backend or central database for forum content.
+
+The browser communicates directly with Nostr relays using `nostr-tools`.
+
+Forum data is represented as events rather than database records.
+
+### Local Data Layer
+
+Panstr uses **IndexedDB through Dexie.js** to cache events locally.
+
+The local data layer is used for:
+
+* caching retrieved events
+* local queries
+* reducing repeated relay requests
+* client-side search
+* maintaining application state
+
+This means the application has to manage more of the data-processing workload in the browser than a conventional API-driven application.
 
 ## Core Features
 
 ### Forum Rooms
 
-Panstr organizes discussions into predefined Rooms using Nostr event tags.
+Discussions are organized into predefined **Rooms** using Nostr event tags.
 
-This provides a more traditional discussion-board experience instead of relying on an algorithmic social feed.
+The interface is intentionally closer to a traditional discussion board than an algorithmic social-media feed.
+
+Users browse discussions by topic rather than relying on a personalized ranking system.
 
 ### Threaded Discussions
 
-Replies are reconstructed using NIP-10 reply relationships.
+One of the main technical challenges is converting Nostr's event-based reply relationships into a conventional forum thread.
 
-The client builds nested discussion structures from otherwise flat Nostr events and renders them as a hierarchical thread.
+Panstr processes NIP-10 reply metadata to reconstruct structures such as:
 
-### Nostr Authentication
+```text
+Original Post
+├── Reply
+│   ├── Nested Reply
+│   └── Nested Reply
+└── Reply
+    └── Nested Reply
+```
 
-Authentication supports:
+The underlying data is a collection of events; the application builds the hierarchical discussion model at runtime.
+
+### Nostr Identity
+
+Users can authenticate through:
 
 * NIP-07 browser extensions
 * Nostr private-key authentication
 
-The application uses Nostr identities and signatures rather than a conventional username/password backend.
+The application works with public-key identities and signed events rather than a traditional username/password authentication system.
 
 ### Relay Management
 
-Panstr includes client-side relay management functionality for:
+Panstr includes client-side relay management for:
 
 * configuring relays
 * checking relay connectivity
@@ -130,13 +123,13 @@ Panstr includes client-side relay management functionality for:
 
 ### Local Search
 
-Panstr maintains a local event cache and performs client-side search over cached data.
+Retrieved events can be cached locally and searched through the browser.
 
-The current implementation should be understood as **local search over retrieved events**, rather than a global search index across the entire Nostr network.
+The current implementation primarily searches the application's locally available dataset rather than providing a global search index across the entire network.
 
 ## Technology
 
-### Frontend
+### Application
 
 * Next.js
 * React
@@ -144,97 +137,107 @@ The current implementation should be understood as **local search over retrieved
 * Tailwind CSS
 * DaisyUI
 
-### Nostr
+### Data & Protocol
 
+* Nostr
 * `nostr-tools`
-* Nostr relay subscriptions
-* Nostr event publishing
-* NIP-07 authentication
-* NIP-10 threading
-* NIP-19 identifiers
-* NIP-65 relay management
-
-### Client Data
-
-* Dexie.js
+* Nostr relays
 * IndexedDB
+* Dexie.js
 * Fuse.js
 
-## Project Structure
+### Protocol Integrations
 
-The application is organized around the client application, Nostr integration, and UI components.
+The codebase includes implementations and experiments around several Nostr specifications, including:
 
-```text
-app/
-├── components/       # UI components
-├── lib/
-│   ├── storage/      # IndexedDB / Dexie storage
-│   └── ...           # Nostr and application logic
-├── room/             # Forum room and thread views
-├── wiki/             # Wiki-related functionality
-└── ...
+* NIP-07 — Browser Extension Signing
+* NIP-10 — Threaded Replies
+* NIP-11 — Relay Information
+* NIP-19 — Encoded Identifiers
+* NIP-50 — Search
+* NIP-54 — Wiki
+* NIP-57 — Zaps
+* NIP-65 — Relay List Metadata
+* NIP-72 — Communities
+* NIP-86 — Relay Management
+* NIP-89 — Application Discovery
+* NIP-90 — Data Vending
+* NIP-96 — File Storage
 
-```
-
-A significant part of the Nostr integration is centralized in the application's Nostr client layer, which handles relay communication, event processing, and protocol-specific operations.
+Some of these integrations are experimental or partially connected to the main forum experience.
 
 ## Engineering Challenges
 
-### 1. Reconstructing Threads from Events
+### Distributed Data Instead of a Database
 
-Traditional forums store relationships directly in a database.
+In a conventional forum, the database provides a single source of truth.
 
-Nostr provides a stream of events with relationships expressed through tags.
+Panstr instead retrieves events from external relays.
 
-Panstr therefore reconstructs:
+This means the application has to account for:
 
-```text
-Root Post
-├── Reply
-│   ├── Nested Reply
-│   └── Nested Reply
-└── Reply
-```
-
-from Nostr event metadata and renders that structure as a conventional forum thread.
-
-### 2. Client-Side Persistence
-
-Without a traditional backend database, the browser becomes responsible for managing a significant amount of application state.
-
-Dexie/IndexedDB is used to cache events locally and provide a queryable client-side data layer.
-
-### 3. Working with Relays
-
-The application has to deal with decentralized relay infrastructure rather than a single authoritative API.
-
-That introduces practical concerns around:
-
+* multiple relays
+* event duplication
 * relay availability
-* synchronization
 * event propagation
-* duplicate events
 * query scope
 * local caching
-* relay-specific capabilities
+* inconsistent availability of data
 
-These constraints are part of the reason the application includes relay management and local caching.
+### Reconstructing Relationships
 
-## Limitations
+A relational database can represent:
 
-Panstr is an experimental/portfolio project rather than a production-scale decentralized forum.
+```text
+posts
+replies
+users
+parent_id
+```
 
-Some protocol implementations and UI areas are exploratory or partially integrated.
+directly.
 
-In particular:
+Nostr represents relationships through event metadata and tags.
 
-* Search currently operates primarily over locally cached/retrieved events rather than providing global Nostr-wide search.
-* NIP-72 community functionality is present in the codebase but is not the primary data flow for the main forum Rooms.
-* Moderation functionality is not currently wired into the main forum flow.
+Panstr therefore has to interpret those relationships and reconstruct a usable forum hierarchy in the client.
+
+### Client-Side State
+
+Without a traditional backend handling application state, more responsibility moves into the browser.
+
+Panstr uses IndexedDB/Dexie to maintain a local event cache and performs part of its querying and search locally.
+
+This architecture reduces dependence on a centralized backend but introduces different constraints around browser storage, synchronization, and dataset size.
+
+## Project Structure
+
+```text
+app/
+├── components/        # UI components
+├── lib/
+│   ├── storage/       # IndexedDB / Dexie
+│   └── ...            # Nostr and application logic
+├── room/              # Forum rooms and threads
+├── wiki/              # Wiki functionality
+└── ...
+```
+
+The main Nostr integration is handled through the application's client layer, which manages relay communication, event processing, publishing, subscriptions, and protocol-specific functionality.
+
+## Current Limitations
+
+Panstr is an experimental portfolio project rather than a production-scale forum.
+
+Known limitations include:
+
+* Local search operates on events available to the client rather than a global search index.
+* The main forum Rooms use their own event/tag structure rather than relying entirely on NIP-72 Communities.
+* Some community and moderation functionality exists at the protocol/code level but is not fully connected to the main forum flow.
 * Notification infrastructure is incomplete.
-* The application relies heavily on client-side processing and browser storage.
+* Client-side processing and browser storage limit how much data can be handled efficiently.
+* Private-key authentication requires careful handling because sensitive keys are processed in the browser.
 
-These limitations are intentional parts of the current project state and help define the areas that would need further work for a production system.
+These limitations are part of the current state of the project.
 
 ## Running Locally
 
@@ -243,7 +246,7 @@ These limitations are intentional parts of the current project state and help de
 * Node.js
 * npm
 
-### Install
+### Installation
 
 ```bash
 git clone https://github.com/51N74/panstr-webboard-forum.git
@@ -251,30 +254,48 @@ cd panstr-webboard-forum
 npm install
 ```
 
-### Run
+### Development
 
 ```bash
 npm run dev
 ```
 
-Then open the local development server in your browser.
+Open the development server in your browser.
 
 ## Project Status
 
-Panstr is a **working technical project exploring decentralized forum architecture on Nostr**.
+Panstr is a working exploration of **building a forum around an event-based, decentralized data model instead of a conventional backend database**.
 
-The core forum experience — browsing Rooms, reading posts, and reconstructing threaded discussions — is implemented.
+The main forum experience includes:
 
-The project also contains several experimental Nostr protocol integrations that are not all part of the main forum flow.
+* browsing Rooms
+* reading posts
+* creating posts
+* viewing nested discussions
+* working with Nostr identities
+* connecting to and managing relays
 
-## What I Learned
+The repository also contains additional protocol integrations and experiments that are not all part of the core forum flow.
 
-Building Panstr required thinking about application architecture beyond the conventional:
+## What This Project Demonstrates
 
-> frontend → API → database
+Panstr gave me practical experience with a different class of application architecture:
 
-Instead, the project required working with:
+```text
+Traditional Application
 
-> frontend → decentralized event network → local client data layer
+Frontend → API → Database
 
-The most interesting part was not simply connecting a React application to Nostr, but adapting a decentralized event model into a familiar forum experience with rooms, posts, replies, and nested discussions.
+
+Panstr
+
+Frontend → Event Network
+             ↕
+        Local Data Layer
+```
+
+The most valuable part of the project was learning how to turn a decentralized, event-oriented data model into a familiar application experience.
+
+Rather than simply consuming an API, the client is responsible for interpreting events, reconstructing relationships, managing local data, and coordinating with external relays.
+
+That architecture became the core engineering challenge behind Panstr.
